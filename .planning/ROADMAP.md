@@ -12,7 +12,7 @@
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Module scaffold, exported data model, Myers algorithm, functional API, and OSS baseline
+- [x] **Phase 1: Foundation** - Module scaffold, exported data model, Myers algorithm, functional API, and OSS baseline (completed 2026-03-25)
 - [ ] **Phase 2: Algorithms** - Patience and Histogram diff algorithms with Myers fallback and algorithm selection option
 - [ ] **Phase 3: Unified Rendering** - Chroma syntax highlighting, terminal theme detection, language detection, and unified diff output
 - [ ] **Phase 4: Split Rendering** - Side-by-side split diff view via Lip Gloss two-panel layout
@@ -38,7 +38,7 @@ Plans:
 - [x] 01-02-PLAN.md — Exported data model: Op, Edit, Hunk, Line, DiffResult, Option/config, internal algo.Differ interface
 - [x] 01-03-PLAN.md — Myers algorithm (TDD): implement internal/algo/myers/ with table-driven + cross-validated tests
 - [x] 01-04-PLAN.md — Hunk builder + drift.Diff() API: internal/hunk/, drift.go, \r\n normalization
-- [ ] 01-05-PLAN.md — Property-based + fuzz testing: rapid round-trip invariant, Go fuzz for Myers
+- [x] 01-05-PLAN.md — Property-based + fuzz testing: rapid round-trip invariant, Go fuzz for Myers
 
 ### Phase 2: Algorithms
 **Goal**: Callers can select Patience or Histogram algorithms, with correct Myers fallback for edge cases
@@ -136,7 +136,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 4/5 | In Progress|  |
+| 1. Foundation | 5/5 | Complete   | 2026-03-25 |
 | 2. Algorithms | 0/4 | Not started | - |
 | 3. Unified Rendering | 0/5 | Not started | - |
 | 4. Split Rendering | 0/3 | Not started | - |
