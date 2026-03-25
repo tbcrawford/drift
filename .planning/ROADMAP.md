@@ -71,7 +71,7 @@ Plans:
 
 Plans:
 - [x] 03-01: Research Lip Gloss v2 `HasDarkBackground` timeout behavior; implement `internal/theme/` with safe OSC 11 detection
-- [ ] 03-02: Implement `internal/highlight/` — Chroma v2 lexer → formatter pipeline with color profile detection
+- [x] 03-02: Implement `internal/highlight/` — Chroma v2 lexer → formatter pipeline with color profile detection
 - [ ] 03-03: Implement language auto-detection (`lexers.Match()` + `lexers.Analyse()` fallback) and `WithLang()` / `WithTheme()` options
 - [ ] 03-04: Implement `internal/render/unified.go` — UnifiedRenderer with hunk headers and `+`/`-` prefixes
 - [ ] 03-05: Wire `WithNoColor()` and terminal color depth detection (TrueColor / 256 / 16 / none)

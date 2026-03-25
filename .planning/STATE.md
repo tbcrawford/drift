@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: Executing Phase 03
-stopped_at: Completed 03-unified-rendering/03-01-PLAN.md
-last_updated: "2026-03-25T22:00:00.000Z"
+stopped_at: Completed 03-unified-rendering/03-02-PLAN.md
+last_updated: "2026-03-25T22:10:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 14
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -79,6 +79,8 @@ Recent decisions affecting current work:
 - [Phase 02-algorithms]: Iterative stack with tagged union for patience diff, O(N*M) LCS anchors, Myers fallback for no-unique-lines sub-ranges — Avoids recursion depth issues and post-sort step; matches research section 5.1 design recommendations
 - [Phase 02-algorithms]: Histogram.Diff uses tagged stackItem union (isEmit bool) — same pattern as Patience; OldLine-proxy post-sort is fundamentally uncomputable without full traversal, so sort approach was dropped entirely
 - [Phase 02-algorithms]: Property tests use rapid.SliceOfN(elem, -1, 50) with drift.WithAlgorithm() option for all three algorithms; 1000 iterations each
+- [Phase 03-unified-rendering/03-02]: styles.Get() returns Fallback (not nil) — use Registry[name] map lookup in SelectTheme to distinguish known vs unknown theme names
+- [Phase 03-unified-rendering/03-02]: chroma.FormatterFunc is not comparable with == (panics) — test formatter selection behaviorally via output comparison, not pointer identity
 
 ### Pending Todos
 
