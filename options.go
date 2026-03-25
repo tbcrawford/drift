@@ -22,6 +22,7 @@ type config struct {
 	noColor      bool
 	lang         string
 	theme        string
+	split        bool
 }
 
 // defaultConfig returns a config with production-ready defaults.
@@ -59,4 +60,11 @@ func WithLang(lang string) Option {
 // Use Chroma style names (e.g., "monokai", "github", "dracula").
 func WithTheme(theme string) Option {
 	return func(c *config) { c.theme = theme }
+}
+
+// WithSplit enables side-by-side split diff rendering.
+// The output is rendered as two equal-width panels (old on the left,
+// new on the right) joined by a " │ " separator.
+func WithSplit() Option {
+	return func(c *config) { c.split = true }
 }
