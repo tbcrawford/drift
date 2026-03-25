@@ -19,14 +19,20 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] Property-based round-trip: `Apply(Diff(a,b), a) == b` holds for all inputs — Validated in Phase 01: Foundation
 - [x] Supports three diff algorithms: Myers, Patience, Histogram (selectable per call) — Validated in Phase 02: algorithms
 
+### Validated
+
+- [x] Produces unified diff output (Git-style context hunks) — Validated in Phase 03: unified-rendering
+- [x] Chroma syntax highlighting applied per-line via HighlightLine pipeline — Validated in Phase 03: unified-rendering
+- [x] Auto-detects terminal color theme (OSC 11 guard, NoTTY short-circuit) — Validated in Phase 03: unified-rendering
+- [x] User can override Chroma theme via WithTheme() option — Validated in Phase 03: unified-rendering
+- [x] Language auto-detected from file extension; overridable via WithLang() — Validated in Phase 03: unified-rendering
+- [x] Color depth detection + graceful degradation (TrueColor→ANSI256→ANSI→NoTTY) — Validated in Phase 03: unified-rendering
+- [x] NO_COLOR env var and WithNoColor() suppresses all ANSI sequences — Validated in Phase 03: unified-rendering
+
 ### Active
 
 - [ ] Library exposes both functional and builder/fluent API styles
-- [ ] Produces unified diff output (Git-style context hunks)
 - [ ] Produces side-by-side split diff output (left/right panels)
-- [ ] Chroma syntax highlighting applied per-line with diff colors (red/green) layered on top
-- [ ] Auto-detects terminal color theme to select best-matching Chroma theme
-- [ ] User can override Chroma theme via option/flag
 - [ ] Language auto-detected from file extension; overridable via --lang flag
 - [ ] CLI accepts two file paths, stdin piping, or two raw string arguments
 - [ ] Single go.mod monorepo: library at root, CLI at cmd/drift/
@@ -87,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after Phase 02: algorithms complete — Patience and Histogram algorithms implemented, wired into drift.Diff(), all property-based tests green*
+*Last updated: 2026-03-25 after Phase 03: unified-rendering complete — Chroma v2 highlight pipeline, OSC 11 safe dark-background detection, and public drift.Render() API implemented; go test ./... green across all packages*
