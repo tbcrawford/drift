@@ -2,8 +2,8 @@
 phase: 2
 slug: algorithms
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-25
 ---
 
@@ -38,12 +38,14 @@ created: 2026-03-25
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 02-02-01 | 02 | 1 | ALGO-01 | unit | `go test ./internal/algo/patience/...` | ❌ W0 | ⬜ pending |
-| 02-02-02 | 02 | 1 | ALGO-01 | unit | `go test ./internal/algo/patience/...` | ❌ W0 | ⬜ pending |
-| 02-03-01 | 03 | 1 | ALGO-02 | unit | `go test ./internal/algo/histogram/...` | ❌ W0 | ⬜ pending |
-| 02-03-02 | 03 | 1 | ALGO-02, ALGO-03 | unit | `go test ./internal/algo/histogram/...` | ❌ W0 | ⬜ pending |
-| 02-04-01 | 04 | 2 | ALGO-04 | integration | `go test ./...` | ❌ W0 | ⬜ pending |
-| 02-04-02 | 04 | 2 | ALGO-01, ALGO-02, ALGO-03, ALGO-04 | property | `go test -run TestRoundTrip ./...` | ❌ W0 | ⬜ pending |
+| 02-01-01 | 02-01 | 1 | ALGO-01 | unit | `go test ./internal/algo/patience/... -run TestBothEmpty` | ❌ W0 | ⬜ pending |
+| 02-01-02 | 02-01 | 1 | ALGO-01 | unit | `go test ./internal/algo/patience/... -race` | ❌ W0 | ⬜ pending |
+| 02-02-01 | 02-02 | 1 | ALGO-02 | unit | `go test ./internal/algo/histogram/... -run TestBothEmpty` | ❌ W0 | ⬜ pending |
+| 02-02-02 | 02-02 | 1 | ALGO-02 | unit | `go test ./internal/algo/histogram/... -race` | ❌ W0 | ⬜ pending |
+| 02-03-01 | 02-03 | 2 | ALGO-01, ALGO-02, ALGO-03 | integration | `go build ./...` | ✅ exists | ⬜ pending |
+| 02-03-02 | 02-03 | 2 | ALGO-01, ALGO-02, ALGO-03 | integration | `go test -run TestAllAlgorithmsCorrect ./...` | ❌ W0 | ⬜ pending |
+| 02-04-01 | 02-04 | 2 | ALGO-04 | property | `go test -run TestProperty_RoundTrip_Patience ./... -race` | ❌ W0 | ⬜ pending |
+| 02-04-02 | 02-04 | 2 | ALGO-01, ALGO-02, ALGO-03, ALGO-04 | property | `go test -run TestProperty ./... -race` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -51,11 +53,11 @@ created: 2026-03-25
 
 ## Wave 0 Requirements
 
-- [ ] `internal/algo/patience/patience_test.go` — stubs for ALGO-01
-- [ ] `internal/algo/histogram/histogram_test.go` — stubs for ALGO-02, ALGO-03
-- [ ] Integration of `WithAlgorithm()` round-trip test stubs in existing property test file
+- [x] `internal/algo/patience/patience_test.go` — minimal `TestBothEmpty` created alongside `patience.go` in task 02-01-01; full suite expanded in 02-01-02
+- [x] `internal/algo/histogram/histogram_test.go` — minimal `TestBothEmpty` created alongside `histogram.go` in task 02-02-01; full suite expanded in 02-02-02
+- [x] Integration of `WithAlgorithm()` round-trip test stubs in existing property test file — covered by 02-03-02 (`TestAllAlgorithmsCorrect`) and 02-04-01 (property tests)
 
-*Existing infrastructure covers Myers; new packages need test stubs.*
+*Existing infrastructure covers Myers; new packages create test files in their respective implementation tasks.*
 
 ---
 
@@ -70,11 +72,11 @@ created: 2026-03-25
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 10s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 10s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
