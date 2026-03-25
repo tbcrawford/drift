@@ -13,7 +13,7 @@
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Module scaffold, exported data model, Myers algorithm, functional API, and OSS baseline (completed 2026-03-25)
-- [ ] **Phase 2: Algorithms** - Patience and Histogram diff algorithms with Myers fallback and algorithm selection option
+- [x] **Phase 2: Algorithms** - Patience and Histogram diff algorithms with Myers fallback and algorithm selection option (completed 2026-03-25)
 - [ ] **Phase 3: Unified Rendering** - Chroma syntax highlighting, terminal theme detection, language detection, and unified diff output
 - [ ] **Phase 4: Split Rendering** - Side-by-side split diff view via Lip Gloss two-panel layout
 - [ ] **Phase 5: CLI** - Cobra command wrapping the library for file, stdin, and raw-string input with all flags
@@ -54,8 +54,8 @@ Plans:
 Plans:
 - [x] 02-01: Research Histogram frequency cutoff and fallback trigger (raygard source); document decision
 - [x] 02-02: Implement Histogram diff in `internal/algo/histogram/` with Myers fallback for high-repetition inputs
-- [ ] 02-03: Implement Patience diff in `internal/algo/patience/` with inter-anchor Myers fallback
-- [ ] 02-04: Wire `WithAlgorithm()` option and integrate all three algorithms into `drift.Diff()`
+- [x] 02-03: Implement Patience diff in `internal/algo/patience/` with inter-anchor Myers fallback
+- [x] 02-04: Wire `WithAlgorithm()` option and integrate all three algorithms into `drift.Diff()`
 
 ### Phase 3: Unified Rendering
 **Goal**: `drift.Diff()` produces richly highlighted unified diff output renderable to any `io.Writer`
@@ -137,7 +137,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete   | 2026-03-25 |
-| 2. Algorithms | 2/4 | In Progress | - |
+| 2. Algorithms | 4/4 | Complete    | 2026-03-25 |
 | 3. Unified Rendering | 0/5 | Not started | - |
 | 4. Split Rendering | 0/3 | Not started | - |
 | 5. CLI | 0/4 | Not started | - |
