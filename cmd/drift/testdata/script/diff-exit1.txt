@@ -1,0 +1,9 @@
+# Different files → drift exits 1 (non-zero); exec expects failure via ! exec
+! exec drift $WORK/a.txt $WORK/b.txt
+stdout '@@'
+! stderr .
+
+-- a.txt --
+hello
+-- b.txt --
+world

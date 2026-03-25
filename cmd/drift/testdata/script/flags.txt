@@ -1,0 +1,4 @@
+# --algorithm histogram and --no-color with --from/--to
+! exec drift --algorithm histogram --no-color --from 'foo' --to 'bar'
+stdout '@@'
+! stderr .

@@ -1,0 +1,11 @@
+# Identical files → exit 0; unified renderer should not emit hunk headers
+exec drift $WORK/a.txt $WORK/b.txt
+! stdout '@@'
+! stderr .
+
+-- a.txt --
+same
+line
+-- b.txt --
+same
+line
