@@ -17,11 +17,11 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] Supports Myers diff algorithm — Validated in Phase 01: Foundation
 - [x] Library exposes functional Option API style — Validated in Phase 01: Foundation
 - [x] Property-based round-trip: `Apply(Diff(a,b), a) == b` holds for all inputs — Validated in Phase 01: Foundation
+- [x] Supports three diff algorithms: Myers, Patience, Histogram (selectable per call) — Validated in Phase 02: algorithms
 
 ### Active
 
 - [ ] Library exposes both functional and builder/fluent API styles
-- [ ] Supports three diff algorithms: Myers, Patience, Histogram (selectable per call)
 - [ ] Produces unified diff output (Git-style context hunks)
 - [ ] Produces side-by-side split diff output (left/right panels)
 - [ ] Chroma syntax highlighting applied per-line with diff colors (red/green) layered on top
@@ -87,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after Phase 01: Foundation complete — Myers diff engine, public API, and property-based tests all green*
+*Last updated: 2026-03-25 after Phase 02: algorithms complete — Patience and Histogram algorithms implemented, wired into drift.Diff(), all property-based tests green*
