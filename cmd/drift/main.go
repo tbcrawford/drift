@@ -15,12 +15,41 @@ import (
 var stdinReader io.Reader = os.Stdin
 
 var rootCmd = &cobra.Command{
-	Use:           "drift [flags] OLD NEW",
-	Short:         "Pretty-print a diff between two inputs",
+	Use:   "drift [flags] OLD NEW | FILE",
+	Short: "Pretty-print a diff between two inputs",
+	Long: `Pretty-print a diff between two inputs.
+With one path inside a git repository, diffs the working tree against HEAD.`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
-	Args:          cobra.MaximumNArgs(2),
+	Args:          validateRootArgs,
 	RunE:          runRoot,
+}
+
+func validateRootArgs(cmd *cobra.Command, args []string) error {
+	from, err := cmd.Flags().GetString("from")
+	if err != nil {
+		return err
+	}
+	to, err := cmd.Flags().GetString("to")
+	if err != nil {
+		return err
+	}
+
+	if from != "" || to != "" {
+		if len(args) != 0 {
+			return fmt.Errorf("invalid arguments: with --from/--to do not pass file paths")
+		}
+		return nil
+	}
+
+	switch len(args) {
+	case 0:
+		return fmt.Errorf("invalid usage: expected drift [flags] OLD NEW, a single FILE in a git repo, or --from/--to")
+	case 1, 2:
+		return nil
+	default:
+		return fmt.Errorf("invalid usage: too many positional arguments")
+	}
 }
 
 func parseAlgorithm(s string) (drift.Algorithm, error) {
@@ -134,6 +163,10 @@ func runCLI(stdout, stderr io.Writer, stdin io.Reader, args []string) int {
 	prev := stdinReader
 	stdinReader = stdin
 	defer func() { stdinReader = prev }()
+
+	// Tests and repeated invocations share rootCmd; clear flags so prior --from/--to do not leak.
+	_ = rootCmd.Flags().Set("from", "")
+	_ = rootCmd.Flags().Set("to", "")
 
 	rootCmd.SetOut(stdout)
 	rootCmd.SetErr(stderr)

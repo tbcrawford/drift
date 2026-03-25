@@ -8,7 +8,8 @@ import (
 )
 
 // resolveInputs returns old/new content and display names for diff headers.
-// Either two positional paths (or "-" for stdin), or both --from and --to (non-empty) with no positionals.
+// Either two positional paths (or "-" for stdin), a single file path inside a git worktree (vs HEAD),
+// or both --from and --to (non-empty) with no positionals.
 func resolveInputs(args []string, fromFlag, toFlag string, stdin io.Reader) (old, new string, oldName, newName string, err error) {
 	if fromFlag != "" || toFlag != "" {
 		if fromFlag == "" || toFlag == "" {
@@ -20,8 +21,16 @@ func resolveInputs(args []string, fromFlag, toFlag string, stdin io.Reader) (old
 		return fromFlag, toFlag, "a/string", "b/string", nil
 	}
 
+	if len(args) == 1 {
+		return resolveGitWorkingTreeVsHEAD(args[0])
+	}
+
+	if len(args) == 0 {
+		return "", "", "", "", fmt.Errorf("invalid usage: expected drift [flags] OLD NEW, a single FILE in a git repo, or --from/--to")
+	}
+
 	if len(args) != 2 {
-		return "", "", "", "", fmt.Errorf("invalid usage: expected drift [flags] OLD NEW (two paths or stdin '-')")
+		return "", "", "", "", fmt.Errorf("invalid usage: too many positional arguments")
 	}
 
 	a, b := args[0], args[1]
