@@ -31,15 +31,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Files with Windows `\r\n` line endings produce the same diff output as Unix `\n` files
   4. Property-based tests pass: `apply(diff(a, b), a) == b` holds for all generated inputs
   5. `go.mod` exists at module root with path `github.com/tylercrawford/drift`, MIT LICENSE file present, and `just test` / `just build` / `just lint` run successfully
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 01-01: Set up go.mod, module structure, LICENSE, and justfile
-- [ ] 01-02: Define exported data model (`Op`, `Edit`, `Hunk`, `Line`, `DiffResult`, `Option`/`config`)
-- [ ] 01-03: Implement Myers algorithm in `internal/algo/myers/`
-- [ ] 01-04: Implement hunk builder in `internal/hunk/` with configurable context window
-- [ ] 01-05: Wire `drift.Diff()` functional API and input normalization (`\r\n` handling)
-- [ ] 01-06: Set up property-based tests and cross-validate against `diff -u`
+- [ ] 01-01-PLAN.md — Module scaffold: go.mod (github.com/tylercrawford/drift), MIT LICENSE, justfile, golangci-lint config
+- [ ] 01-02-PLAN.md — Exported data model: Op, Edit, Hunk, Line, DiffResult, Option/config, internal algo.Differ interface
+- [ ] 01-03-PLAN.md — Myers algorithm (TDD): implement internal/algo/myers/ with table-driven + cross-validated tests
+- [ ] 01-04-PLAN.md — Hunk builder + drift.Diff() API: internal/hunk/, drift.go, \r\n normalization
+- [ ] 01-05-PLAN.md — Property-based + fuzz testing: rapid round-trip invariant, Go fuzz for Myers
 
 ### Phase 2: Algorithms
 **Goal**: Callers can select Patience or Histogram algorithms, with correct Myers fallback for edge cases
