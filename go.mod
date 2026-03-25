@@ -1,6 +1,6 @@
 module github.com/tylercrawford/drift
 
-go 1.21
+go 1.25.0
 
 require pgregory.net/rapid v1.2.0
 
