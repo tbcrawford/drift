@@ -5,8 +5,6 @@
 package histogram
 
 import (
-	"sort"
-
 	"github.com/tylercrawford/drift/internal/algo"
 	"github.com/tylercrawford/drift/internal/algo/myers"
 	"github.com/tylercrawford/drift/internal/edittype"
@@ -23,8 +21,13 @@ type Histogram struct{}
 // New returns a new Histogram diff instance.
 func New() *Histogram { return &Histogram{} }
 
-// frame is a region of old[os:oe] vs new[ns:ne] to be processed.
-type frame struct {
+// stackItem is a tagged union: either a region to process (isEmit=false) or
+// a pre-built edit to emit directly (isEmit=true). Using a tagged stack
+// ensures edits are appended in file order without a post-sort.
+type stackItem struct {
+	isEmit bool
+	edit   edittype.Edit
+	// frame fields (used when isEmit=false)
 	os, oe int // old start/end (0-indexed, exclusive end)
 	ns, ne int // new start/end (0-indexed, exclusive end)
 }
@@ -59,12 +62,20 @@ func (h *Histogram) Diff(old, new []string) []edittype.Edit {
 		return edits
 	}
 
-	stack := []frame{{0, N, 0, M}}
+	stack := []stackItem{{isEmit: false, os: 0, oe: N, ns: 0, ne: M}}
 	edits := make([]edittype.Edit, 0, N+M)
+	m := myers.New()
 
 	for len(stack) > 0 {
-		f := stack[len(stack)-1]
+		item := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
+
+		if item.isEmit {
+			edits = append(edits, item.edit)
+			continue
+		}
+
+		f := item
 
 		if f.os == f.oe && f.ns == f.ne {
 			continue
@@ -89,46 +100,49 @@ func (h *Histogram) Diff(old, new []string) []edittype.Edit {
 			counts[old[i]]++
 		}
 
-		match, found := findBestMatch(old, new, f, counts)
+		match, found := findBestMatch(old, new, stackItem{os: f.os, oe: f.oe, ns: f.ns, ne: f.ne}, counts)
 
 		if !found {
-			fallback := myers.New().Diff(old[f.os:f.oe], new[f.ns:f.ne])
+			fallback := m.Diff(old[f.os:f.oe], new[f.ns:f.ne])
 			applyOffset(fallback, f.os, f.ns)
 			edits = append(edits, fallback...)
 			continue
 		}
 
-		// Push after-match region first (processed last — file order maintained via LIFO).
+		// We need to emit: before-region edits, then equal-block edits, then after-region edits.
+		// Since the stack is LIFO, push in reverse order: after-region first, then equal emits,
+		// then before-region last (so it processes first).
+
+		// Push after-match region (processes after equal block).
 		if match.oe < f.oe || match.ne < f.ne {
-			stack = append(stack, frame{match.oe, f.oe, match.ne, f.ne})
-		}
-		// Push before-match region second (processed first).
-		if f.os < match.os || f.ns < match.ns {
-			stack = append(stack, frame{f.os, match.os, f.ns, match.ns})
+			stack = append(stack, stackItem{isEmit: false, os: match.oe, oe: f.oe, ns: match.ne, ne: f.ne})
 		}
 
-		// Emit Equal edits for the matched block.
-		for i := 0; i < match.oe-match.os; i++ {
-			edits = append(edits, edittype.Edit{
-				Op:      edittype.Equal,
-				OldLine: match.os + i + 1,
-				NewLine: match.ns + i + 1,
+		// Push equal edits in reverse (last equal pushed first, so they emit in order).
+		for i := match.oe - match.os - 1; i >= 0; i-- {
+			stack = append(stack, stackItem{
+				isEmit: true,
+				edit: edittype.Edit{
+					Op:      edittype.Equal,
+					OldLine: match.os + i + 1,
+					NewLine: match.ns + i + 1,
+				},
 			})
+		}
+
+		// Push before-match region (processes first — last pushed, first popped).
+		if f.os < match.os || f.ns < match.ns {
+			stack = append(stack, stackItem{isEmit: false, os: f.os, oe: match.os, ns: f.ns, ne: match.ns})
 		}
 	}
 
-	// Sort edits into file order by new-line position (Insert uses NewLine;
-	// Delete/Equal use OldLine). Use new-file position as primary key because
-	// it is monotonically defined for all ops; for Deletes (NewLine==0) sort
-	// by the OldLine-derived new-file cursor position tracked via newCursor.
-	sortEdits(edits)
 	return edits
 }
 
 // findBestMatch finds the longest contiguous matching block between old[f.os:f.oe]
 // and new[f.ns:f.ne] where the old lines appear with the fewest occurrences,
 // following the jgit HistogramDiff approach.
-func findBestMatch(old, new []string, f frame, counts map[string]int) (matchResult, bool) {
+func findBestMatch(old, new []string, f stackItem, counts map[string]int) (matchResult, bool) {
 	lowcount := histogramMaxOccurrences + 1
 	var best matchResult
 	found := false
@@ -191,40 +205,4 @@ func applyOffset(edits []edittype.Edit, oldOff, newOff int) {
 			edits[i].NewLine += newOff
 		}
 	}
-}
-
-// sortEdits reorders edits into canonical unified-diff file order.
-// Sort key: for Insert use NewLine; for Equal/Delete use OldLine.
-// When keys are equal, Equal/Delete come before Insert.
-func sortEdits(edits []edittype.Edit) {
-	sort.SliceStable(edits, func(i, j int) bool {
-		ei, ej := edits[i], edits[j]
-		ki := sortKey(ei)
-		kj := sortKey(ej)
-		if ki != kj {
-			return ki < kj
-		}
-		return editTieBreak(ei) < editTieBreak(ej)
-	})
-}
-
-// sortKey returns the new-file line position for an edit.
-// Insert uses NewLine directly. Equal/Delete use NewLine if available,
-// otherwise fall back to OldLine (Delete has NewLine=0).
-// For Equal, NewLine == the new-file position which is what we want.
-// For Delete (NewLine=0), we use OldLine as a proxy — but Deletes sort
-// after Equals/Inserts at the same new-file position by tiebreak.
-func sortKey(e edittype.Edit) int {
-	if e.NewLine > 0 {
-		return e.NewLine
-	}
-	// Delete: NewLine == 0. Use OldLine as position proxy.
-	return e.OldLine
-}
-
-func editTieBreak(e edittype.Edit) int {
-	if e.Op == edittype.Insert {
-		return 1
-	}
-	return 0
 }
