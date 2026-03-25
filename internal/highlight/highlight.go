@@ -8,7 +8,7 @@ import (
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters"
 	"github.com/alecthomas/chroma/v2/lexers"
-	"github.com/alecthomas/chroma/v2/styles"
+	chromastyles "github.com/alecthomas/chroma/v2/styles"
 	"github.com/charmbracelet/colorprofile"
 )
 
@@ -59,13 +59,13 @@ func FormatterForProfile(p colorprofile.Profile) chroma.Formatter {
 // SelectTheme returns the Chroma style for the given theme name and dark/light
 // terminal preference.
 //
-// If requested is non-empty, it is looked up by name (case-insensitive). If the
-// name is unknown, SelectTheme falls back to auto-detection. Auto-detection
-// uses "monokai" for dark terminals and "github" for light terminals.
-// styles.Fallback ("swapoff") is used as the last resort — it is always registered.
+// If requested is non-empty, it is looked up by exact name in the registry.
+// If the name is unknown, SelectTheme falls back to auto-detection.
+// Auto-detection uses "monokai" for dark terminals and "github" for light terminals.
+// chromastyles.Fallback ("swapoff") is used as the last resort — it is always registered.
 func SelectTheme(requested string, isDark bool) *chroma.Style {
 	if requested != "" {
-		if s := styles.Get(requested); s != nil {
+		if s, ok := chromastyles.Registry[requested]; ok {
 			return s
 		}
 		// Unknown theme name: fall through to auto-detect.
@@ -74,10 +74,10 @@ func SelectTheme(requested string, isDark bool) *chroma.Style {
 	if !isDark {
 		name = "github"
 	}
-	if s := styles.Get(name); s != nil {
+	if s, ok := chromastyles.Registry[name]; ok {
 		return s
 	}
-	return styles.Fallback
+	return chromastyles.Fallback
 }
 
 // DetectLexer returns the best Chroma lexer for the given language name,
