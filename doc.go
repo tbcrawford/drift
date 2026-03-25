@@ -12,5 +12,7 @@
 //	}
 //	fmt.Println(result)
 //
+// Alternatively, use New() for a chainable builder that applies the same options.
+//
 // See the examples/ directory for runnable examples.
 package drift
