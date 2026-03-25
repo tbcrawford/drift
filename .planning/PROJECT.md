@@ -28,11 +28,11 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] Language auto-detected from file extension; overridable via WithLang() — Validated in Phase 03: unified-rendering
 - [x] Color depth detection + graceful degradation (TrueColor→ANSI256→ANSI→NoTTY) — Validated in Phase 03: unified-rendering
 - [x] NO_COLOR env var and WithNoColor() suppresses all ANSI sequences — Validated in Phase 03: unified-rendering
+- [x] Produces side-by-side split diff output (left/right panels) — Validated in Phase 04: split-rendering
 
 ### Active
 
 - [ ] Library exposes both functional and builder/fluent API styles
-- [ ] Produces side-by-side split diff output (left/right panels)
 - [ ] Language auto-detected from file extension; overridable via --lang flag
 - [ ] CLI accepts two file paths, stdin piping, or two raw string arguments
 - [ ] Single go.mod monorepo: library at root, CLI at cmd/drift/
@@ -93,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after Phase 03: unified-rendering complete — Chroma v2 highlight pipeline, OSC 11 safe dark-background detection, and public drift.Render() API implemented; go test ./... green across all packages*
+*Last updated: 2026-03-25 after Phase 04: split-rendering complete — internal/render.Split with Lip Gloss two-panel layout, TerminalWidth helper, drift.WithSplit() wired through Render/RenderWithNames; go test ./... green*

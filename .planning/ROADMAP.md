@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Module scaffold, exported data model, Myers algorithm, functional API, and OSS baseline (completed 2026-03-25)
 - [x] **Phase 2: Algorithms** - Patience and Histogram diff algorithms with Myers fallback and algorithm selection option (completed 2026-03-25)
 - [x] **Phase 3: Unified Rendering** - Chroma syntax highlighting, terminal theme detection, language detection, and unified diff output (completed 2026-03-25)
-- [ ] **Phase 4: Split Rendering** - Side-by-side split diff view via Lip Gloss two-panel layout
+- [x] **Phase 4: Split Rendering** - Side-by-side split diff view via Lip Gloss two-panel layout (completed 2026-03-25)
 - [ ] **Phase 5: CLI** - Cobra command wrapping the library for file, stdin, and raw-string input with all flags
 - [ ] **Phase 6: API Hardening & OSS Packaging** - Builder API, godoc, examples, benchmarks, and v1.0.0 stabilization
 
@@ -88,9 +88,9 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 04-01: Implement `internal/render/split.go` — Lip Gloss `JoinHorizontal` two-panel layout with ANSI-aware width measurement
-- [ ] 04-02: Add terminal width detection with pipe fallback; handle Unicode wide characters (`runewidth` `EastAsian = false`)
-- [ ] 04-03: Wire `WithSplit()` option into `drift.Diff()` and validate against unified renderer output
+- [x] 04-01: Implement `internal/render/split.go` — Lip Gloss `JoinHorizontal` two-panel layout with ANSI-aware width measurement
+- [x] 04-02: Add terminal width detection with pipe fallback; handle Unicode wide characters (`runewidth` `EastAsian = false`)
+- [x] 04-03: Wire `WithSplit()` option into `drift.Render()` and validate split vs unified output
 
 ### Phase 5: CLI
 **Goal**: The `drift` CLI binary is installable and correctly wraps the library for all input modes and flags

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: Ready to plan
-stopped_at: Completed 03-unified-rendering/03-01-PLAN.md
-last_updated: "2026-03-25T21:17:46.072Z"
+stopped_at: Completed 04-split-rendering/04-03-PLAN.md
+last_updated: "2026-03-25T21:59:07.107Z"
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 14
-  completed_plans: 14
+  completed_phases: 4
+  total_plans: 17
+  completed_plans: 17
 ---
 
 # Project State
@@ -19,12 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tylercrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 03 — unified-rendering
+**Current focus:** Phase 05 — cli
 
 ## Current Position
 
-Phase: 4
-Phase: 04 (split-rendering) — NEXT
+Phase: 5
 Plan: Not started
 
 ## Performance Metrics
