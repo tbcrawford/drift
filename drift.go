@@ -3,7 +3,9 @@ package drift
 import (
 	"strings"
 
+	"github.com/tylercrawford/drift/internal/algo/histogram"
 	"github.com/tylercrawford/drift/internal/algo/myers"
+	"github.com/tylercrawford/drift/internal/algo/patience"
 	"github.com/tylercrawford/drift/internal/hunk"
 )
 
@@ -34,10 +36,10 @@ func Diff(old, new string, opts ...Option) (DiffResult, error) {
 	// Dispatch to algorithm
 	var differ algoInterface
 	switch cfg.algorithm {
-	case Patience, Histogram:
-		// Patience and Histogram are implemented in Phase 2.
-		// Fall back to Myers for now (they will replace this in Phase 2).
-		differ = myers.New()
+	case Patience:
+		differ = patience.New()
+	case Histogram:
+		differ = histogram.New()
 	default: // Myers
 		differ = myers.New()
 	}
