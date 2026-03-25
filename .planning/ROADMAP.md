@@ -107,7 +107,7 @@ Plans:
 Plans:
 - [x] 05-01: Implement `cmd/drift/main.go` with Cobra root command and flag definitions
 - [x] 05-02: Implement file path, stdin pipe, and `--from`/`--to` raw string input handling
-- [ ] 05-03: Wire all flags through to library options; implement exit code logic
+- [x] 05-03: Wire all flags through to library options; implement exit code logic
 - [ ] 05-04: Verify `go install github.com/tylercrawford/drift/cmd/drift@latest` and test all input modes end-to-end
 
 ### Phase 6: API Hardening & OSS Packaging
