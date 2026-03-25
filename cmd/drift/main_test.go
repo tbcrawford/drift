@@ -6,6 +6,39 @@ import (
 	"testing"
 )
 
+func TestRunCLI_identicalFromTo(t *testing.T) {
+	t.Helper()
+	var out, errOut bytes.Buffer
+	code := runCLI(&out, &errOut, strings.NewReader(""), []string{"--from", "same", "--to", "same"})
+	if code != 0 {
+		t.Fatalf("exit code %d, stderr: %s", code, errOut.String())
+	}
+}
+
+func TestRunCLI_differs(t *testing.T) {
+	t.Helper()
+	var out, errOut bytes.Buffer
+	code := runCLI(&out, &errOut, strings.NewReader(""), []string{"--from", "a", "--to", "b"})
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d stderr=%q", code, errOut.String())
+	}
+	if out.Len() == 0 {
+		t.Fatal("expected diff on stdout")
+	}
+}
+
+func TestRunCLI_invalidAlgorithm(t *testing.T) {
+	t.Helper()
+	var out, errOut bytes.Buffer
+	code := runCLI(&out, &errOut, strings.NewReader(""), []string{"--algorithm", "nope", "--from", "a", "--to", "b"})
+	if code != 2 {
+		t.Fatalf("expected exit 2, got %d", code)
+	}
+	if !strings.Contains(errOut.String(), "algorithm") {
+		t.Fatalf("stderr should mention algorithm: %q", errOut.String())
+	}
+}
+
 func TestHelpListsAllFlags(t *testing.T) {
 	t.Helper()
 	buf := new(bytes.Buffer)

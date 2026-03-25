@@ -1,11 +1,18 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/tylercrawford/drift"
 )
+
+// stdinReader is swapped in tests via runCLI.
+var stdinReader io.Reader = os.Stdin
 
 var rootCmd = &cobra.Command{
 	Use:           "drift [flags] OLD NEW",
@@ -14,6 +21,76 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 	Args:          cobra.MaximumNArgs(2),
 	RunE:          runRoot,
+}
+
+func parseAlgorithm(s string) (drift.Algorithm, error) {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "myers":
+		return drift.Myers, nil
+	case "patience":
+		return drift.Patience, nil
+	case "histogram":
+		return drift.Histogram, nil
+	default:
+		return 0, newExitCode(2, fmt.Sprintf("invalid algorithm: %q (use myers, patience, histogram)", s))
+	}
+}
+
+func buildDriftOptions(cmd *cobra.Command) ([]drift.Option, error) {
+	var opts []drift.Option
+
+	algStr, err := cmd.Flags().GetString("algorithm")
+	if err != nil {
+		return nil, err
+	}
+	a, err := parseAlgorithm(algStr)
+	if err != nil {
+		return nil, err
+	}
+	opts = append(opts, drift.WithAlgorithm(a))
+
+	n, err := cmd.Flags().GetInt("context")
+	if err != nil {
+		return nil, err
+	}
+	if n < 0 {
+		return nil, newExitCode(2, "invalid context: must be non-negative")
+	}
+	opts = append(opts, drift.WithContext(n))
+
+	noColor, err := cmd.Flags().GetBool("no-color")
+	if err != nil {
+		return nil, err
+	}
+	if noColor {
+		opts = append(opts, drift.WithNoColor())
+	}
+
+	lang, err := cmd.Flags().GetString("lang")
+	if err != nil {
+		return nil, err
+	}
+	if lang != "" {
+		opts = append(opts, drift.WithLang(lang))
+	}
+
+	theme, err := cmd.Flags().GetString("theme")
+	if err != nil {
+		return nil, err
+	}
+	if theme != "" {
+		opts = append(opts, drift.WithTheme(theme))
+	}
+
+	split, err := cmd.Flags().GetBool("split")
+	if err != nil {
+		return nil, err
+	}
+	if split {
+		opts = append(opts, drift.WithSplit())
+	}
+
+	return opts, nil
 }
 
 func runRoot(cmd *cobra.Command, args []string) error {
@@ -25,11 +102,62 @@ func runRoot(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	_, _, _, _, err = resolveInputs(args, from, to, os.Stdin)
+
+	old, newText, oldName, newName, err := resolveInputs(args, from, to, stdinReader)
 	if err != nil {
 		return err
 	}
-	return fmt.Errorf("not implemented: complete plan 05-03")
+
+	opts, err := buildDriftOptions(cmd)
+	if err != nil {
+		return err
+	}
+
+	result, err := drift.Diff(old, newText, opts...)
+	if err != nil {
+		return newExitCode(2, err.Error())
+	}
+
+	if result.IsEqual {
+		return nil
+	}
+
+	if err := drift.RenderWithNames(result, cmd.OutOrStdout(), oldName, newName, opts...); err != nil {
+		return newExitCode(2, err.Error())
+	}
+
+	// Differences rendered successfully; exit 1 without stderr noise.
+	return newExitCode(1, "")
+}
+
+func runCLI(stdout, stderr io.Writer, stdin io.Reader, args []string) int {
+	prev := stdinReader
+	stdinReader = stdin
+	defer func() { stdinReader = prev }()
+
+	rootCmd.SetOut(stdout)
+	rootCmd.SetErr(stderr)
+	rootCmd.SetArgs(args)
+
+	err := rootCmd.Execute()
+	if err == nil {
+		return 0
+	}
+
+	var ec *exitCodeErr
+	if errors.As(err, &ec) {
+		if ec.msg != "" {
+			fmt.Fprintln(stderr, ec.msg)
+		}
+		return ec.code
+	}
+
+	fmt.Fprintln(stderr, err)
+	return 2
+}
+
+func executeDrift() int {
+	return runCLI(os.Stdout, os.Stderr, os.Stdin, os.Args[1:])
 }
 
 func init() {
@@ -44,8 +172,5 @@ func init() {
 }
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
-	}
+	os.Exit(executeDrift())
 }
