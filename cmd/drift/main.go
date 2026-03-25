@@ -8,14 +8,28 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:          "drift [flags] OLD NEW",
-	Short:        "Pretty-print a diff between two inputs",
-	SilenceUsage: true,
+	Use:           "drift [flags] OLD NEW",
+	Short:         "Pretty-print a diff between two inputs",
+	SilenceUsage:  true,
 	SilenceErrors: true,
-	Args:         cobra.MaximumNArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return fmt.Errorf("not implemented: complete in plan 05-02")
-	},
+	Args:          cobra.MaximumNArgs(2),
+	RunE:          runRoot,
+}
+
+func runRoot(cmd *cobra.Command, args []string) error {
+	from, err := cmd.Flags().GetString("from")
+	if err != nil {
+		return err
+	}
+	to, err := cmd.Flags().GetString("to")
+	if err != nil {
+		return err
+	}
+	_, _, _, _, err = resolveInputs(args, from, to, os.Stdin)
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("not implemented: complete plan 05-03")
 }
 
 func init() {
