@@ -142,3 +142,13 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. Split Rendering | 0/3 | Not started | - |
 | 5. CLI | 0/4 | Not started | - |
 | 6. API Hardening & OSS Packaging | 0/5 | Not started | - |
+
+### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 7 to break down)

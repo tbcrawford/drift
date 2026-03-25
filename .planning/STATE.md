@@ -87,6 +87,10 @@ Recent decisions affecting current work:
 - [Phase 03-unified-rendering/03-05]: colorprofile.NewWriter used for ANSI downsampling; non-file writers default to NoTTY → NoOp formatter → plain text
 - [Phase 03-unified-rendering/03-05]: Public drift.Render() follows same options application pattern as drift.Diff()
 
+### Roadmap Evolution
+
+- Phase 7 added: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
+
 ### Pending Todos
 
 None yet.
