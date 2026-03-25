@@ -39,6 +39,8 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 	// Wrap the writer for automatic ANSI downsampling when it is an *os.File.
 	wrapped := colorprofile.NewWriter(w, os.Environ())
 
+	termWidth := render.TerminalWidth(w)
+
 	rcfg := &render.RenderConfig{
 		Lang:      cfg.lang,
 		Lexer:     lexer,
@@ -46,8 +48,12 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 		Formatter: formatter,
 		Profile:   profile,
 		NoColor:   cfg.noColor,
+		TermWidth: termWidth,
 	}
 
+	if cfg.split {
+		return render.Split(result, wrapped, rcfg)
+	}
 	return render.Unified(result, wrapped, rcfg)
 }
 
@@ -71,6 +77,8 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 
 	wrapped := colorprofile.NewWriter(w, os.Environ())
 
+	termWidth := render.TerminalWidth(w)
+
 	rcfg := &render.RenderConfig{
 		OldName:   oldName,
 		NewName:   newName,
@@ -80,8 +88,12 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 		Formatter: formatter,
 		Profile:   profile,
 		NoColor:   cfg.noColor,
+		TermWidth: termWidth,
 	}
 
+	if cfg.split {
+		return render.Split(result, wrapped, rcfg)
+	}
 	return render.Unified(result, wrapped, rcfg)
 }
 
