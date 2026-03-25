@@ -29,14 +29,13 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] Color depth detection + graceful degradation (TrueColor→ANSI256→ANSI→NoTTY) — Validated in Phase 03: unified-rendering
 - [x] NO_COLOR env var and WithNoColor() suppresses all ANSI sequences — Validated in Phase 03: unified-rendering
 - [x] Produces side-by-side split diff output (left/right panels) — Validated in Phase 04: split-rendering
+- [x] CLI at `cmd/drift` (Cobra): file paths, stdin `-`, `--from`/`--to`, flags for algorithm/context/theme/lang/no-color/split — Validated in Phase 05: cli
+- [x] CLI exit codes 0 (no diff), 1 (diff), 2 (errors); testscript integration tests — Validated in Phase 05: cli
 
 ### Active
 
 - [ ] Library exposes both functional and builder/fluent API styles
-- [ ] Language auto-detected from file extension; overridable via --lang flag
-- [ ] CLI accepts two file paths, stdin piping, or two raw string arguments
-- [ ] Single go.mod monorepo: library at root, CLI at cmd/drift/
-- [ ] Standard Go OSS packaging: MIT license, go.mod, godoc comments, examples/ directory
+- [ ] Standard Go OSS packaging: examples/ directory (godoc examples beyond CLI)
 - [ ] Lip Gloss used for terminal layout and styling; Bubble Tea available for interactive scenarios
 
 ### Out of Scope
@@ -93,4 +92,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after Phase 04: split-rendering complete — internal/render.Split with Lip Gloss two-panel layout, TerminalWidth helper, drift.WithSplit() wired through Render/RenderWithNames; go test ./... green*
+*Last updated: 2026-03-25 after Phase 05: cli complete — `cmd/drift` with Cobra, input resolution, Diff/Render wiring, exit codes, and testscript harness; `go test ./...` and `just build` green*
