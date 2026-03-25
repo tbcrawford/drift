@@ -31,6 +31,7 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] Produces side-by-side split diff output (left/right panels) — Validated in Phase 04: split-rendering
 - [x] CLI at `cmd/drift` (Cobra): file paths, stdin `-`, `--from`/`--to`, flags for algorithm/context/theme/lang/no-color/split — Validated in Phase 05: cli
 - [x] CLI exit codes 0 (no diff), 1 (diff), 2 (errors); testscript integration tests — Validated in Phase 05: cli
+- [x] CLI single path inside a Git worktree: diff working tree file vs `HEAD` via `git` subprocess (`GIT_TERMINAL_PROMPT=0`); errors mention `git` and two-path fallback — Validated in Phase 07: support-diffs-from-git
 - [x] Library exposes builder/fluent API (`drift.New()` chain delegating to functional options) — Validated in Phase 06: api-hardening-oss-packaging
 - [x] Runnable `examples/basic` and `examples/builder`; root README (install, CLI, library, rendering); godoc package overview — Validated in Phase 06: api-hardening-oss-packaging
 - [x] Benchmarks for large (~10k line) diff and unified/split render — Validated in Phase 06: api-hardening-oss-packaging
@@ -93,4 +94,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after Phase 06: api-hardening-oss-packaging complete — builder API, godoc quick starts, examples, benchmarks, README; phase verification passed*
+*Last updated: 2026-03-25 after Phase 07 complete — CLI single-arg git mode (working tree vs HEAD), README example; milestone roadmap phase 7 marked complete*
