@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: Executing Phase 03
-stopped_at: Completed 03-unified-rendering/03-03-PLAN.md
-last_updated: "2026-03-25T22:15:00.000Z"
+stopped_at: Completed 03-unified-rendering/03-04-PLAN.md
+last_updated: "2026-03-25T22:23:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 ## Current Position
 
 Phase: 03 (unified-rendering) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 
 ## Performance Metrics
 
@@ -81,6 +81,9 @@ Recent decisions affecting current work:
 - [Phase 02-algorithms]: Property tests use rapid.SliceOfN(elem, -1, 50) with drift.WithAlgorithm() option for all three algorithms; 1000 iterations each
 - [Phase 03-unified-rendering/03-02]: styles.Get() returns Fallback (not nil) — use Registry[name] map lookup in SelectTheme to distinguish known vs unknown theme names
 - [Phase 03-unified-rendering/03-02]: chroma.FormatterFunc is not comparable with == (panics) — test formatter selection behaviorally via output comparison, not pointer identity
+- [Phase 03-unified-rendering/03-04]: RenderConfig holds pre-resolved Chroma Lexer/Style/Formatter — avoids redundant lookups per render call; callers populate cfg once, renderer uses it
+- [Phase 03-unified-rendering/03-04]: Unified() fail-open on HighlightLine error — plain content used rather than returning error; diff output always appears
+- [Phase 03-unified-rendering/03-04]: No file headers written when Hunks is empty — matches git diff behavior for identical files
 
 ### Pending Todos
 
