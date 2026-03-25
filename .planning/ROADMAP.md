@@ -52,9 +52,9 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 02-01: Research Histogram frequency cutoff and fallback trigger (raygard source); document decision
-- [ ] 02-02: Implement Patience diff in `internal/algo/patience/` with inter-anchor Myers fallback
-- [ ] 02-03: Implement Histogram diff in `internal/algo/histogram/` with Myers fallback for high-repetition inputs
+- [x] 02-01: Research Histogram frequency cutoff and fallback trigger (raygard source); document decision
+- [x] 02-02: Implement Histogram diff in `internal/algo/histogram/` with Myers fallback for high-repetition inputs
+- [ ] 02-03: Implement Patience diff in `internal/algo/patience/` with inter-anchor Myers fallback
 - [ ] 02-04: Wire `WithAlgorithm()` option and integrate all three algorithms into `drift.Diff()`
 
 ### Phase 3: Unified Rendering
@@ -137,7 +137,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete   | 2026-03-25 |
-| 2. Algorithms | 0/4 | Not started | - |
+| 2. Algorithms | 2/4 | In Progress | - |
 | 3. Unified Rendering | 0/5 | Not started | - |
 | 4. Split Rendering | 0/3 | Not started | - |
 | 5. CLI | 0/4 | Not started | - |
