@@ -125,7 +125,7 @@ Plans:
 Plans:
 - [x] 06-01: Implement builder/fluent API (`drift.New()` with method chaining delegating to functional options)
 - [x] 06-02: Audit all exported symbols; write or improve godoc comments to complete coverage
-- [ ] 06-03: Write `examples/basic/main.go` and `examples/builder/main.go` runnable examples
+- [x] 06-03: Write `examples/basic/main.go` and `examples/builder/main.go` runnable examples
 - [ ] 06-04: Write performance benchmarks for 10,000-line unified and split diffs
 - [ ] 06-05: Write `README.md` with installation, usage, API reference, and rendering screenshots/snippets
 
