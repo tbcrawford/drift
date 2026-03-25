@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 01-foundation/01-01-PLAN.md
-last_updated: "2026-03-25T18:49:12.167Z"
+stopped_at: Completed 01-foundation/01-02-PLAN.md
+last_updated: "2026-03-25T18:52:32.703Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Plan: 2 of 5
 
 *Updated after each plan completion*
 | Phase 01-foundation P01 | 2 | 2 tasks | 5 files |
+| Phase 01-foundation P02 | 83 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: go 1.21 pinned as minimum version per STACK.md despite local Go 1.26.1
 - [Phase 01-foundation]: justfile established as canonical task runner; all dev workflows via just
 - [Phase 01-foundation]: drift.go root package stub added so go test ./... exits 0 with no test files
+- [Phase 01-foundation]: Op enum uses iota starting at Equal=0 — zero value means 'no change', safe default
+- [Phase 01-foundation]: Line.Spans []Span kept nil in v1.0 — reserved for v1.x intra-line word diff, no breaking change
+- [Phase 01-foundation]: Algorithm enum defined in options.go (public API) not internal/algo — it's a caller-facing choice
 
 ### Pending Todos
 
@@ -74,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T18:49:12.163Z
-Stopped at: Completed 01-foundation/01-01-PLAN.md
+Last session: 2026-03-25T18:52:32.699Z
+Stopped at: Completed 01-foundation/01-02-PLAN.md
 Resume file: None

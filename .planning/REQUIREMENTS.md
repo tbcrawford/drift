@@ -9,8 +9,8 @@
 
 - [ ] **CORE-01**: Library correctly diffs any two multi-line strings using the Myers algorithm
 - [ ] **CORE-02**: Hunk builder merges adjacent edits into context windows (default 3 lines, configurable)
-- [ ] **CORE-03**: Library exports structured data model: `Op`, `Edit`, `Hunk`, `Line`, `DiffResult` types
-- [ ] **CORE-04**: Library exposes functional API: `drift.Diff(a, b string, opts ...Option) DiffResult`
+- [x] **CORE-03**: Library exports structured data model: `Op`, `Edit`, `Hunk`, `Line`, `DiffResult` types
+- [x] **CORE-04**: Library exposes functional API: `drift.Diff(a, b string, opts ...Option) DiffResult`
 - [ ] **CORE-05**: Library exposes builder/fluent API: `drift.New().Algorithm(drift.Myers).Diff(a, b)`
 - [ ] **CORE-06**: `Diff()` returns an empty result immediately when both inputs are identical (no allocation)
 - [ ] **CORE-07**: Library normalizes line endings on input (`\r\n` → `\n`); handles Windows files correctly
@@ -91,8 +91,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | CORE-01 | Phase 1 — Foundation | Pending |
 | CORE-02 | Phase 1 — Foundation | Pending |
-| CORE-03 | Phase 1 — Foundation | Pending |
-| CORE-04 | Phase 1 — Foundation | Pending |
+| CORE-03 | Phase 1 — Foundation | Complete |
+| CORE-04 | Phase 1 — Foundation | Complete |
 | CORE-06 | Phase 1 — Foundation | Pending |
 | CORE-07 | Phase 1 — Foundation | Pending |
 | OSS-01 | Phase 1 — Foundation | Complete |
