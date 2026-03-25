@@ -7,6 +7,79 @@ import (
 	"testing"
 )
 
+func TestResolveInputs_singleArg_gitMode(t *testing.T) {
+	t.Helper()
+	bin := t.TempDir()
+	repo := t.TempDir()
+	file := filepath.Join(repo, "f.go")
+	if err := os.WriteFile(file, []byte("new\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	repoAbs, err := filepath.Abs(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := "#!/bin/sh\n" +
+		"joined=\"$*\"\n" +
+		"case \"$joined\" in\n" +
+		"  *rev-parse*--is-inside-work-tree*) echo true; exit 0 ;;\n" +
+		"  *rev-parse*--show-toplevel*) echo \"" + repoAbs + "\"; exit 0 ;;\n" +
+		"  *show*HEAD:f.go*) printf '%s' 'old\n'; exit 0 ;;\n" +
+		"esac\n" +
+		"echo \"fake git: $joined\" >&2\n" +
+		"exit 99\n"
+	writeFakeGit(t, bin, script)
+	prependPath(t, bin)
+
+	old, new_, on, nn, err := resolveInputs([]string{file}, "", "", strings.NewReader(""))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if old != "old\n" || new_ != "new\n" {
+		t.Fatalf("content old=%q new=%q", old, new_)
+	}
+	if !strings.HasSuffix(on, "(HEAD)") || !strings.HasSuffix(nn, "(working tree)") {
+		t.Fatalf("names on=%q nn=%q", on, nn)
+	}
+}
+
+func TestResolveInputs_singleArg_notGitWorktree(t *testing.T) {
+	t.Helper()
+	bin := t.TempDir()
+	repo := t.TempDir()
+	file := filepath.Join(repo, "f.go")
+	if err := os.WriteFile(file, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	script := "#!/bin/sh\n" +
+		"joined=\"$*\"\n" +
+		"case \"$joined\" in\n" +
+		"  *rev-parse*--is-inside-work-tree*) echo false; exit 0 ;;\n" +
+		"esac\n" +
+		"exit 99\n"
+	writeFakeGit(t, bin, script)
+	prependPath(t, bin)
+
+	_, _, _, _, err := resolveInputs([]string{file}, "", "", strings.NewReader(""))
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(strings.ToLower(err.Error()), "two") {
+		t.Fatalf("expected 'two' in error: %v", err)
+	}
+}
+
+func TestResolveInputs_zeroArgs(t *testing.T) {
+	t.Helper()
+	_, _, _, _, err := resolveInputs([]string{}, "", "", strings.NewReader(""))
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "expected") || !strings.Contains(err.Error(), "NEW") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestResolveInputs_twoFiles(t *testing.T) {
 	t.Helper()
 	dir := t.TempDir()
