@@ -12,7 +12,11 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Single go.mod monorepo: library at root, CLI at cmd/drift/ — Validated in Phase 01: Foundation
+- [x] Standard Go OSS packaging: MIT license, go.mod, godoc comments — Validated in Phase 01: Foundation
+- [x] Supports Myers diff algorithm — Validated in Phase 01: Foundation
+- [x] Library exposes functional Option API style — Validated in Phase 01: Foundation
+- [x] Property-based round-trip: `Apply(Diff(a,b), a) == b` holds for all inputs — Validated in Phase 01: Foundation
 
 ### Active
 
@@ -83,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after initialization*
+*Last updated: 2026-03-25 after Phase 01: Foundation complete — Myers diff engine, public API, and property-based tests all green*
