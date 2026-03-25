@@ -31,11 +31,12 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] Produces side-by-side split diff output (left/right panels) — Validated in Phase 04: split-rendering
 - [x] CLI at `cmd/drift` (Cobra): file paths, stdin `-`, `--from`/`--to`, flags for algorithm/context/theme/lang/no-color/split — Validated in Phase 05: cli
 - [x] CLI exit codes 0 (no diff), 1 (diff), 2 (errors); testscript integration tests — Validated in Phase 05: cli
+- [x] Library exposes builder/fluent API (`drift.New()` chain delegating to functional options) — Validated in Phase 06: api-hardening-oss-packaging
+- [x] Runnable `examples/basic` and `examples/builder`; root README (install, CLI, library, rendering); godoc package overview — Validated in Phase 06: api-hardening-oss-packaging
+- [x] Benchmarks for large (~10k line) diff and unified/split render — Validated in Phase 06: api-hardening-oss-packaging
 
 ### Active
 
-- [ ] Library exposes both functional and builder/fluent API styles
-- [ ] Standard Go OSS packaging: examples/ directory (godoc examples beyond CLI)
 - [ ] Lip Gloss used for terminal layout and styling; Bubble Tea available for interactive scenarios
 
 ### Out of Scope
@@ -70,7 +71,7 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 | Library can use deps (Chroma, Lip Gloss) | Rendering is a core library capability, not just CLI concern | — Pending |
 | Single go.mod monorepo | Simpler distribution; `go install` and `go get` both work from one module | — Pending |
 | Terminal-only output for v1 | Keeps scope tight; HTML rendering is additive and can come later | — Pending |
-| Both functional + builder API | Convenience for simple use cases, flexibility for advanced ones | — Pending |
+| Both functional + builder API | Convenience for simple use cases, flexibility for advanced ones | `New()` + chain methods in Phase 06 |
 | Three algorithms (Myers + Patience + Histogram) | Different algorithms shine on different input types; user should choose | — Pending |
 | Lip Gloss for split view layout | Industry standard for Go terminal layouts; pairs naturally with Chroma ANSI output | — Pending |
 
@@ -92,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after Phase 05: cli complete — `cmd/drift` with Cobra, input resolution, Diff/Render wiring, exit codes, and testscript harness; `go test ./...` and `just build` green*
+*Last updated: 2026-03-25 after Phase 06: api-hardening-oss-packaging complete — builder API, godoc quick starts, examples, benchmarks, README; phase verification passed*
