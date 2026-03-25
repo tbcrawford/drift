@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
-status: Executing Phase 03
-stopped_at: Completed 03-unified-rendering/03-04-PLAN.md
-last_updated: "2026-03-25T22:23:00.000Z"
+status: Executing Phase 04
+stopped_at: Completed 03-unified-rendering/03-05-PLAN.md
+last_updated: "2026-03-25T22:28:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State
@@ -23,8 +23,9 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 
 ## Current Position
 
-Phase: 03 (unified-rendering) — EXECUTING
-Plan: 4 of 5
+Phase: 03 (unified-rendering) — COMPLETE
+Phase: 04 (split-rendering) — NEXT
+Plan: 5 of 5 (03-05 completed)
 
 ## Performance Metrics
 
@@ -83,7 +84,9 @@ Recent decisions affecting current work:
 - [Phase 03-unified-rendering/03-02]: chroma.FormatterFunc is not comparable with == (panics) — test formatter selection behaviorally via output comparison, not pointer identity
 - [Phase 03-unified-rendering/03-04]: RenderConfig holds pre-resolved Chroma Lexer/Style/Formatter — avoids redundant lookups per render call; callers populate cfg once, renderer uses it
 - [Phase 03-unified-rendering/03-04]: Unified() fail-open on HighlightLine error — plain content used rather than returning error; diff output always appears
-- [Phase 03-unified-rendering/03-04]: No file headers written when Hunks is empty — matches git diff behavior for identical files
+- [Phase 03-unified-rendering/03-05]: resolveProfile checks cfg.noColor and NO_COLOR env before *os.File detection — explicit user intent wins
+- [Phase 03-unified-rendering/03-05]: colorprofile.NewWriter used for ANSI downsampling; non-file writers default to NoTTY → NoOp formatter → plain text
+- [Phase 03-unified-rendering/03-05]: Public drift.Render() follows same options application pattern as drift.Diff()
 
 ### Pending Todos
 

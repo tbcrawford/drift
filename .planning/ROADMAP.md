@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Module scaffold, exported data model, Myers algorithm, functional API, and OSS baseline (completed 2026-03-25)
 - [x] **Phase 2: Algorithms** - Patience and Histogram diff algorithms with Myers fallback and algorithm selection option (completed 2026-03-25)
-- [ ] **Phase 3: Unified Rendering** - Chroma syntax highlighting, terminal theme detection, language detection, and unified diff output
+- [x] **Phase 3: Unified Rendering** - Chroma syntax highlighting, terminal theme detection, language detection, and unified diff output (completed 2026-03-25)
 - [ ] **Phase 4: Split Rendering** - Side-by-side split diff view via Lip Gloss two-panel layout
 - [ ] **Phase 5: CLI** - Cobra command wrapping the library for file, stdin, and raw-string input with all flags
 - [ ] **Phase 6: API Hardening & OSS Packaging** - Builder API, godoc, examples, benchmarks, and v1.0.0 stabilization
@@ -74,7 +74,7 @@ Plans:
 - [x] 03-02: Implement `internal/highlight/` — Chroma v2 lexer → formatter pipeline with color profile detection
 - [x] 03-03: Implement language auto-detection (`lexers.Match()` + `lexers.Analyse()` fallback) and `WithLang()` / `WithTheme()` options
 - [x] 03-04: Implement `internal/render/unified.go` — UnifiedRenderer with hunk headers and `+`/`-` prefixes
-- [ ] 03-05: Wire `WithNoColor()` and terminal color depth detection (TrueColor / 256 / 16 / none)
+- [x] 03-05: Wire `WithNoColor()` and terminal color depth detection (TrueColor / 256 / 16 / none)
 
 ### Phase 4: Split Rendering
 **Goal**: Callers can request side-by-side split diff output with correct two-panel layout at any terminal width
@@ -138,7 +138,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete   | 2026-03-25 |
 | 2. Algorithms | 4/4 | Complete    | 2026-03-25 |
-| 3. Unified Rendering | 3/5 | In progress | - |
+| 3. Unified Rendering | 5/5 | Complete    | 2026-03-25 |
 | 4. Split Rendering | 0/3 | Not started | - |
 | 5. CLI | 0/4 | Not started | - |
 | 6. API Hardening & OSS Packaging | 0/5 | Not started | - |
