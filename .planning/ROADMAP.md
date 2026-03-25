@@ -72,7 +72,7 @@ Plans:
 Plans:
 - [x] 03-01: Research Lip Gloss v2 `HasDarkBackground` timeout behavior; implement `internal/theme/` with safe OSC 11 detection
 - [x] 03-02: Implement `internal/highlight/` — Chroma v2 lexer → formatter pipeline with color profile detection
-- [ ] 03-03: Implement language auto-detection (`lexers.Match()` + `lexers.Analyse()` fallback) and `WithLang()` / `WithTheme()` options
+- [x] 03-03: Implement language auto-detection (`lexers.Match()` + `lexers.Analyse()` fallback) and `WithLang()` / `WithTheme()` options
 - [ ] 03-04: Implement `internal/render/unified.go` — UnifiedRenderer with hunk headers and `+`/`-` prefixes
 - [ ] 03-05: Wire `WithNoColor()` and terminal color depth detection (TrueColor / 256 / 16 / none)
 
@@ -138,7 +138,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete   | 2026-03-25 |
 | 2. Algorithms | 4/4 | Complete    | 2026-03-25 |
-| 3. Unified Rendering | 1/5 | In progress | - |
+| 3. Unified Rendering | 3/5 | In progress | - |
 | 4. Split Rendering | 0/3 | Not started | - |
 | 5. CLI | 0/4 | Not started | - |
 | 6. API Hardening & OSS Packaging | 0/5 | Not started | - |
