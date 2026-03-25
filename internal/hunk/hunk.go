@@ -3,7 +3,7 @@
 package hunk
 
 import (
-	"github.com/tylercrawford/drift"
+	"github.com/tylercrawford/drift/internal/edittype"
 )
 
 // Build converts a slice of Edits (as returned by a diff algorithm) into a
@@ -17,9 +17,9 @@ import (
 //  3. Merge overlapping or adjacent expanded ranges.
 //  4. For each merged range, walk the edit sequence to build []Line.
 //  5. Compute OldStart/OldLines/NewStart/NewLines from the resulting Lines.
-func Build(edits []drift.Edit, oldLines, newLines []string, contextLines int) []drift.Hunk {
+func Build(edits []edittype.Edit, oldLines, newLines []string, contextLines int) []edittype.Hunk {
 	if len(edits) == 0 {
-		return []drift.Hunk{}
+		return []edittype.Hunk{}
 	}
 
 	// Step 1: Collect the edit-sequence index of every non-Equal edit.
@@ -28,12 +28,12 @@ func Build(edits []drift.Edit, oldLines, newLines []string, contextLines int) []
 	type editRange struct{ start, end int } // inclusive indices into edits
 	var changed []int
 	for i, e := range edits {
-		if e.Op != drift.Equal {
+		if e.Op != edittype.Equal {
 			changed = append(changed, i)
 		}
 	}
 	if len(changed) == 0 {
-		return []drift.Hunk{}
+		return []edittype.Hunk{}
 	}
 
 	// Step 2 & 3: Expand each changed-edit index by contextLines (in edit-space)
@@ -60,7 +60,7 @@ func Build(edits []drift.Edit, oldLines, newLines []string, contextLines int) []
 	}
 
 	// Step 4 & 5: Build a Hunk for each merged range.
-	result := make([]drift.Hunk, 0, len(ranges))
+	result := make([]edittype.Hunk, 0, len(ranges))
 	for _, r := range ranges {
 		lines := buildLines(edits[r.start:r.end+1], oldLines, newLines)
 		if len(lines) == 0 {
@@ -72,27 +72,27 @@ func Build(edits []drift.Edit, oldLines, newLines []string, contextLines int) []
 }
 
 // buildLines constructs the []Line slice for a contiguous sub-sequence of edits.
-func buildLines(edits []drift.Edit, oldLines, newLines []string) []drift.Line {
-	lines := make([]drift.Line, 0, len(edits))
+func buildLines(edits []edittype.Edit, oldLines, newLines []string) []edittype.Line {
+	lines := make([]edittype.Line, 0, len(edits))
 	for _, e := range edits {
 		switch e.Op {
-		case drift.Equal:
-			lines = append(lines, drift.Line{
-				Op:      drift.Equal,
+		case edittype.Equal:
+			lines = append(lines, edittype.Line{
+				Op:      edittype.Equal,
 				Content: oldLines[e.OldLine-1],
 				OldNum:  e.OldLine,
 				NewNum:  e.NewLine,
 			})
-		case drift.Delete:
-			lines = append(lines, drift.Line{
-				Op:      drift.Delete,
+		case edittype.Delete:
+			lines = append(lines, edittype.Line{
+				Op:      edittype.Delete,
 				Content: oldLines[e.OldLine-1],
 				OldNum:  e.OldLine,
 				NewNum:  0,
 			})
-		case drift.Insert:
-			lines = append(lines, drift.Line{
-				Op:      drift.Insert,
+		case edittype.Insert:
+			lines = append(lines, edittype.Line{
+				Op:      edittype.Insert,
 				Content: newLines[e.NewLine-1],
 				OldNum:  0,
 				NewNum:  e.NewLine,
@@ -108,13 +108,13 @@ func buildLines(edits []drift.Edit, oldLines, newLines []string) []drift.Line {
 // NewStart: first NewNum found by skipping leading Delete lines.
 // OldLines: count of Equal + Delete lines.
 // NewLines: count of Equal + Insert lines.
-func buildHunkHeader(lines []drift.Line) drift.Hunk {
+func buildHunkHeader(lines []edittype.Line) edittype.Hunk {
 	oldStart, newStart := 0, 0
 	oldCount, newCount := 0, 0
 
 	for _, l := range lines {
 		switch l.Op {
-		case drift.Equal:
+		case edittype.Equal:
 			if oldStart == 0 {
 				oldStart = l.OldNum
 			}
@@ -123,12 +123,12 @@ func buildHunkHeader(lines []drift.Line) drift.Hunk {
 			}
 			oldCount++
 			newCount++
-		case drift.Delete:
+		case edittype.Delete:
 			if oldStart == 0 {
 				oldStart = l.OldNum
 			}
 			oldCount++
-		case drift.Insert:
+		case edittype.Insert:
 			if newStart == 0 {
 				newStart = l.NewNum
 			}
@@ -144,7 +144,7 @@ func buildHunkHeader(lines []drift.Line) drift.Hunk {
 		newStart = 1
 	}
 
-	return drift.Hunk{
+	return edittype.Hunk{
 		OldStart: oldStart,
 		OldLines: oldCount,
 		NewStart: newStart,

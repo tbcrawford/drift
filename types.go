@@ -1,57 +1,42 @@
 package drift
 
-// Op represents the operation type for a diff edit.
-type Op int
+import "github.com/tylercrawford/drift/internal/edittype"
+
+// Op represents the operation type for a diff edit or line.
+// It is an alias for edittype.Op to break the import cycle between the
+// root package and internal algorithm/hunk implementations.
+type Op = edittype.Op
 
 const (
 	// Equal indicates the line is unchanged.
-	Equal Op = iota
+	Equal = edittype.Equal
 	// Insert indicates the line was added.
-	Insert
+	Insert = edittype.Insert
 	// Delete indicates the line was removed.
-	Delete
+	Delete = edittype.Delete
 )
 
 // Edit represents a single line-level change from the diff algorithm.
 // OldLine and NewLine are 1-indexed line numbers; zero means not applicable.
-type Edit struct {
-	Op      Op
-	OldLine int // 1-indexed; 0 for Insert (no old line)
-	NewLine int // 1-indexed; 0 for Delete (no new line)
-}
-
-// Line represents a single rendered line in a diff hunk.
-// It carries the operation, content, and original line numbers.
-type Line struct {
-	Op      Op
-	Content string // line text without trailing newline
-	OldNum  int    // 1-indexed old file line number; 0 if inserted
-	NewNum  int    // 1-indexed new file line number; 0 if deleted
-	// Spans holds intra-line word-level diff spans (nil in v1.0; reserved for v1.x).
-	Spans []Span
-}
+// It is an alias for edittype.Edit.
+type Edit = edittype.Edit
 
 // Span marks a character range within a Line for intra-line highlighting.
 // Start and End are byte offsets into Line.Content. Reserved for v1.x.
-type Span struct {
-	Start int
-	End   int
-	Op    Op
-}
+// It is an alias for edittype.Span.
+type Span = edittype.Span
+
+// Line represents a single rendered line in a diff hunk.
+// It carries the operation, content, and original line numbers.
+// It is an alias for edittype.Line.
+type Line = edittype.Line
 
 // Hunk represents a contiguous block of changes with surrounding context lines.
 // OldStart/OldLines and NewStart/NewLines are used to generate @@ hunk headers.
-type Hunk struct {
-	OldStart int    // 1-indexed start line in old file
-	OldLines int    // number of lines from old file in this hunk
-	NewStart int    // 1-indexed start line in new file
-	NewLines int    // number of lines from new file in this hunk
-	Lines    []Line // all lines in the hunk (context + changes)
-}
+// It is an alias for edittype.Hunk.
+type Hunk = edittype.Hunk
 
 // DiffResult is the structured output of a diff operation.
 // When IsEqual is true, Hunks is empty and no edits were found.
-type DiffResult struct {
-	Hunks   []Hunk
-	IsEqual bool // true when both inputs were identical
-}
+// It is an alias for edittype.DiffResult.
+type DiffResult = edittype.DiffResult

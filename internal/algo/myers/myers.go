@@ -4,8 +4,8 @@
 package myers
 
 import (
-	"github.com/tylercrawford/drift"
 	"github.com/tylercrawford/drift/internal/algo"
+	"github.com/tylercrawford/drift/internal/edittype"
 )
 
 // Ensure Myers satisfies the algo.Differ interface at compile time.
@@ -36,29 +36,29 @@ func copyV(v []int) []int {
 // CRITICAL: trace is saved at the END of the d-loop (after the k-loop), NOT
 // at the top. Saving at the top causes an off-by-one invisible on short inputs
 // but wrong on 100+ line files.
-func (m *Myers) Diff(oldLines, newLines []string) []drift.Edit {
+func (m *Myers) Diff(oldLines, newLines []string) []edittype.Edit {
 	N := len(oldLines)
 	M := len(newLines)
 
 	// Edge case: both empty
 	if N == 0 && M == 0 {
-		return []drift.Edit{}
+		return []edittype.Edit{}
 	}
 
 	// Edge case: old empty — all inserts
 	if N == 0 {
-		edits := make([]drift.Edit, M)
+		edits := make([]edittype.Edit, M)
 		for i := 0; i < M; i++ {
-			edits[i] = drift.Edit{Op: drift.Insert, OldLine: 0, NewLine: i + 1}
+			edits[i] = edittype.Edit{Op: edittype.Insert, OldLine: 0, NewLine: i + 1}
 		}
 		return edits
 	}
 
 	// Edge case: new empty — all deletes
 	if M == 0 {
-		edits := make([]drift.Edit, N)
+		edits := make([]edittype.Edit, N)
 		for i := 0; i < N; i++ {
-			edits[i] = drift.Edit{Op: drift.Delete, OldLine: i + 1, NewLine: 0}
+			edits[i] = edittype.Edit{Op: edittype.Delete, OldLine: i + 1, NewLine: 0}
 		}
 		return edits
 	}
@@ -118,7 +118,7 @@ outer:
 	// We walk backwards from (x=N, y=M) to (0,0), reading from trace[d].
 	// trace[d] tells us the V state AFTER processing edit distance d,
 	// which allows us to determine what move was made to reach current (x,y).
-	edits := make([]drift.Edit, 0, N+M)
+	edits := make([]edittype.Edit, 0, N+M)
 	x, y := N, M
 
 	for d := len(trace) - 1; d >= 0; d-- {
@@ -142,8 +142,8 @@ outer:
 		for x > prevX && y > prevY {
 			x--
 			y--
-			edits = append(edits, drift.Edit{
-				Op:      drift.Equal,
+			edits = append(edits, edittype.Edit{
+				Op:      edittype.Equal,
 				OldLine: x + 1, // convert to 1-indexed
 				NewLine: y + 1,
 			})
@@ -155,8 +155,8 @@ outer:
 				// Came from down: Insert (y decreased by 1, x unchanged)
 				// prevX == x, prevY == y-1 → the new line at y (0-indexed) was inserted
 				y--
-				edits = append(edits, drift.Edit{
-					Op:      drift.Insert,
+				edits = append(edits, edittype.Edit{
+					Op:      edittype.Insert,
 					OldLine: 0,
 					NewLine: y + 1, // convert to 1-indexed
 				})
@@ -164,8 +164,8 @@ outer:
 				// Came from right: Delete (x decreased by 1, y unchanged)
 				// prevX == x-1, prevY == y → the old line at x (0-indexed) was deleted
 				x--
-				edits = append(edits, drift.Edit{
-					Op:      drift.Delete,
+				edits = append(edits, edittype.Edit{
+					Op:      edittype.Delete,
 					OldLine: x + 1, // convert to 1-indexed
 					NewLine: 0,
 				})
