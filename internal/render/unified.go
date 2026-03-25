@@ -40,6 +40,10 @@ type RenderConfig struct {
 
 	// NoColor disables all ANSI output when true.
 	NoColor bool
+
+	// TermWidth is the resolved terminal width in columns for split rendering.
+	// Zero means "use 80 columns" — the Split renderer applies this default.
+	TermWidth int
 }
 
 // Unified writes a Git-compatible unified diff of result to w.
