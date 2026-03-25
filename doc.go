@@ -12,7 +12,16 @@
 //	}
 //	fmt.Println(result)
 //
-// Alternatively, use New() for a chainable builder that applies the same options.
+// Builder quick start:
+//
+//	b := drift.New().Algorithm(drift.Myers).Theme("github").NoColor()
+//	result, err := b.Diff(oldText, newText)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	if err := b.Render(result, os.Stdout); err != nil {
+//	    log.Fatal(err)
+//	}
 //
 // See the examples/ directory for runnable examples.
 package drift
