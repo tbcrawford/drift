@@ -182,3 +182,105 @@ func TestRender_NoColorEnvVar(t *testing.T) {
 		t.Errorf("NO_COLOR=1 output contains ANSI codes:\n%s", output)
 	}
 }
+
+func TestRender_WithSplit_ContainsSeparator(t *testing.T) {
+	old := "package main\n\nfunc hello() {\n\tfmt.Println(\"hello\")\n}\n"
+	new_ := "package main\n\nfunc hello() {\n\tfmt.Println(\"hello, world\")\n\tfmt.Println(\"done\")\n}\n"
+
+	result, err := drift.Diff(old, new_)
+	if err != nil {
+		t.Fatalf("Diff error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := drift.Render(result, &buf, drift.WithSplit(), drift.WithNoColor()); err != nil {
+		t.Fatalf("Render error: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "|") {
+		t.Errorf("WithSplit output must contain '|' separator; got:\n%s", output)
+	}
+}
+
+func TestRender_WithSplit_ContainsBothPanelContents(t *testing.T) {
+	old := "line one\nline two\n"
+	new_ := "line one\nline THREE\n"
+
+	result, err := drift.Diff(old, new_)
+	if err != nil {
+		t.Fatalf("Diff error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := drift.Render(result, &buf, drift.WithSplit(), drift.WithNoColor()); err != nil {
+		t.Fatalf("Render error: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "line two") {
+		t.Errorf("WithSplit output should contain old content 'line two'; got:\n%s", output)
+	}
+	if !strings.Contains(output, "line THREE") {
+		t.Errorf("WithSplit output should contain new content 'line THREE'; got:\n%s", output)
+	}
+}
+
+func TestRender_WithSplit_IdenticalInputs(t *testing.T) {
+	old := "no changes here\n"
+	result, err := drift.Diff(old, old)
+	if err != nil {
+		t.Fatalf("Diff error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := drift.Render(result, &buf, drift.WithSplit(), drift.WithNoColor()); err != nil {
+		t.Fatalf("Render(identical) error: %v", err)
+	}
+	if buf.Len() != 0 {
+		t.Errorf("expected empty output for identical inputs, got: %q", buf.String())
+	}
+}
+
+func TestRender_WithSplit_HunkHeaderFormat(t *testing.T) {
+	old := "a\nb\n"
+	new_ := "a\nc\n"
+
+	result, err := drift.Diff(old, new_)
+	if err != nil {
+		t.Fatalf("Diff error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := drift.Render(result, &buf, drift.WithSplit(), drift.WithNoColor()); err != nil {
+		t.Fatalf("Render error: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "@@ -") {
+		t.Errorf("WithSplit output must contain '@@ -' hunk header; got:\n%s", output)
+	}
+}
+
+func TestRender_WithoutSplit_StillProducesUnified(t *testing.T) {
+	old := "x\n"
+	new_ := "y\n"
+
+	result, err := drift.Diff(old, new_)
+	if err != nil {
+		t.Fatalf("Diff error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := drift.Render(result, &buf, drift.WithNoColor()); err != nil {
+		t.Fatalf("Render error: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "---") {
+		t.Errorf("non-split output should contain unified '---' header; got:\n%s", output)
+	}
+	if !strings.Contains(output, "+++") {
+		t.Errorf("non-split output should contain unified '+++' header; got:\n%s", output)
+	}
+}
