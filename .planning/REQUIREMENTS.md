@@ -89,42 +89,42 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-01 | Phase 1 | Pending |
-| CORE-02 | Phase 1 | Pending |
-| CORE-03 | Phase 1 | Pending |
-| CORE-04 | Phase 1 | Pending |
-| CORE-06 | Phase 1 | Pending |
-| CORE-07 | Phase 1 | Pending |
-| ALGO-01 | Phase 2 | Pending |
-| ALGO-02 | Phase 2 | Pending |
-| ALGO-03 | Phase 2 | Pending |
-| ALGO-04 | Phase 2 | Pending |
-| REND-01 | Phase 3 | Pending |
-| REND-03 | Phase 3 | Pending |
-| REND-04 | Phase 3 | Pending |
-| REND-05 | Phase 3 | Pending |
-| REND-06 | Phase 3 | Pending |
-| REND-07 | Phase 3 | Pending |
-| REND-08 | Phase 3 | Pending |
-| REND-09 | Phase 3 | Pending |
-| REND-02 | Phase 4 | Pending |
-| CLI-01 | Phase 5 | Pending |
-| CLI-02 | Phase 5 | Pending |
-| CLI-03 | Phase 5 | Pending |
-| CLI-04 | Phase 5 | Pending |
-| CLI-05 | Phase 5 | Pending |
-| CLI-06 | Phase 5 | Pending |
-| CLI-07 | Phase 5 | Pending |
-| CORE-05 | Phase 6 | Pending |
-| OSS-01 | Phase 1 | Pending |
-| OSS-02 | Phase 6 | Pending |
-| OSS-03 | Phase 6 | Pending |
-| OSS-04 | Phase 5 | Pending |
-| OSS-05 | Phase 1 | Pending |
-| OSS-06 | Phase 6 | Pending |
-| OSS-07 | Phase 6 | Pending |
-| OSS-08 | Phase 1 | Pending |
-| OSS-09 | Phase 1 | Pending |
+| CORE-01 | Phase 1 — Foundation | Pending |
+| CORE-02 | Phase 1 — Foundation | Pending |
+| CORE-03 | Phase 1 — Foundation | Pending |
+| CORE-04 | Phase 1 — Foundation | Pending |
+| CORE-06 | Phase 1 — Foundation | Pending |
+| CORE-07 | Phase 1 — Foundation | Pending |
+| OSS-01 | Phase 1 — Foundation | Pending |
+| OSS-05 | Phase 1 — Foundation | Pending |
+| OSS-08 | Phase 1 — Foundation | Pending |
+| OSS-09 | Phase 1 — Foundation | Pending |
+| ALGO-01 | Phase 2 — Algorithms | Pending |
+| ALGO-02 | Phase 2 — Algorithms | Pending |
+| ALGO-03 | Phase 2 — Algorithms | Pending |
+| ALGO-04 | Phase 2 — Algorithms | Pending |
+| REND-01 | Phase 3 — Unified Rendering | Pending |
+| REND-03 | Phase 3 — Unified Rendering | Pending |
+| REND-04 | Phase 3 — Unified Rendering | Pending |
+| REND-05 | Phase 3 — Unified Rendering | Pending |
+| REND-06 | Phase 3 — Unified Rendering | Pending |
+| REND-07 | Phase 3 — Unified Rendering | Pending |
+| REND-08 | Phase 3 — Unified Rendering | Pending |
+| REND-09 | Phase 3 — Unified Rendering | Pending |
+| REND-02 | Phase 4 — Split Rendering | Pending |
+| CLI-01 | Phase 5 — CLI | Pending |
+| CLI-02 | Phase 5 — CLI | Pending |
+| CLI-03 | Phase 5 — CLI | Pending |
+| CLI-04 | Phase 5 — CLI | Pending |
+| CLI-05 | Phase 5 — CLI | Pending |
+| CLI-06 | Phase 5 — CLI | Pending |
+| CLI-07 | Phase 5 — CLI | Pending |
+| OSS-04 | Phase 5 — CLI | Pending |
+| CORE-05 | Phase 6 — API Hardening & OSS Packaging | Pending |
+| OSS-02 | Phase 6 — API Hardening & OSS Packaging | Pending |
+| OSS-03 | Phase 6 — API Hardening & OSS Packaging | Pending |
+| OSS-06 | Phase 6 — API Hardening & OSS Packaging | Pending |
+| OSS-07 | Phase 6 — API Hardening & OSS Packaging | Pending |
 
 **Coverage:**
 - v1 requirements: 35 total
