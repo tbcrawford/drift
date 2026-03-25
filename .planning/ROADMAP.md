@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Module scaffold: go.mod (github.com/tylercrawford/drift), MIT LICENSE, justfile, golangci-lint config
+- [x] 01-01-PLAN.md — Module scaffold: go.mod (github.com/tylercrawford/drift), MIT LICENSE, justfile, golangci-lint config
 - [ ] 01-02-PLAN.md — Exported data model: Op, Edit, Hunk, Line, DiffResult, Option/config, internal algo.Differ interface
 - [ ] 01-03-PLAN.md — Myers algorithm (TDD): implement internal/algo/myers/ with table-driven + cross-validated tests
 - [ ] 01-04-PLAN.md — Hunk builder + drift.Diff() API: internal/hunk/, drift.go, \r\n normalization

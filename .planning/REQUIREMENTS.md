@@ -46,15 +46,15 @@
 
 ### OSS Packaging
 
-- [ ] **OSS-01**: Project has a valid `go.mod` with module path `github.com/tylercrawford/drift`
+- [x] **OSS-01**: Project has a valid `go.mod` with module path `github.com/tylercrawford/drift`
 - [ ] **OSS-02**: All exported types, functions, and options have godoc comments
 - [ ] **OSS-03**: `examples/` directory contains runnable `basic/` and `builder/` examples
 - [ ] **OSS-04**: `go install github.com/tylercrawford/drift/cmd/drift@latest` installs the CLI correctly
-- [ ] **OSS-05**: Project includes an MIT `LICENSE` file
+- [x] **OSS-05**: Project includes an MIT `LICENSE` file
 - [ ] **OSS-06**: `README.md` covers installation, CLI usage, library API, and rendering examples
 - [ ] **OSS-07**: Benchmarks exist for diffing a 10,000-line file (unified and split views)
 - [ ] **OSS-08**: Property-based tests verify algorithm correctness invariants (round-trip: `apply(diff(a,b), a) == b`)
-- [ ] **OSS-09**: Project includes a `justfile` (or `Makefile`) for common repository maintenance tasks (test, lint, build, benchmark)
+- [x] **OSS-09**: Project includes a `justfile` (or `Makefile`) for common repository maintenance tasks (test, lint, build, benchmark)
 
 ## v2 Requirements
 
@@ -95,10 +95,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-04 | Phase 1 — Foundation | Pending |
 | CORE-06 | Phase 1 — Foundation | Pending |
 | CORE-07 | Phase 1 — Foundation | Pending |
-| OSS-01 | Phase 1 — Foundation | Pending |
-| OSS-05 | Phase 1 — Foundation | Pending |
+| OSS-01 | Phase 1 — Foundation | Complete |
+| OSS-05 | Phase 1 — Foundation | Complete |
 | OSS-08 | Phase 1 — Foundation | Pending |
-| OSS-09 | Phase 1 — Foundation | Pending |
+| OSS-09 | Phase 1 — Foundation | Complete |
 | ALGO-01 | Phase 2 — Algorithms | Pending |
 | ALGO-02 | Phase 2 — Algorithms | Pending |
 | ALGO-03 | Phase 2 — Algorithms | Pending |
