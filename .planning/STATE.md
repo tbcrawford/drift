@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 01-foundation/01-02-PLAN.md
-last_updated: "2026-03-25T18:52:32.703Z"
+stopped_at: Completed 01-foundation/01-03-PLAN.md
+last_updated: "2026-03-25T18:58:50.375Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Plan: 3 of 5
 *Updated after each plan completion*
 | Phase 01-foundation P01 | 2 | 2 tasks | 5 files |
 | Phase 01-foundation P02 | 83 | 2 tasks | 5 files |
+| Phase 01-foundation P03 | 231 | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: Op enum uses iota starting at Equal=0 — zero value means 'no change', safe default
 - [Phase 01-foundation]: Line.Spans []Span kept nil in v1.0 — reserved for v1.x intra-line word diff, no breaking change
 - [Phase 01-foundation]: Algorithm enum defined in options.go (public API) not internal/algo — it's a caller-facing choice
+- [Phase 01-foundation]: Myers trace saved at END of d-loop — off-by-one invisible on short inputs, catastrophic at 100+ lines
+- [Phase 01-foundation]: V array pre-allocated to 2*(N+M)+1 for O(1) forward pass allocations
+- [Phase 01-foundation]: Myers edge cases (both-empty, old-empty, new-empty) handled before algorithm entry point
 
 ### Pending Todos
 
@@ -78,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T18:52:32.699Z
-Stopped at: Completed 01-foundation/01-02-PLAN.md
+Last session: 2026-03-25T18:58:50.371Z
+Stopped at: Completed 01-foundation/01-03-PLAN.md
 Resume file: None

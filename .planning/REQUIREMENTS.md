@@ -7,7 +7,7 @@
 
 ### Core Engine
 
-- [ ] **CORE-01**: Library correctly diffs any two multi-line strings using the Myers algorithm
+- [x] **CORE-01**: Library correctly diffs any two multi-line strings using the Myers algorithm
 - [ ] **CORE-02**: Hunk builder merges adjacent edits into context windows (default 3 lines, configurable)
 - [x] **CORE-03**: Library exports structured data model: `Op`, `Edit`, `Hunk`, `Line`, `DiffResult` types
 - [x] **CORE-04**: Library exposes functional API: `drift.Diff(a, b string, opts ...Option) DiffResult`
@@ -89,7 +89,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-01 | Phase 1 — Foundation | Pending |
+| CORE-01 | Phase 1 — Foundation | Complete |
 | CORE-02 | Phase 1 — Foundation | Pending |
 | CORE-03 | Phase 1 — Foundation | Complete |
 | CORE-04 | Phase 1 — Foundation | Complete |
