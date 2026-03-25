@@ -76,6 +76,11 @@ func (m *Myers) Diff(oldLines, newLines []string) []drift.Edit {
 	trace := make([][]int, 0, maxD+1)
 
 	// Forward pass: find the edit distance and record trace.
+	// For each edit distance d, extend all reachable diagonals to their
+	// furthest x position. The V array is updated in place. A snapshot is
+	// saved at the END of each d-iteration so backtracking can recover the
+	// exact path. (Saving at the TOP would give the state BEFORE this d's
+	// extensions, causing an off-by-one on the backtrack.)
 outer:
 	for d := 0; d <= maxD; d++ {
 		for k := -d; k <= d; k += 2 {
@@ -98,15 +103,14 @@ outer:
 
 			v[k+maxD] = x
 
-			// Check if we've reached the endpoint
+			// Reached the endpoint: save the final trace entry and stop.
 			if x == N && y == M {
-				// CRITICAL: save trace at END (after k-loop processes this d)
-				trace = append(trace, copyV(v))
+				trace = append(trace, copyV(v)) // END of d-loop — correct position
 				break outer
 			}
 		}
 
-		// CRITICAL: save copy of V at END of d-loop iteration (not at top).
+		// Save V snapshot at END of d-loop (after all k-diagonals updated).
 		trace = append(trace, copyV(v))
 	}
 
