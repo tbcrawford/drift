@@ -19,7 +19,10 @@ The `drift` command compares two files, stdin pairs, or `--from` / `--to` string
 drift old.go new.go
 drift --algorithm histogram --split file_a.txt file_b.txt
 drift --no-color --lang go ./old.go ./new.go
+drift ./internal/foo.go   # inside a git repo: diff working tree vs HEAD
 ```
+
+With a single path inside a Git worktree, `drift` compares the file on disk to the version at `HEAD` (same idea as `git diff HEAD -- path`). See `drift --help` for all flags.
 
 Common flags: `--algorithm` (`myers`, `patience`, `histogram`), `--split` (side-by-side), `--theme`, `--lang`, `--no-color`, `--context`, `--from` / `--to`.
 
