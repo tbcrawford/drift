@@ -166,3 +166,33 @@ Plans:
 Plans:
 - [x] 08-01-PLAN.md — Pure `BestMatchTheme` + `ParseOSC4Responses` in `internal/highlight` (completed 2026-03-26)
 - [x] 08-02-PLAN.md — Unix OSC 4 query, `Render` auto-theme wiring, `--show-theme`, README (completed 2026-03-26)
+
+### Phase 9: Dual line-number gutters (old | new), centered numbers with space padding; brighter gutter background vs muted code — unified and split
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 9 to break down)
+
+### Phase 10: Theme-aware full-line diff styling for additions and deletions: entire line highlighted; hybrid Chroma + ANSI/Lip Gloss; green/red from selected theme — unified and split
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 10 to break down)
+
+### Phase 11: GitHub PR-style intra-line change highlights: word-level chunks; changed spans use gutter background; rest of line muted; Chroma tokens on tinted backgrounds — unified and split
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 10
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 11 to break down)

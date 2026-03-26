@@ -90,6 +90,9 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 7 added: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
+- Phase 9 added: dual line-number gutters (old | new), centered numbers, brighter gutter vs muted code — unified and split
+- Phase 10 added: theme-aware full-line add/delete diff styling (hybrid Chroma + Lip Gloss/ANSI) — depends on 9
+- Phase 11 added: GitHub PR-style intra-line word-level highlights — depends on 10
 
 ### Pending Todos
 
