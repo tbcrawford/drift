@@ -164,5 +164,5 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Pure `BestMatchTheme` + `ParseOSC4Responses` in `internal/highlight`
-- [ ] 08-02-PLAN.md — Unix OSC 4 query, `Render` auto-theme wiring, `--show-theme`, README
+- [x] 08-01-PLAN.md — Pure `BestMatchTheme` + `ParseOSC4Responses` in `internal/highlight` (completed 2026-03-26)
+- [x] 08-02-PLAN.md — Unix OSC 4 query, `Render` auto-theme wiring, `--show-theme`, README (completed 2026-03-26)

@@ -50,7 +50,7 @@ completed: 2026-03-26
 
 ## Task Commits
 
-1. **08-02 (combined tasks)** — (see git commit after execution)
+1. **08-02 (combined tasks)** — `1759f3f` (feat: OSC4 TTY palette query + auto Chroma theme + --show-theme)
 
 ## Files Created/Modified
 

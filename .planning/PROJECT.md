@@ -35,6 +35,7 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] Library exposes builder/fluent API (`drift.New()` chain delegating to functional options) — Validated in Phase 06: api-hardening-oss-packaging
 - [x] Runnable `examples/basic` and `examples/builder`; root README (install, CLI, library, rendering); godoc package overview — Validated in Phase 06: api-hardening-oss-packaging
 - [x] Benchmarks for large (~10k line) diff and unified/split render — Validated in Phase 06: api-hardening-oss-packaging
+- [x] Optional OSC 4 terminal palette query on Unix TTY; `BestMatchTheme` picks closest Chroma style when `WithTheme` is omitted — Validated in Phase 08: terminal-palette-best-match-chroma-theme
 
 ### Active
 
@@ -94,4 +95,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after Phase 07 complete — CLI single-arg git mode (working tree vs HEAD), README example; milestone roadmap phase 7 marked complete*
+*Last updated: 2026-03-26 after Phase 08 complete — OSC 4 palette query, `BestMatchTheme`, `WithThemeResolved`, hidden `--show-theme`*
