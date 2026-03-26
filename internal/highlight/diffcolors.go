@@ -8,10 +8,15 @@ import (
 
 // DiffLineBackgroundColour returns the background for a full diff line (add/remove).
 //
-// It mirrors terrasort’s chromaDiffLineRGBA pipeline: [chroma.GenericInserted] /
-// [chroma.GenericDeleted] entries, preferring Background, then blending Colour toward
-// the terminal base (dark (18,18,22) vs light (255,255,255)) at mix 0.78 when only
-// foreground is set, then the same fallback hexes as terrasort [fallbackDiffRGBA].
+// Pipeline (terrasort-aligned):
+//  1. diffEntryChromaColour: Background if explicitly set, else blend Colour at mix 0.78
+//     toward terminal base — this is terrasort's exact chromaDiffLineRGBA algorithm.
+//  2. If the colour returned in step 1 equals the theme's own base background the tint
+//     would be invisible (monokai embeds #272822 on every token). Fall through to step 3.
+//  3. Blend the theme's base background toward semantic red/green at α=0.18 dark / 0.12
+//     light — mirrors terrasort's lineFallbackFromTerminalRGB, using the Chroma base as
+//     a proxy for the terminal background.
+//  4. Final fallback: hardcoded constants matching terrasort's fallbackDiffRGBA.
 func DiffLineBackgroundColour(style *chroma.Style, isDark, del bool) chroma.Colour {
 	if style == nil {
 		return fallbackDiffChroma(isDark, del)
@@ -23,20 +28,33 @@ func DiffLineBackgroundColour(style *chroma.Style, isDark, del bool) chroma.Colo
 		tt = chroma.GenericInserted
 	}
 	e := style.Get(tt)
-	// Skip Background when it equals the theme's own base background (e.g. monokai
-	// embeds its terminal BG #272822 on every token, making the diff highlight invisible).
 	baseBackground := style.Get(chroma.Background).Background
-	c := diffEntryChromaColour(e, isDark, baseBackground)
-	if !c.IsSet() {
-		return fallbackDiffChroma(isDark, del)
+
+	c := diffEntryChromaColour(e, isDark)
+
+	// If the chroma entry yielded a real colour that is distinct from the theme's own
+	// background, use it directly (e.g. github-dark → #490202 / #0f5323).
+	if c.IsSet() && c != baseBackground {
+		return c
 	}
-	return c
+
+	// The colour is either unset or equals the theme's own base BG (monokai case).
+	// Synthesise by blending the base BG toward semantic red/green — mirrors terrasort's
+	// lineFallbackFromTerminalRGB using the Chroma base as a terminal-BG proxy.
+	if baseBackground.IsSet() {
+		return LineFallbackFromTerminalRGB(
+			baseBackground.Red(), baseBackground.Green(), baseBackground.Blue(),
+			isDark, del,
+		)
+	}
+
+	return fallbackDiffChroma(isDark, del)
 }
 
-// diffEntryChromaColour derives a diff-line background from a chroma StyleEntry.
-// Background is used only when it differs from baseBackground (the theme's own BG).
-func diffEntryChromaColour(e chroma.StyleEntry, isDark bool, baseBackground chroma.Colour) chroma.Colour {
-	if e.Background.IsSet() && e.Background != baseBackground {
+// diffEntryChromaColour is terrasort's exact algorithm: use Background if set,
+// otherwise blend Colour toward terminal base at mix 0.78.
+func diffEntryChromaColour(e chroma.StyleEntry, isDark bool) chroma.Colour {
+	if e.Background.IsSet() {
 		return e.Background
 	}
 	if e.Colour.IsSet() {
@@ -98,7 +116,7 @@ func GutterBackgroundHex(isDark, oldSide bool) string {
 }
 
 // GutterDimForegroundHex is the muted gray for context line numbers and for the old/new
-// column separator (│). It matches terrasort’s UXTheme.DimFg (see terrasort
+// column separator (│). It matches terrasort's UXTheme.DimFg (see terrasort
 // internal/highlight/uxtheme.go).
 func GutterDimForegroundHex(isDark bool) string {
 	if isDark {
@@ -108,7 +126,7 @@ func GutterDimForegroundHex(isDark bool) string {
 }
 
 // GutterHighlightForegroundHex is the gutter number color on delete/insert rows (on top of
-// semantic backgrounds). It matches terrasort’s UXTheme.GutterHighlightFg.
+// semantic backgrounds). It matches terrasort's UXTheme.GutterHighlightFg.
 func GutterHighlightForegroundHex(isDark bool) string {
 	if isDark {
 		return "#d1d7e0"
