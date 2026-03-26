@@ -81,7 +81,7 @@ func TestWordSpanStyle_delete_hasBackgroundANSI(t *testing.T) {
 	}
 }
 
-func TestGutterStyleForCell_contextUsesNeutralGray(t *testing.T) {
+func TestGutterStyleForCell_contextHasNoBackgroundColor(t *testing.T) {
 	t.Parallel()
 	style := styles.Get("github")
 	if style == nil {
@@ -89,8 +89,7 @@ func TestGutterStyleForCell_contextUsesNeutralGray(t *testing.T) {
 	}
 	st := gutterStyleForCell(style, false, false, true, edittype.Equal)
 	out := st.Render(" ")
-	// Neutral github light gutter uses #e4e4e4 for old column.
-	if !strings.Contains(out, "e4e4e4") && !strings.Contains(out, "228") {
-		t.Fatalf("expected neutral light gray in gutter output, got %q", out)
+	if strings.Contains(out, "\x1b[48;") {
+		t.Fatalf("context gutter should not set background (no gray wash), got %q", out)
 	}
 }

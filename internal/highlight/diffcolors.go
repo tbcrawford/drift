@@ -71,11 +71,10 @@ func fallbackDiffChroma(isDark, del bool) chroma.Colour {
 	return chroma.MustParseColour("#e6f7e6")
 }
 
-// GutterBackgroundHex returns a neutral #RRGGBB background for gutter cells on
-// context (unchanged) lines — old vs new column use slightly different grays (ANSI
-// 240/238 dark, 254/255 light). Delete/insert rows use the same neutrals for
-// line-number columns; semantic add/remove backgrounds apply to the full code line
-// via [DiffLineMutedBackgroundColour] / [DiffLineStyle].
+// GutterBackgroundHex returns a neutral #RRGGBB for old vs new column when a
+// fallback background is needed (e.g. [WordSpanBackgroundColour] unset). Context
+// line gutters in the renderer use foreground only (no fill). ANSI 240/238 dark,
+// 254/255 light.
 func GutterBackgroundHex(isDark, oldSide bool) string {
 	if isDark {
 		if oldSide {

@@ -38,35 +38,37 @@ func gutterWidths(lines []edittype.Line) (oldW, newW int) {
 // gutterStyleForCell returns a Lip Gloss style for one gutter column on one logical line.
 // Delete rows on the old column and insert rows on the new column use the same semantic
 // background as [highlight.WordSpanBackgroundColour] (matches highlighted changed words).
-// Context lines use neutral [highlight.GutterBackgroundHex]. Callers should use
-// [GutterNumberRender] so Width + center alignment fill the full gutter with background.
+// Context (unchanged) lines and blank gutter cells use **foreground only** — no gray fill,
+// so the terminal default background shows through. Callers should use [GutterNumberRender]
+// so Width + center alignment fill the column; padding spaces inherit the same style.
 func gutterStyleForCell(style *chroma.Style, isDark, noColor bool, oldColumn bool, lineOp edittype.Op) lipgloss.Style {
 	if noColor {
 		return lipgloss.NewStyle()
 	}
-	var bg string
+	fg := gutterForegroundColor(isDark)
 	switch {
 	case style != nil && oldColumn && lineOp == edittype.Delete:
 		c := highlight.WordSpanBackgroundColour(style, isDark, true)
-		if c.IsSet() {
-			bg = c.String()
-		} else {
-			bg = highlight.GutterBackgroundHex(isDark, true)
+		if !c.IsSet() {
+			return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, true))).Foreground(lipgloss.Color(fg))
 		}
+		return lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Foreground(lipgloss.Color(fg))
 	case style != nil && !oldColumn && lineOp == edittype.Insert:
 		c := highlight.WordSpanBackgroundColour(style, isDark, false)
-		if c.IsSet() {
-			bg = c.String()
-		} else {
-			bg = highlight.GutterBackgroundHex(isDark, false)
+		if !c.IsSet() {
+			return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, false))).Foreground(lipgloss.Color(fg))
 		}
+		return lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Foreground(lipgloss.Color(fg))
 	default:
-		bg = highlight.GutterBackgroundHex(isDark, oldColumn)
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(fg))
 	}
+}
+
+func gutterForegroundColor(isDark bool) string {
 	if isDark {
-		return lipgloss.NewStyle().Background(lipgloss.Color(bg)).Foreground(lipgloss.Color("252"))
+		return "252"
 	}
-	return lipgloss.NewStyle().Background(lipgloss.Color(bg)).Foreground(lipgloss.Color("240"))
+	return "240"
 }
 
 // GutterNumberRender renders a line number (or blank when n==0) in a fixed display width.
