@@ -68,16 +68,19 @@ func TestGutterStyleForCell_deleteOldColumn_hasBackgroundANSI(t *testing.T) {
 	}
 }
 
-func TestWordSpanStyle_delete_hasBackgroundANSI(t *testing.T) {
+func TestWordSpanBg_delete_hasBackgroundANSI(t *testing.T) {
 	t.Parallel()
 	style := styles.Get("github-dark")
 	if style == nil {
 		t.Fatal("github-dark style")
 	}
-	st := wordSpanStyle(style, true, false, true)
-	out := st.Render("chg")
+	c := wordSpanBg(style, true, false, true)
+	if !c.IsSet() {
+		t.Fatal("expected set word span background colour")
+	}
+	out := lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Render("chg")
 	if !strings.Contains(out, "\x1b[48;") {
-		t.Fatalf("expected full-line background CSI 48 in word-span style output, got %q", out)
+		t.Fatalf("expected background CSI 48 in word-span output, got %q", out)
 	}
 }
 

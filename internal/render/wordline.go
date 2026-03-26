@@ -45,27 +45,11 @@ func renderPanelContent(content string, panelWidth int, bg chroma.Colour) string
 	return lipgloss.NewStyle().Width(panelWidth).Render(content)
 }
 
-// mutedStyle returns a foreground-only style for unchanged intra-line segments.
-func mutedStyle(style *chroma.Style, isDark bool) lipgloss.Style {
-	if style == nil {
-		return lipgloss.NewStyle()
-	}
-	e := style.Get(chroma.Comment)
-	if e.Colour.IsSet() {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color(e.Colour.String()))
-	}
-	if isDark {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#8b8b8b"))
-	}
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("#57606a"))
-}
-
 func shouldWordDiffPair(cfg *RenderConfig, left, right string, leftOp, rightOp edittype.Op) bool {
 	if cfg == nil || !cfg.WordDiff || cfg.NoColor {
 		return false
 	}
-	// Chroma formatter is not comparable (FormatterFunc); use profile so we
-	// only run word diff when terminal color output is active.
+	// Only run word diff when terminal color output is active.
 	switch cfg.Profile {
 	case colorprofile.TrueColor, colorprofile.ANSI256, colorprofile.ANSI:
 	default:
@@ -77,11 +61,12 @@ func shouldWordDiffPair(cfg *RenderConfig, left, right string, leftOp, rightOp e
 	return leftOp == edittype.Delete && rightOp == edittype.Insert
 }
 
-// highlightSegmented applies Chroma per segment and wraps unchanged spans with
-// mutedStyle and changed spans with semantic word-span background (brighter red/green).
-// When lineBg is set, the base highlight uses terrasort-style per-token lipgloss with
-// that line background so the full-line diff tint survives token boundaries.
-func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, segs []worddiff.Segment, muted, changedWord lipgloss.Style, lineBg chroma.Colour) string {
+// highlightSegmented applies Chroma per segment, using wordBg for changed spans and
+// lineBg for unchanged spans. Both backgrounds are passed directly to highlightPiece
+// (which calls HighlightLineWithLineBackground per-token) so the background is embedded
+// in each token's ANSI escape — the outer-wrapper approach breaks because per-token
+// backgrounds already override any outer lipgloss wrap.
+func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, segs []worddiff.Segment, lineBg, wordBg chroma.Colour) string {
 	if content == "" {
 		return ""
 	}
@@ -97,14 +82,11 @@ func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style,
 		if piece == "" {
 			continue
 		}
-		hl := highlightPiece(piece, lexer, style, formatter, lineBg)
-		hl = strings.ReplaceAll(hl, "\x1b[0m", "\x1b[39m")
-		if seg.Changed {
-			hl = changedWord.Render(hl)
-		} else {
-			hl = muted.Render(hl)
+		bg := lineBg
+		if seg.Changed && wordBg.IsSet() {
+			bg = wordBg
 		}
-		b.WriteString(hl)
+		b.WriteString(highlightPiece(piece, lexer, style, formatter, bg))
 	}
 	if b.Len() == 0 {
 		return highlightPiece(content, lexer, style, formatter, lineBg)
@@ -112,11 +94,11 @@ func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style,
 	return b.String()
 }
 
-// highlightPiece highlights a substring; when lineBg is set, uses terrasort-style per-token
-// lipgloss with that line background.
-func highlightPiece(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, lineBg chroma.Colour) string {
-	if lineBg.IsSet() {
-		h, err := highlight.HighlightLineWithLineBackground(content, lexer, style, lineBg)
+// highlightPiece highlights a substring; when bg is set, uses terrasort-style per-token
+// lipgloss with that background so the colour extends through token boundaries.
+func highlightPiece(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, bg chroma.Colour) string {
+	if bg.IsSet() {
+		h, err := highlight.HighlightLineWithLineBackground(content, lexer, style, bg)
 		if err == nil {
 			return h
 		}
@@ -124,17 +106,14 @@ func highlightPiece(content string, lexer chroma.Lexer, style *chroma.Style, for
 	return highlightPanel(content, lexer, style, formatter)
 }
 
-// wordSpanStyle returns a background-only style for intra-line changed segments:
-// brighter semantic red (delete) or green (insert) than the muted full-line plane.
-func wordSpanStyle(style *chroma.Style, isDark, noColor, del bool) lipgloss.Style {
+// wordSpanBg returns the word-diff background colour for the given side: brighter
+// semantic red (delete) or green (insert) than the full-line plane.
+// Matches what the gutter uses via highlight.WordSpanBackgroundColour.
+func wordSpanBg(style *chroma.Style, isDark, noColor, del bool) chroma.Colour {
 	if noColor || style == nil {
-		return lipgloss.NewStyle()
+		return chroma.Colour(0)
 	}
-	c := highlight.WordSpanBackgroundColour(style, isDark, del)
-	if !c.IsSet() {
-		return lipgloss.NewStyle()
-	}
-	return lipgloss.NewStyle().Background(lipgloss.Color(c.String()))
+	return highlight.WordSpanBackgroundColour(style, isDark, del)
 }
 
 // splitHighlightPair returns highlighted left/right panel strings, using word-level
@@ -143,16 +122,15 @@ func wordSpanStyle(style *chroma.Style, isDark, noColor, del bool) lipgloss.Styl
 func splitHighlightPair(cfg *RenderConfig, style *chroma.Style, pair linePair, lexer chroma.Lexer, formatter chroma.Formatter) (string, string) {
 	if shouldWordDiffPair(cfg, pair.left, pair.right, pair.leftOp, pair.rightOp) {
 		oldSegs, newSegs := worddiff.PairSegments(pair.left, pair.right)
-		muted := mutedStyle(style, cfg.IsDark)
-		lWord := wordSpanStyle(style, cfg.IsDark, cfg.NoColor, true)
-		rWord := wordSpanStyle(style, cfg.IsDark, cfg.NoColor, false)
-		var delBg, insBg chroma.Colour
+		var delLineBg, insLineBg, delWordBg, insWordBg chroma.Colour
 		if cfg.LineDiffStyle && !cfg.NoColor {
-			delBg, _ = highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark)
-			insBg, _ = highlight.DiffLineStyle(style, edittype.Insert, cfg.IsDark)
+			delLineBg, _ = highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark)
+			insLineBg, _ = highlight.DiffLineStyle(style, edittype.Insert, cfg.IsDark)
 		}
-		l := highlightSegmented(pair.left, lexer, style, formatter, oldSegs, muted, lWord, delBg)
-		r := highlightSegmented(pair.right, lexer, style, formatter, newSegs, muted, rWord, insBg)
+		delWordBg = wordSpanBg(style, cfg.IsDark, cfg.NoColor, true)
+		insWordBg = wordSpanBg(style, cfg.IsDark, cfg.NoColor, false)
+		l := highlightSegmented(pair.left, lexer, style, formatter, oldSegs, delLineBg, delWordBg)
+		r := highlightSegmented(pair.right, lexer, style, formatter, newSegs, insLineBg, insWordBg)
 		return l, r
 	}
 	l := highlightSplitPanel(cfg, style, pair, true, pair.left, lexer, formatter)
@@ -167,15 +145,14 @@ func unifiedHighlightPair(cfg *RenderConfig, style *chroma.Style, del, ins editt
 		return "", "", false
 	}
 	oldSegs, newSegs := worddiff.PairSegments(del.Content, ins.Content)
-	muted := mutedStyle(style, cfg.IsDark)
-	lWord := wordSpanStyle(style, cfg.IsDark, cfg.NoColor, true)
-	rWord := wordSpanStyle(style, cfg.IsDark, cfg.NoColor, false)
-	var delBg, insBg chroma.Colour
+	var delLineBg, insLineBg chroma.Colour
 	if cfg.LineDiffStyle && !cfg.NoColor {
-		delBg, _ = highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark)
-		insBg, _ = highlight.DiffLineStyle(style, edittype.Insert, cfg.IsDark)
+		delLineBg, _ = highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark)
+		insLineBg, _ = highlight.DiffLineStyle(style, edittype.Insert, cfg.IsDark)
 	}
-	hlDel = highlightSegmented(del.Content, lexer, style, formatter, oldSegs, muted, lWord, delBg)
-	hlIns = highlightSegmented(ins.Content, lexer, style, formatter, newSegs, muted, rWord, insBg)
+	delWordBg := wordSpanBg(style, cfg.IsDark, cfg.NoColor, true)
+	insWordBg := wordSpanBg(style, cfg.IsDark, cfg.NoColor, false)
+	hlDel = highlightSegmented(del.Content, lexer, style, formatter, oldSegs, delLineBg, delWordBg)
+	hlIns = highlightSegmented(ins.Content, lexer, style, formatter, newSegs, insLineBg, insWordBg)
 	return hlDel, hlIns, true
 }
