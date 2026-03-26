@@ -1,7 +1,6 @@
 package render
 
 import (
-	"image/color"
 	"strconv"
 	"strings"
 
@@ -51,24 +50,14 @@ func centerLineNumber(n int, width int) string {
 }
 
 // gutterStyleForCell returns a Lip Gloss style for one gutter column on one logical line.
-// Theme-derived red/green backgrounds apply when the row op matches the column (delete on
-// the old column, insert on the new); unchanged lines use neutral grays from
-// [highlight.GutterBackgroundHex].
-func gutterStyleForCell(style *chroma.Style, isDark, noColor bool, oldColumn bool, lineOp edittype.Op) lipgloss.Style {
+// Line-number columns use neutral grays from [highlight.GutterBackgroundHex] for every
+// row; semantic add/remove backgrounds are applied to the full code line (prefix + body)
+// by the unified/split renderers, not in the gutter cells.
+func gutterStyleForCell(_ *chroma.Style, isDark, noColor bool, oldColumn bool, _ edittype.Op) lipgloss.Style {
 	if noColor {
 		return lipgloss.NewStyle()
 	}
-	var bg color.Color
-	switch {
-	case oldColumn && lineOp == edittype.Delete:
-		c := highlight.DiffLineBackgroundColour(style, isDark, true)
-		bg = lipgloss.Color(c.String())
-	case !oldColumn && lineOp == edittype.Insert:
-		c := highlight.DiffLineBackgroundColour(style, isDark, false)
-		bg = lipgloss.Color(c.String())
-	default:
-		bg = lipgloss.Color(highlight.GutterBackgroundHex(isDark, oldColumn))
-	}
+	bg := lipgloss.Color(highlight.GutterBackgroundHex(isDark, oldColumn))
 	if isDark {
 		return lipgloss.NewStyle().Background(bg).Foreground(lipgloss.Color("252"))
 	}

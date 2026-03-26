@@ -16,8 +16,13 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Algorithms** - Patience and Histogram diff algorithms with Myers fallback and algorithm selection option (completed 2026-03-25)
 - [x] **Phase 3: Unified Rendering** - Chroma syntax highlighting, terminal theme detection, language detection, and unified diff output (completed 2026-03-25)
 - [x] **Phase 4: Split Rendering** - Side-by-side split diff view via Lip Gloss two-panel layout (completed 2026-03-25)
-- [ ] **Phase 5: CLI** - Cobra command wrapping the library for file, stdin, and raw-string input with all flags
-- [ ] **Phase 6: API Hardening & OSS Packaging** - Builder API, godoc, examples, benchmarks, and v1.0.0 stabilization
+- [x] **Phase 5: CLI** - Cobra command wrapping the library for file, stdin, and raw-string input with all flags (completed 2026-03-25)
+- [x] **Phase 6: API Hardening & OSS Packaging** - Builder API, godoc, examples, benchmarks, and v1.0.0 stabilization (completed 2026-03-25)
+- [x] **Phase 7: support diffs from git** - single-file path in a repo shows working tree diff (completed 2026-03-26)
+- [x] **Phase 8: Terminal palette best-match Chroma theme** - OSC 4 palette + BestMatchTheme (completed 2026-03-26)
+- [x] **Phase 9: Dual line-number gutters** - old/new gutters, unified and split (completed 2026-03-26)
+- [x] **Phase 10: Theme-aware full-line diff styling** - depends on Phase 9 (completed 2026-03-26)
+- [x] **Phase 11: GitHub PR-style intra-line highlights** - depends on Phase 10 (completed 2026-03-26)
 
 ## Phase Details
 
@@ -139,9 +144,14 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Foundation | 5/5 | Complete   | 2026-03-25 |
 | 2. Algorithms | 4/4 | Complete    | 2026-03-25 |
 | 3. Unified Rendering | 5/5 | Complete    | 2026-03-25 |
-| 4. Split Rendering | 0/3 | Not started | - |
-| 5. CLI | 0/4 | Not started | - |
-| 6. API Hardening & OSS Packaging | 0/5 | Not started | - |
+| 4. Split Rendering | 3/3 | Complete | 2026-03-25 |
+| 5. CLI | 4/4 | Complete | 2026-03-25 |
+| 6. API Hardening & OSS Packaging | 5/5 | Complete | 2026-03-25 |
+| 7. Git working-tree diff | 2/2 | Complete | 2026-03-26 |
+| 8. Terminal palette / BestMatchTheme | 2/2 | Complete | 2026-03-26 |
+| 9. Dual line-number gutters | 2/2 | Complete | 2026-03-26 |
+| 10. Theme-aware full-line diff styling | 1/1 | Complete | 2026-03-26 |
+| 11. Intra-line word highlights | 2/2 | Complete    | 2026-03-26 |
 
 ### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
 
@@ -169,30 +179,32 @@ Plans:
 
 ### Phase 9: Dual line-number gutters (old | new), centered numbers with space padding; brighter gutter background vs muted code — unified and split
 
-**Goal:** [To be planned]
+**Goal:** Shared gutter formatting and unified/split integration with `WithLineNumbers` / `WithoutLineNumbers` (default on).
 **Requirements**: TBD
 **Depends on:** Phase 8
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 9 to break down)
+- [x] 09-01-PLAN.md — Gutter primitives + unified (completed 2026-03-26)
+- [x] 09-02-PLAN.md — Split gutters + README + builder (completed 2026-03-26)
 
 ### Phase 10: Theme-aware full-line diff styling for additions and deletions: entire line highlighted; hybrid Chroma + ANSI/Lip Gloss; green/red from selected theme — unified and split
 
-**Goal:** [To be planned]
+**Goal:** Theme-derived full-line backgrounds on +/- lines from Chroma `GenericDeleted` / `GenericInserted`, ANSI-safe token boundaries, `WithLineDiffStyle` (default on).
 **Requirements**: TBD
 **Depends on:** Phase 9
-**Plans:** 0 plans
+**Plans:** 1 plan
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 10 to break down)
+- [x] 10-01-PLAN.md — highlight + unified + split + options + tests (completed 2026-03-26)
 
 ### Phase 11: GitHub PR-style intra-line change highlights: word-level chunks; changed spans use gutter background; rest of line muted; Chroma tokens on tinted backgrounds — unified and split
 
-**Goal:** [To be planned]
+**Goal:** Word-level alignment + split/unified segmented rendering (muted vs gutter-tinted changed spans); `WithWordDiff` (default on).
 **Requirements**: TBD
 **Depends on:** Phase 10
-**Plans:** 0 plans
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 11 to break down)
+- [x] 11-01-PLAN.md — `internal/worddiff` foundation (completed 2026-03-26)
+- [x] 11-02-PLAN.md — render integration + options + tests (completed 2026-03-26)

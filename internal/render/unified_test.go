@@ -149,6 +149,47 @@ func TestUnified_CustomFileNames(t *testing.T) {
 	}
 }
 
+func TestUnified_WordDiffPairedDeleteInsert(t *testing.T) {
+	result := edittype.DiffResult{
+		Hunks: []edittype.Hunk{
+			{
+				OldStart: 1, OldLines: 1, NewStart: 1, NewLines: 1,
+				Lines: []edittype.Line{
+					{Op: edittype.Delete, Content: "let x = foo bar baz", OldNum: 1},
+					{Op: edittype.Insert, Content: "let x = foo qux baz", NewNum: 1},
+				},
+			},
+		},
+	}
+	cfg := &RenderConfig{
+		Lexer:         highlight.DetectLexer("go", "", ""),
+		Style:         styles.Get("github"),
+		Formatter:     formatters.TTY16m,
+		Profile:       colorprofile.TrueColor,
+		WordDiff:      true,
+		LineDiffStyle: true,
+		IsDark:        false,
+	}
+	if cfg.Style == nil {
+		cfg.Style = highlight.SelectTheme("", false)
+	}
+	var buf bytes.Buffer
+	if err := Unified(result, &buf, cfg); err != nil {
+		t.Fatalf("Unified error: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "\033[") {
+		t.Fatalf("expected ANSI in word-diff output:\n%s", out)
+	}
+	if !strings.Contains(out, "bar") || !strings.Contains(out, "qux") {
+		t.Fatalf("expected both sides of substitution in output:\n%s", out)
+	}
+	// Full-line semantic background after word segmentation (D-LAYER-01).
+	if !strings.Contains(out, "\x1b[48;") {
+		t.Fatalf("expected full-line background SGR CSI 48 in word-diff output:\n%s", out)
+	}
+}
+
 func TestUnified_TrueColorProducesANSI(t *testing.T) {
 	result := edittype.DiffResult{
 		Hunks: []edittype.Hunk{
@@ -208,6 +249,34 @@ func TestUnified_NilLexerFallback(t *testing.T) {
 	}
 	if buf.Len() == 0 {
 		t.Error("expected non-empty output")
+	}
+}
+
+func TestUnified_ShowLineNumbersGutter(t *testing.T) {
+	result := edittype.DiffResult{
+		Hunks: []edittype.Hunk{
+			{
+				OldStart: 1, OldLines: 1, NewStart: 1, NewLines: 1,
+				Lines: []edittype.Line{
+					{Op: edittype.Equal, Content: "x", OldNum: 10, NewNum: 20},
+				},
+			},
+		},
+	}
+	cfg := noopConfig()
+	cfg.ShowLineNumbers = true
+	cfg.NoColor = true
+	cfg.IsDark = true
+	var buf bytes.Buffer
+	if err := Unified(result, &buf, cfg); err != nil {
+		t.Fatalf("Unified error: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "10") || !strings.Contains(out, "20") {
+		t.Fatalf("expected gutter line numbers in output:\n%s", out)
+	}
+	if !strings.Contains(out, "|") {
+		t.Fatalf("expected gutter separator:\n%s", out)
 	}
 }
 
