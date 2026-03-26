@@ -80,6 +80,15 @@ func SelectTheme(requested string, isDark bool) *chroma.Style {
 	return chromastyles.Fallback
 }
 
+// FilenameForLexer strips display-only suffixes drift adds for git single-file
+// mode (" (HEAD)", " (working tree)"). Those suffixes break extension matching
+// in lexers.Match (e.g. "main.tf (HEAD)" yields a nil lexer → plaintext).
+func FilenameForLexer(displayName string) string {
+	s := strings.TrimSuffix(displayName, " (HEAD)")
+	s = strings.TrimSuffix(s, " (working tree)")
+	return strings.TrimSpace(s)
+}
+
 // DetectLexer returns the best Chroma lexer for the given language name,
 // filename, and content. The selection priority is:
 //  1. Explicit language name via lexers.Get(lang) — e.g., "go", "python"
@@ -96,7 +105,7 @@ func DetectLexer(lang, filename, content string) chroma.Lexer {
 		lexer = lexers.Get(lang)
 	}
 	if lexer == nil && filename != "" {
-		lexer = lexers.Match(filename)
+		lexer = lexers.Match(FilenameForLexer(filename))
 	}
 	if lexer == nil && content != "" {
 		lexer = lexers.Analyse(content)

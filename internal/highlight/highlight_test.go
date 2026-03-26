@@ -194,10 +194,32 @@ func TestDetectLexer_ExplicitLang(t *testing.T) {
 	}
 }
 
+func TestFilenameForLexer_gitDisplaySuffixes(t *testing.T) {
+	if got := FilenameForLexer("main.tf (HEAD)"); got != "main.tf" {
+		t.Fatalf("FilenameForLexer(main.tf (HEAD)) = %q, want main.tf", got)
+	}
+	if got := FilenameForLexer("foo.go (working tree)"); got != "foo.go" {
+		t.Fatalf("FilenameForLexer = %q, want foo.go", got)
+	}
+	if got := FilenameForLexer("unchanged.go"); got != "unchanged.go" {
+		t.Fatalf("FilenameForLexer = %q", got)
+	}
+}
+
 func TestDetectLexer_FilenameExtension(t *testing.T) {
 	lexer := DetectLexer("", "main.go", "")
 	if lexer == nil {
 		t.Fatal("DetectLexer with filename='main.go' returned nil")
+	}
+}
+
+func TestDetectLexer_gitModeDisplayNamesStillMatchExtension(t *testing.T) {
+	plain := DetectLexer("", "main.tf (HEAD)", "")
+	if plain == nil {
+		t.Fatal("DetectLexer returned nil")
+	}
+	if plain.Config().Name == "plaintext" || plain.Config().Name == "fallback" {
+		t.Fatalf("expected non-plaintext lexer for .tf after sanitizing display name, got %q", plain.Config().Name)
 	}
 }
 
