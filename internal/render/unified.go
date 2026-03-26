@@ -153,13 +153,13 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 							return err
 						}
 					} else {
-						goLeft := gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, line.Op).Width(oldW).Render(centerLineNumber(line.OldNum, oldW))
-						goRight := gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, line.Op).Width(newW).Render(centerLineNumber(line.NewNum, newW))
+						goLeft := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, line.Op), oldW, line.OldNum)
+						goRight := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, line.Op), newW, line.NewNum)
 						if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft, gutterSep, goRight, codeDel); err != nil {
 							return err
 						}
-						goLeft2 := gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, ins.Op).Width(oldW).Render(centerLineNumber(ins.OldNum, oldW))
-						goRight2 := gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, ins.Op).Width(newW).Render(centerLineNumber(ins.NewNum, newW))
+						goLeft2 := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, ins.Op), oldW, ins.OldNum)
+						goRight2 := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, ins.Op), newW, ins.NewNum)
 						if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft2, gutterSep, goRight2, codeIns); err != nil {
 							return err
 						}
@@ -191,8 +191,8 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 				continue
 			}
 
-			goLeft := gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, line.Op).Width(oldW).Render(centerLineNumber(line.OldNum, oldW))
-			goRight := gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, line.Op).Width(newW).Render(centerLineNumber(line.NewNum, newW))
+			goLeft := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, line.Op), oldW, line.OldNum)
+			goRight := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, line.Op), newW, line.NewNum)
 			if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft, gutterSep, goRight, code); err != nil {
 				return err
 			}

@@ -2,7 +2,6 @@ package render
 
 import (
 	"strconv"
-	"strings"
 
 	"charm.land/lipgloss/v2"
 	"github.com/alecthomas/chroma/v2"
@@ -30,38 +29,55 @@ func gutterWidths(lines []edittype.Line) (oldW, newW int) {
 	return oldW, newW
 }
 
-// centerLineNumber renders n centered in a field of display width width.
-// When n == 0, returns width spaces (blank gutter cell).
-func centerLineNumber(n int, width int) string {
+// gutterStyleForCell returns a Lip Gloss style for one gutter column on one logical line.
+// Delete rows on the old column and insert rows on the new column use the same semantic
+// background as [highlight.WordSpanBackgroundColour] (matches highlighted changed words).
+// Context lines use neutral [highlight.GutterBackgroundHex]. Callers should use
+// [GutterNumberRender] so Width + center alignment fill the full gutter with background.
+func gutterStyleForCell(style *chroma.Style, isDark, noColor bool, oldColumn bool, lineOp edittype.Op) lipgloss.Style {
+	if noColor {
+		return lipgloss.NewStyle()
+	}
+	var bg string
+	switch {
+	case style != nil && oldColumn && lineOp == edittype.Delete:
+		c := highlight.WordSpanBackgroundColour(style, isDark, true)
+		if c.IsSet() {
+			bg = c.String()
+		} else {
+			bg = highlight.GutterBackgroundHex(isDark, true)
+		}
+	case style != nil && !oldColumn && lineOp == edittype.Insert:
+		c := highlight.WordSpanBackgroundColour(style, isDark, false)
+		if c.IsSet() {
+			bg = c.String()
+		} else {
+			bg = highlight.GutterBackgroundHex(isDark, false)
+		}
+	default:
+		bg = highlight.GutterBackgroundHex(isDark, oldColumn)
+	}
+	if isDark {
+		return lipgloss.NewStyle().Background(lipgloss.Color(bg)).Foreground(lipgloss.Color("252"))
+	}
+	return lipgloss.NewStyle().Background(lipgloss.Color(bg)).Foreground(lipgloss.Color("240"))
+}
+
+// GutterNumberRender renders a line number (or blank when n==0) in a fixed display width
+// with centered digits. Padding spaces use the same Lip Gloss style so the background
+// fills the entire gutter column.
+func GutterNumberRender(st lipgloss.Style, width int, n int) string {
 	if width < 1 {
 		width = 1
 	}
 	if n == 0 {
-		return strings.Repeat(" ", width)
+		return st.Width(width).AlignHorizontal(lipgloss.Center).Render("")
 	}
 	s := strconv.Itoa(n)
 	if len(s) >= width {
-		return s
+		return st.Render(s)
 	}
-	pad := width - len(s)
-	left := pad / 2
-	right := pad - left
-	return strings.Repeat(" ", left) + s + strings.Repeat(" ", right)
-}
-
-// gutterStyleForCell returns a Lip Gloss style for one gutter column on one logical line.
-// Line-number columns use neutral grays from [highlight.GutterBackgroundHex] for every
-// row; semantic add/remove backgrounds are applied to the full code line (prefix + body)
-// by the unified/split renderers, not in the gutter cells.
-func gutterStyleForCell(_ *chroma.Style, isDark, noColor bool, oldColumn bool, _ edittype.Op) lipgloss.Style {
-	if noColor {
-		return lipgloss.NewStyle()
-	}
-	bg := lipgloss.Color(highlight.GutterBackgroundHex(isDark, oldColumn))
-	if isDark {
-		return lipgloss.NewStyle().Background(bg).Foreground(lipgloss.Color("252"))
-	}
-	return lipgloss.NewStyle().Background(bg).Foreground(lipgloss.Color("240"))
+	return st.Width(width).AlignHorizontal(lipgloss.Center).Render(s)
 }
 
 func gutterPairWidths(pairs []linePair) (oldW, newW int) {
