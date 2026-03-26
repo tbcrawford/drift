@@ -152,3 +152,17 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 7 to break down)
+
+### Phase 8: Terminal palette best-match Chroma theme
+
+**Goal:** When the user does not pass an explicit Chroma theme, drift may query the terminal’s ANSI palette (OSC 4) and pick the registered Chroma style whose sampled syntax-token colors are closest to that palette (Terrasort-style `BestMatchTheme`), then fall back to the existing light/dark `SelectTheme` path when OSC 4 is unavailable, fails, or stdout is not a TTY.
+
+**Depends on:** Phase 3 (rendering) — extends theme resolution; library and CLI remain stdlib-first (no new deps unless already allowed).
+
+**Requirements:** REND-04 (best matching Chroma theme — currently binary dark/light), REND-08
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Pure `BestMatchTheme` + `ParseOSC4Responses` in `internal/highlight`
+- [ ] 08-02-PLAN.md — Unix OSC 4 query, `Render` auto-theme wiring, `--show-theme`, README

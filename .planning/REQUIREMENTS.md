@@ -27,7 +27,7 @@
 - [ ] **REND-01**: Library renders unified diff output with Git-style `@@ -a,b +c,d @@` hunk headers and `+`/`-` line prefixes
 - [ ] **REND-02**: Library renders side-by-side split diff with left/right panels via Lip Gloss, terminal-width-aware
 - [ ] **REND-03**: Library applies Chroma v2 syntax highlighting per line, with diff colors (red/green) layered on top
-- [ ] **REND-04**: Library auto-detects terminal light/dark theme and selects the best matching Chroma theme
+- [ ] **REND-04**: Library auto-detects terminal light/dark theme and selects the best matching Chroma theme (Phase 8 extends this with optional OSC 4 palette **best-match** when no explicit `WithTheme`)
 - [ ] **REND-05**: Caller can override the Chroma theme via `drift.WithTheme("monokai")` option
 - [ ] **REND-06**: Library auto-detects language from file extension; falls back to content analysis via `lexers.Analyse()`
 - [ ] **REND-07**: Caller can override detected language via `drift.WithLang("go")` option
