@@ -101,6 +101,7 @@ Recent decisions affecting current work:
 | 2026-03-26 | Word diff: full-line `DiffLineStyle` on paired rows (unified + split); intra-line changed spans use neutral `GutterBackgroundHex` only |
 | 2026-03-26 | `/gsd-plan-phase 11` — added `11-03-PLAN.md` (terrasort chroma parity, gutter-neutral words, verification refresh) |
 | 2026-03-26 | `/gsd-plan-phase 11 --research` — `11-RESEARCH.md` (drift vs terrasort pipeline diff), `11-VALIDATION.md` (Nyquist map) |
+| 2026-03-26 | Fix full-line background highlighting: prefix char now carries line bg; trailing whitespace extended with bg-colored spaces (terrasort parity) |
 
 ### Pending Todos
 

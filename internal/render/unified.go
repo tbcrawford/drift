@@ -69,8 +69,9 @@ type RenderConfig struct {
 // respectively. Syntax highlighting is applied per-line when cfg.Formatter is
 // not NoOp.
 //
-// The output is self-contained: ANSI reset sequences are emitted by Chroma at
-// line boundaries, so each line is independently renderable.
+// When LineDiffStyle is enabled, insert/delete lines use per-token lipgloss rendering
+// with a line-level background (terrasort-style), not Chroma's TTY formatter with a
+// background prefix.
 func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 	if cfg == nil {
 		cfg = &RenderConfig{}
@@ -110,9 +111,11 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 		return err
 	}
 
-	gutterSep := " │ "
-	if cfg.NoColor {
-		gutterSep = " | "
+	gutterSep := styledGutterColumnSeparator(cfg)
+
+	termWidth := cfg.TermWidth
+	if termWidth == 0 {
+		termWidth = 80
 	}
 
 	for _, h := range result.Hunks {
@@ -128,22 +131,34 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 			oldW, newW = gutterWidths(h.Lines)
 		}
 
+		// contentW is the width available for highlighted content (prefix already excluded).
+		// We use it to extend line backgrounds to the full terminal width.
+		const gutterSepWidth = 2 // " │"
+		contentW := termWidth - 1 // -1 for the +/-/space prefix
+		if cfg.ShowLineNumbers {
+			contentW -= oldW + gutterSepWidth + newW
+		}
+		if contentW < 0 {
+			contentW = 0
+		}
+
 		lines := h.Lines
 		for i := 0; i < len(lines); i++ {
 			line := lines[i]
 
 			if i+1 < len(lines) && line.Op == edittype.Delete && lines[i+1].Op == edittype.Insert {
 				if hlDel, hlIns, ok := unifiedHighlightPair(cfg, style, line, lines[i+1], lexer, formatter); ok {
-					codeDel := "-" + hlDel
-					codeIns := "+" + hlIns
+					var delBg, insBg chroma.Colour
 					if cfg.LineDiffStyle && !cfg.NoColor {
-						if st, ok := highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark); ok {
-							codeDel = highlight.ApplyDiffLineStyle(st, codeDel)
-						}
-						if st, ok := highlight.DiffLineStyle(style, edittype.Insert, cfg.IsDark); ok {
-							codeIns = highlight.ApplyDiffLineStyle(st, codeIns)
-						}
+						delBg, _ = highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark)
+						insBg, _ = highlight.DiffLineStyle(style, edittype.Insert, cfg.IsDark)
 					}
+					prefixDel := styledDiffPrefix(edittype.Delete, delBg)
+					prefixIns := styledDiffPrefix(edittype.Insert, insBg)
+					hlDel = padLineBackground(hlDel, contentW, delBg)
+					hlIns = padLineBackground(hlIns, contentW, insBg)
+					codeDel := prefixDel + hlDel
+					codeIns := prefixIns + hlIns
 					ins := lines[i+1]
 					if !cfg.ShowLineNumbers {
 						if _, err := fmt.Fprintf(w, "%s\n", codeDel); err != nil {
@@ -169,20 +184,14 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 				}
 			}
 
-			prefix := linePrefix(line.Op)
-
-			highlighted, err := highlight.HighlightLine(line.Content, lexer, style, formatter)
-			if err != nil {
-				// Fail-open: use plain content on highlight error.
-				highlighted = line.Content
-			}
-
-			code := prefix + highlighted
+			var lineBg chroma.Colour
 			if cfg.LineDiffStyle && !cfg.NoColor {
-				if st, ok := highlight.DiffLineStyle(style, line.Op, cfg.IsDark); ok {
-					code = highlight.ApplyDiffLineStyle(st, code)
-				}
+				lineBg, _ = highlight.DiffLineStyle(style, line.Op, cfg.IsDark)
 			}
+			prefix := styledDiffPrefix(line.Op, lineBg)
+			highlighted := highlightUnifiedLine(cfg, style, line, lexer, formatter)
+			highlighted = padLineBackground(highlighted, contentW, lineBg)
+			code := prefix + highlighted
 
 			if !cfg.ShowLineNumbers {
 				if _, err := fmt.Fprintf(w, "%s\n", code); err != nil {
@@ -212,4 +221,22 @@ func linePrefix(op edittype.Op) string {
 	default: // Equal
 		return " "
 	}
+}
+
+// highlightUnifiedLine applies syntax highlighting. For diff lines with LineDiffStyle,
+// uses HighlightLineWithLineBackground (terrasort token loop); otherwise Chroma's formatter.
+func highlightUnifiedLine(cfg *RenderConfig, style *chroma.Style, line edittype.Line, lexer chroma.Lexer, formatter chroma.Formatter) string {
+	if cfg.LineDiffStyle && !cfg.NoColor {
+		if bg, ok := highlight.DiffLineStyle(style, line.Op, cfg.IsDark); ok {
+			h, err := highlight.HighlightLineWithLineBackground(line.Content, lexer, style, bg)
+			if err == nil {
+				return h
+			}
+		}
+	}
+	h, err := highlight.HighlightLine(line.Content, lexer, style, formatter)
+	if err != nil {
+		return line.Content
+	}
+	return h
 }

@@ -184,8 +184,8 @@ func TestUnified_WordDiffPairedDeleteInsert(t *testing.T) {
 	if !strings.Contains(out, "bar") || !strings.Contains(out, "qux") {
 		t.Fatalf("expected both sides of substitution in output:\n%s", out)
 	}
-	// Full-line semantic background after word segmentation (D-LAYER-01).
-	if !strings.Contains(out, "\x1b[48;") {
+	// Full-line semantic background (lipgloss may merge 38+48 as ...;48;2;... in one SGR).
+	if !strings.Contains(out, ";48;2") && !strings.Contains(out, "\x1b[48;") {
 		t.Fatalf("expected full-line background SGR CSI 48 in word-diff output:\n%s", out)
 	}
 }
@@ -275,8 +275,52 @@ func TestUnified_ShowLineNumbersGutter(t *testing.T) {
 	if !strings.Contains(out, "10") || !strings.Contains(out, "20") {
 		t.Fatalf("expected gutter line numbers in output:\n%s", out)
 	}
-	if !strings.Contains(out, "|") {
-		t.Fatalf("expected gutter separator:\n%s", out)
+	if !strings.Contains(out, "│") {
+		t.Fatalf("expected │ gutter separator:\n%s", out)
+	}
+}
+
+// TestUnified_FullLineBackgroundAndPrefix checks that when LineDiffStyle is active,
+// the +/- prefix character and trailing whitespace both carry the line background colour.
+func TestUnified_FullLineBackgroundAndPrefix(t *testing.T) {
+	result := edittype.DiffResult{
+		Hunks: []edittype.Hunk{
+			{
+				OldStart: 1, OldLines: 1, NewStart: 1, NewLines: 1,
+				Lines: []edittype.Line{
+					{Op: edittype.Delete, Content: "old line", OldNum: 1},
+					{Op: edittype.Insert, Content: "new line", NewNum: 1},
+				},
+			},
+		},
+	}
+	cfg := &RenderConfig{
+		Lexer:         highlight.DetectLexer("go", "", ""),
+		Style:         styles.Get("github"),
+		Formatter:     formatters.TTY16m,
+		Profile:       colorprofile.TrueColor,
+		LineDiffStyle: true,
+		IsDark:        false,
+		TermWidth:     80,
+	}
+	if cfg.Style == nil {
+		cfg.Style = highlight.SelectTheme("", false)
+	}
+	var buf bytes.Buffer
+	if err := Unified(result, &buf, cfg); err != nil {
+		t.Fatalf("Unified error: %v", err)
+	}
+	out := buf.String()
+
+	// Must contain background SGR (CSI 48) for both delete and insert lines.
+	if !strings.Contains(out, ";48;2") && !strings.Contains(out, "\x1b[48;") {
+		t.Fatalf("expected full-line background SGR (CSI 48) in output:\n%s", out)
+	}
+
+	// The output must contain ANSI codes before the first '-' or '+' prefix,
+	// confirming the prefix character carries a background.
+	if !strings.Contains(out, "\x1b[") {
+		t.Fatalf("expected ANSI codes in output:\n%s", out)
 	}
 }
 

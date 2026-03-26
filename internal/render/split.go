@@ -11,11 +11,7 @@ import (
 	"github.com/tylercrawford/drift/internal/highlight"
 )
 
-const (
-	separatorColor   = " │ "
-	separatorNoColor = " | "
-	minTermWidth     = 40
-)
+const minTermWidth = 40
 
 type linePair struct {
 	left    string
@@ -29,12 +25,13 @@ type linePair struct {
 
 // Split writes a side-by-side split diff of result to w.
 //
-// Each hunk is rendered as two equal-width panels joined by a " │ " separator.
+// Each hunk is rendered as two equal-width panels joined by gutterColumnSeparator
+// (space + │ light vertical, standard TUI box stroke).
 // The left panel shows old (deleted) lines; the right panel shows new (inserted)
 // lines. Equal lines appear in both panels. Deleted lines with no matching
 // insert (and vice versa) are paired with a blank placeholder on the opposite side.
 //
-// Panel width is (termWidth - 3) / 2. Lines are padded/truncated to exact panel
+// Panel width is (termWidth - 2) / 2. Lines are padded/truncated to exact panel
 // width using lipgloss Style so ANSI sequences within highlighted content do not
 // overflow column boundaries.
 func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
@@ -53,13 +50,8 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 		termWidth = minTermWidth
 	}
 
-	sep := separatorColor
-	if cfg.NoColor {
-		sep = separatorNoColor
-	}
-
-	panelWidth := (termWidth - 3) / 2
-	rightPanelWidth := termWidth - 3 - panelWidth
+	panelWidth := (termWidth - 2) / 2
+	rightPanelWidth := termWidth - 2 - panelWidth
 
 	lexer := cfg.Lexer
 	if lexer == nil {
@@ -85,13 +77,16 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 		var leftLines, rightLines, sepLines []string
 
 		if !cfg.ShowLineNumbers {
-			leftStyle := lipgloss.NewStyle().Width(panelWidth)
-			rightStyle := lipgloss.NewStyle().Width(rightPanelWidth)
 			for _, pair := range pairs {
 				lContent, rContent := splitHighlightPair(cfg, style, pair, lexer, formatter)
-				leftLines = append(leftLines, leftStyle.Render(lContent))
-				rightLines = append(rightLines, rightStyle.Render(rContent))
-				sepLines = append(sepLines, sep)
+				var lBg, rBg chroma.Colour
+				if cfg.LineDiffStyle && !cfg.NoColor {
+					lBg, _ = highlight.DiffLineStyle(style, pair.leftOp, cfg.IsDark)
+					rBg, _ = highlight.DiffLineStyle(style, pair.rightOp, cfg.IsDark)
+				}
+				leftLines = append(leftLines, renderPanelContent(lContent, panelWidth, lBg))
+				rightLines = append(rightLines, renderPanelContent(rContent, rightPanelWidth, rBg))
+				sepLines = append(sepLines, styledGutterColumnSeparator(cfg))
 			}
 		} else {
 			oldW, newW := gutterPairWidths(pairs)
@@ -107,15 +102,18 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 					rightCodeW = 1
 				}
 
+				var lBg, rBg chroma.Colour
+				if cfg.LineDiffStyle && !cfg.NoColor {
+					lBg, _ = highlight.DiffLineStyle(style, pair.leftOp, cfg.IsDark)
+					rBg, _ = highlight.DiffLineStyle(style, pair.rightOp, cfg.IsDark)
+				}
+
 				leftG := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, pair.leftOp), oldW, pair.leftOldNum)
 				rightG := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, pair.rightOp), newW, pair.rightNewNum)
 
-				leftStyle := lipgloss.NewStyle().Width(leftCodeW)
-				rightStyle := lipgloss.NewStyle().Width(rightCodeW)
-
-				leftLines = append(leftLines, lipgloss.JoinHorizontal(lipgloss.Top, leftG, leftStyle.Render(lContent)))
-				rightLines = append(rightLines, lipgloss.JoinHorizontal(lipgloss.Top, rightG, rightStyle.Render(rContent)))
-				sepLines = append(sepLines, sep)
+				leftLines = append(leftLines, lipgloss.JoinHorizontal(lipgloss.Top, leftG, renderPanelContent(lContent, leftCodeW, lBg)))
+				rightLines = append(rightLines, lipgloss.JoinHorizontal(lipgloss.Top, rightG, renderPanelContent(rContent, rightCodeW, rBg)))
+				sepLines = append(sepLines, styledGutterColumnSeparator(cfg))
 			}
 		}
 
@@ -187,23 +185,24 @@ func pairHunkLines(lines []edittype.Line) []linePair {
 	return pairs
 }
 
-// splitApplyDiffLine applies theme-derived full-line backgrounds on delete (left)
-// and insert (right) panels when the corresponding side has content.
-func splitApplyDiffLine(cfg *RenderConfig, style *chroma.Style, pair linePair, lContent, rContent string) (string, string) {
-	if !cfg.LineDiffStyle || cfg.NoColor {
-		return lContent, rContent
+// highlightSplitPanel highlights one split panel line. For delete (left) / insert (right)
+// with LineDiffStyle, uses terrasort-style per-token lipgloss with the line background.
+func highlightSplitPanel(cfg *RenderConfig, style *chroma.Style, pair linePair, leftSide bool, content string, lexer chroma.Lexer, formatter chroma.Formatter) string {
+	var op edittype.Op
+	if leftSide {
+		op = pair.leftOp
+	} else {
+		op = pair.rightOp
 	}
-	if pair.left != "" && pair.leftOp == edittype.Delete {
-		if st, ok := highlight.DiffLineStyle(style, pair.leftOp, cfg.IsDark); ok {
-			lContent = highlight.ApplyDiffLineStyle(st, lContent)
+	if cfg.LineDiffStyle && !cfg.NoColor {
+		if bg, ok := highlight.DiffLineStyle(style, op, cfg.IsDark); ok {
+			h, err := highlight.HighlightLineWithLineBackground(content, lexer, style, bg)
+			if err == nil {
+				return h
+			}
 		}
 	}
-	if pair.right != "" && pair.rightOp == edittype.Insert {
-		if st, ok := highlight.DiffLineStyle(style, pair.rightOp, cfg.IsDark); ok {
-			rContent = highlight.ApplyDiffLineStyle(st, rContent)
-		}
-	}
-	return lContent, rContent
+	return highlightPanel(content, lexer, style, formatter)
 }
 
 // highlightPanel highlights a line for panel display. Fails open to plain text.
