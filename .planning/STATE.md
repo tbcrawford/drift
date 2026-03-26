@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: Complete
-stopped_at: Phase 11 complete — intra-line word diff (unified + split)
-last_updated: "2026-03-26T22:30:00Z"
+stopped_at: Phase 11 — plan 11-03 added (terrasort color parity + layering); execute when ready
+last_updated: "2026-03-26T23:45:00Z"
 progress:
   total_phases: 11
   completed_phases: 11
@@ -99,6 +99,7 @@ Recent decisions affecting current work:
 | Date | Summary |
 |------|---------|
 | 2026-03-26 | Word diff: full-line `DiffLineStyle` on paired rows (unified + split); intra-line changed spans use neutral `GutterBackgroundHex` only |
+| 2026-03-26 | `/gsd-plan-phase 11` — added `11-03-PLAN.md` (terrasort chroma parity, gutter-neutral words, verification refresh) |
 
 ### Pending Todos
 
