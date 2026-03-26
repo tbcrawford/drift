@@ -75,7 +75,7 @@ func fallbackDiffChroma(isDark, del bool) chroma.Colour {
 // context (unchanged) lines — old vs new column use slightly different grays (ANSI
 // 240/238 dark, 254/255 light). Delete/insert rows use the same neutrals for
 // line-number columns; semantic add/remove backgrounds apply to the full code line
-// via [DiffLineBackgroundColour] / [DiffLineStyle].
+// via [DiffLineMutedBackgroundColour] / [DiffLineStyle].
 func GutterBackgroundHex(isDark, oldSide bool) string {
 	if isDark {
 		if oldSide {
@@ -118,4 +118,53 @@ func redGreenTarget(del bool) (tr, tg, tb uint8) {
 
 func clampFloat(v float64) float64 {
 	return math.Max(0, math.Min(255, v))
+}
+
+// terminalBaseRGB is the RGB used when muting diff colours toward the terminal
+// background (same anchors as [blendChromaTowardTerminalBase]).
+func terminalBaseRGB(isDark bool) (r, g, b uint8) {
+	if isDark {
+		return 18, 18, 22
+	}
+	return 255, 255, 255
+}
+
+// blendColourTowardRGB linearly blends c toward (tr,tg,tb); alpha is the weight on the target.
+func blendColourTowardRGB(c chroma.Colour, tr, tg, tb uint8, alpha float64) chroma.Colour {
+	r := float64(c.Red())*(1-alpha) + float64(tr)*alpha
+	g := float64(c.Green())*(1-alpha) + float64(tg)*alpha
+	b := float64(c.Blue())*(1-alpha) + float64(tb)*alpha
+	return chroma.NewColour(
+		uint8(clampFloat(r)),
+		uint8(clampFloat(g)),
+		uint8(clampFloat(b)),
+	)
+}
+
+// DiffLineMutedBackgroundColour returns the background for the full-line diff wash
+// (add/remove). It starts from [DiffLineBackgroundColour] and blends further toward
+// the terminal base so the line plane stays **more muted** than [WordSpanBackgroundColour]
+// on changed tokens.
+func DiffLineMutedBackgroundColour(style *chroma.Style, isDark, del bool) chroma.Colour {
+	base := DiffLineBackgroundColour(style, isDark, del)
+	if !base.IsSet() {
+		return chroma.Colour(0)
+	}
+	tr, tg, tb := terminalBaseRGB(isDark)
+	return blendColourTowardRGB(base, tr, tg, tb, 0.42)
+}
+
+// WordSpanBackgroundColour returns a **brighter** semantic red (delete) or green (insert)
+// background for intra-line changed spans. It is derived from the same Chroma style as
+// [DiffLineBackgroundColour] but blended toward pure red/green so it reads stronger than
+// [DiffLineMutedBackgroundColour] on the full-line plane.
+func WordSpanBackgroundColour(style *chroma.Style, isDark, del bool) chroma.Colour {
+	base := DiffLineBackgroundColour(style, isDark, del)
+	if !base.IsSet() {
+		return chroma.Colour(0)
+	}
+	if del {
+		return blendColourTowardRGB(base, 255, 0, 0, 0.32)
+	}
+	return blendColourTowardRGB(base, 0, 255, 0, 0.32)
 }

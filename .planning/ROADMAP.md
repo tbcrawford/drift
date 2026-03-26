@@ -203,7 +203,7 @@ Plans:
 **Goal:** Word-level alignment + split/unified segmented rendering (muted vs gutter-tinted changed spans); `WithWordDiff` (default on).
 **Requirements**: TBD
 **Depends on:** Phase 10
-**Plans:** 3/3 plans complete
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 11-01-PLAN.md — `internal/worddiff` foundation (completed 2026-03-26)

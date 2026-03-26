@@ -21,12 +21,16 @@ func TestGutterStyleForCell_deleteOldColumn_hasBackgroundANSI(t *testing.T) {
 	}
 }
 
-func TestGutterNeutralTint_LightOldColumn_gutterTintStyle(t *testing.T) {
+func TestWordSpanStyle_delete_hasBackgroundANSI(t *testing.T) {
 	t.Parallel()
-	st := gutterTintStyle(false, false, true)
+	style := styles.Get("github-dark")
+	if style == nil {
+		t.Fatal("github-dark style")
+	}
+	st := wordSpanStyle(style, true, false, true)
 	out := st.Render("chg")
-	if !strings.Contains(out, "e4e4e4") && !strings.Contains(out, "228") {
-		t.Fatalf("expected light old-column neutral (#e4e4e4 / 228) in gutter tint output, got %q", out)
+	if !strings.Contains(out, "\x1b[48;") {
+		t.Fatalf("expected full-line background CSI 48 in word-span style output, got %q", out)
 	}
 }
 

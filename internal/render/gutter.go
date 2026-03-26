@@ -64,16 +64,6 @@ func gutterStyleForCell(_ *chroma.Style, isDark, noColor bool, oldColumn bool, _
 	return lipgloss.NewStyle().Background(bg).Foreground(lipgloss.Color("240"))
 }
 
-// gutterTintStyle returns a background-only style for intra-line changed spans in word-diff
-// mode: neutral gutter column greys from [highlight.GutterBackgroundHex] (same as line-number
-// gutters), while the full line uses [highlight.DiffLineStyle] applied by the caller.
-func gutterTintStyle(isDark, noColor, oldSide bool) lipgloss.Style {
-	if noColor {
-		return lipgloss.NewStyle()
-	}
-	return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, oldSide)))
-}
-
 func gutterPairWidths(pairs []linePair) (oldW, newW int) {
 	oldW, newW = 1, 1
 	for _, p := range pairs {

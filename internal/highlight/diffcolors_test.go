@@ -73,6 +73,24 @@ func TestTerrasortParity_DiffLineBias_MonokaiAndGithubDark(t *testing.T) {
 	}
 }
 
+func TestWordSpanBrighterThanMutedLine_githubDark(t *testing.T) {
+	t.Parallel()
+	style := styles.Get("github-dark")
+	if style == nil {
+		t.Fatal("github-dark style")
+	}
+	mutedDel := DiffLineMutedBackgroundColour(style, true, true)
+	wordDel := WordSpanBackgroundColour(style, true, true)
+	if wordDel.Red() <= mutedDel.Red() {
+		t.Fatalf("delete: word span R=%d should exceed muted line R=%d", wordDel.Red(), mutedDel.Red())
+	}
+	mutedIns := DiffLineMutedBackgroundColour(style, true, false)
+	wordIns := WordSpanBackgroundColour(style, true, false)
+	if wordIns.Green() <= mutedIns.Green() {
+		t.Fatalf("insert: word span G=%d should exceed muted line G=%d", wordIns.Green(), mutedIns.Green())
+	}
+}
+
 func TestLineFallbackFromTerminalRGB_nearBlack(t *testing.T) {
 	t.Parallel()
 	c := LineFallbackFromTerminalRGB(13, 17, 23, true, false)

@@ -9,9 +9,9 @@ import (
 )
 
 // DiffLineStyle returns a Lip Gloss style that applies only a full-line background
-// for insert/delete lines. Colours come from [DiffLineBackgroundColour] (terrasort
-// chromaDiffLineRGBA pipeline: GenericInserted/GenericDeleted, terminal-base blend,
-// fallbacks).
+// for insert/delete lines. Colours come from [DiffLineMutedBackgroundColour] — the
+// muted semantic plane — so brighter [WordSpanBackgroundColour] spans can sit on top
+// in word-diff mode.
 //
 // The second return is false when op is Equal or when no usable background can be derived.
 func DiffLineStyle(style *chroma.Style, op edittype.Op, isDark bool) (lipgloss.Style, bool) {
@@ -29,7 +29,7 @@ func DiffLineStyle(style *chroma.Style, op edittype.Op, isDark bool) (lipgloss.S
 		return lipgloss.NewStyle(), false
 	}
 
-	bg := DiffLineBackgroundColour(style, isDark, del)
+	bg := DiffLineMutedBackgroundColour(style, isDark, del)
 	if !bg.IsSet() {
 		return lipgloss.NewStyle(), false
 	}

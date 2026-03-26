@@ -7,6 +7,7 @@ import (
 	"github.com/alecthomas/chroma/v2"
 	"github.com/charmbracelet/colorprofile"
 	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tylercrawford/drift/internal/highlight"
 	"github.com/tylercrawford/drift/internal/worddiff"
 )
 
@@ -43,8 +44,8 @@ func shouldWordDiffPair(cfg *RenderConfig, left, right string, leftOp, rightOp e
 }
 
 // highlightSegmented applies Chroma per segment and wraps unchanged spans with
-// mutedStyle and changed spans with changedTint (neutral gutter-column background).
-func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, segs []worddiff.Segment, muted, changedTint lipgloss.Style) string {
+// mutedStyle and changed spans with semantic word-span background (brighter red/green).
+func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, segs []worddiff.Segment, muted, changedWord lipgloss.Style) string {
 	if content == "" {
 		return ""
 	}
@@ -63,7 +64,7 @@ func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style,
 		hl := highlightPanel(piece, lexer, style, formatter)
 		hl = strings.ReplaceAll(hl, "\x1b[0m", "\x1b[39m")
 		if seg.Changed {
-			hl = changedTint.Render(hl)
+			hl = changedWord.Render(hl)
 		} else {
 			hl = muted.Render(hl)
 		}
@@ -75,6 +76,19 @@ func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style,
 	return b.String()
 }
 
+// wordSpanStyle returns a background-only style for intra-line changed segments:
+// brighter semantic red (delete) or green (insert) than the muted full-line plane.
+func wordSpanStyle(style *chroma.Style, isDark, noColor, del bool) lipgloss.Style {
+	if noColor || style == nil {
+		return lipgloss.NewStyle()
+	}
+	c := highlight.WordSpanBackgroundColour(style, isDark, del)
+	if !c.IsSet() {
+		return lipgloss.NewStyle()
+	}
+	return lipgloss.NewStyle().Background(lipgloss.Color(c.String()))
+}
+
 // splitHighlightPair returns highlighted left/right panel strings, using word-level
 // segments when paired delete/insert lines are both non-empty; otherwise full-line
 // diff styling via splitApplyDiffLine.
@@ -82,10 +96,10 @@ func splitHighlightPair(cfg *RenderConfig, style *chroma.Style, pair linePair, l
 	if shouldWordDiffPair(cfg, pair.left, pair.right, pair.leftOp, pair.rightOp) {
 		oldSegs, newSegs := worddiff.PairSegments(pair.left, pair.right)
 		muted := mutedStyle(style, cfg.IsDark)
-		lTint := gutterTintStyle(cfg.IsDark, cfg.NoColor, true)
-		rTint := gutterTintStyle(cfg.IsDark, cfg.NoColor, false)
-		l := highlightSegmented(pair.left, lexer, style, formatter, oldSegs, muted, lTint)
-		r := highlightSegmented(pair.right, lexer, style, formatter, newSegs, muted, rTint)
+		lWord := wordSpanStyle(style, cfg.IsDark, cfg.NoColor, true)
+		rWord := wordSpanStyle(style, cfg.IsDark, cfg.NoColor, false)
+		l := highlightSegmented(pair.left, lexer, style, formatter, oldSegs, muted, lWord)
+		r := highlightSegmented(pair.right, lexer, style, formatter, newSegs, muted, rWord)
 		return splitApplyDiffLine(cfg, style, pair, l, r)
 	}
 	l := highlightPanel(pair.left, lexer, style, formatter)
@@ -101,9 +115,9 @@ func unifiedHighlightPair(cfg *RenderConfig, style *chroma.Style, del, ins editt
 	}
 	oldSegs, newSegs := worddiff.PairSegments(del.Content, ins.Content)
 	muted := mutedStyle(style, cfg.IsDark)
-	lTint := gutterTintStyle(cfg.IsDark, cfg.NoColor, true)
-	rTint := gutterTintStyle(cfg.IsDark, cfg.NoColor, false)
-	hlDel = highlightSegmented(del.Content, lexer, style, formatter, oldSegs, muted, lTint)
-	hlIns = highlightSegmented(ins.Content, lexer, style, formatter, newSegs, muted, rTint)
+	lWord := wordSpanStyle(style, cfg.IsDark, cfg.NoColor, true)
+	rWord := wordSpanStyle(style, cfg.IsDark, cfg.NoColor, false)
+	hlDel = highlightSegmented(del.Content, lexer, style, formatter, oldSegs, muted, lWord)
+	hlIns = highlightSegmented(ins.Content, lexer, style, formatter, newSegs, muted, rWord)
 	return hlDel, hlIns, true
 }
