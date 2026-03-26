@@ -6,9 +6,24 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/alecthomas/chroma/v2/styles"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/tylercrawford/drift/internal/edittype"
 	"github.com/tylercrawford/drift/internal/highlight"
 )
+
+func TestGutterNumberRender_padsSingleDigitWithSpaces(t *testing.T) {
+	t.Parallel()
+	style := styles.Get("github")
+	if style == nil {
+		t.Fatal("github style")
+	}
+	st := gutterStyleForCell(style, false, false, true, edittype.Equal)
+	out := GutterNumberRender(st, 3, 1)
+	plain := ansi.Strip(out)
+	if plain != " 1 " {
+		t.Fatalf("want padded \" 1 \", got %q", plain)
+	}
+}
 
 func TestGutterNumberRender_blankFillsFullColumnWidth(t *testing.T) {
 	t.Parallel()
@@ -34,8 +49,9 @@ func TestGutterDeleteCell_usesSemanticWordSpanColour(t *testing.T) {
 	}
 	st := gutterStyleForCell(style, true, false, true, edittype.Delete)
 	out := GutterNumberRender(st, 3, 2)
-	if !strings.Contains(out, "\x1b[48;") {
-		t.Fatalf("expected background SGR in delete gutter (same pipeline as word spans): %q", out)
+	// Foreground may precede background (38…48…); require embedded 48 (bg) sequence.
+	if !strings.Contains(out, ";48;") && !strings.Contains(out, ";48:") {
+		t.Fatalf("expected background SGR (48) in delete gutter (same pipeline as word spans): %q", out)
 	}
 }
 
