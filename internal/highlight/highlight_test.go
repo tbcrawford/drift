@@ -12,22 +12,6 @@ import (
 	"github.com/charmbracelet/colorprofile"
 )
 
-// renderEmpty runs the formatter on an empty token stream and returns the output.
-// Used to characterize formatters without comparing function pointers (which panics).
-func renderEmpty(f chroma.Formatter) (string, error) {
-	style := styles.Fallback
-	lexer := chroma.Coalesce(lexers.Fallback)
-	iter, err := lexer.Tokenise(nil, "")
-	if err != nil {
-		return "", err
-	}
-	var buf bytes.Buffer
-	if err := f.Format(&buf, style, iter); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
 // renderLine runs the formatter on a simple Go line and returns the output.
 func renderLine(f chroma.Formatter) (string, error) {
 	style := styles.Get("monokai")
@@ -97,8 +81,8 @@ func TestSelectTheme_DarkDefault(t *testing.T) {
 	if style == nil {
 		t.Fatal("SelectTheme returned nil for dark default")
 	}
-	if style.Name != "monokai" {
-		t.Errorf("dark default theme = %q; want %q", style.Name, "monokai")
+	if style.Name != "github-dark" {
+		t.Errorf("dark default theme = %q; want %q", style.Name, "github-dark")
 	}
 }
 
@@ -127,8 +111,8 @@ func TestSelectTheme_UnknownFallsBackToAutoDetect(t *testing.T) {
 	if style == nil {
 		t.Fatal("SelectTheme returned nil for unknown theme with dark=true")
 	}
-	if style.Name != "monokai" {
-		t.Errorf("unknown theme fallback (dark) = %q; want %q", style.Name, "monokai")
+	if style.Name != "github-dark" {
+		t.Errorf("unknown theme fallback (dark) = %q; want %q", style.Name, "github-dark")
 	}
 }
 

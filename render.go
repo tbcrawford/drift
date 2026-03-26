@@ -44,13 +44,17 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 	termWidth := render.TerminalWidth(w)
 
 	rcfg := &render.RenderConfig{
-		Lang:      cfg.lang,
-		Lexer:     lexer,
-		Style:     style,
-		Formatter: formatter,
-		Profile:   profile,
-		NoColor:   cfg.noColor,
-		TermWidth: termWidth,
+		Lang:            cfg.lang,
+		Lexer:           lexer,
+		Style:           style,
+		Formatter:       formatter,
+		Profile:         profile,
+		NoColor:         cfg.noColor,
+		TermWidth:       termWidth,
+		ShowLineNumbers: cfg.lineNumbers,
+		IsDark:          isDark,
+		LineDiffStyle:   cfg.lineDiffStyle,
+		WordDiff:        cfg.wordDiff,
 	}
 
 	if cfg.split {
@@ -82,15 +86,19 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 	termWidth := render.TerminalWidth(w)
 
 	rcfg := &render.RenderConfig{
-		OldName:   oldName,
-		NewName:   newName,
-		Lang:      cfg.lang,
-		Lexer:     lexer,
-		Style:     style,
-		Formatter: formatter,
-		Profile:   profile,
-		NoColor:   cfg.noColor,
-		TermWidth: termWidth,
+		OldName:         oldName,
+		NewName:         newName,
+		Lang:            cfg.lang,
+		Lexer:           lexer,
+		Style:           style,
+		Formatter:       formatter,
+		Profile:         profile,
+		NoColor:         cfg.noColor,
+		TermWidth:       termWidth,
+		ShowLineNumbers: cfg.lineNumbers,
+		IsDark:          isDark,
+		LineDiffStyle:   cfg.lineDiffStyle,
+		WordDiff:        cfg.wordDiff,
 	}
 
 	if cfg.split {
@@ -101,7 +109,7 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 
 func autoThemeName(isDark bool) string {
 	if isDark {
-		return "monokai"
+		return "github-dark"
 	}
 	return "github"
 }

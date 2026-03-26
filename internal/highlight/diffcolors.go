@@ -23,15 +23,20 @@ func DiffLineBackgroundColour(style *chroma.Style, isDark, del bool) chroma.Colo
 		tt = chroma.GenericInserted
 	}
 	e := style.Get(tt)
-	c := diffEntryChromaColour(e, isDark)
+	// Skip Background when it equals the theme's own base background (e.g. monokai
+	// embeds its terminal BG #272822 on every token, making the diff highlight invisible).
+	baseBackground := style.Get(chroma.Background).Background
+	c := diffEntryChromaColour(e, isDark, baseBackground)
 	if !c.IsSet() {
 		return fallbackDiffChroma(isDark, del)
 	}
 	return c
 }
 
-func diffEntryChromaColour(e chroma.StyleEntry, isDark bool) chroma.Colour {
-	if e.Background.IsSet() {
+// diffEntryChromaColour derives a diff-line background from a chroma StyleEntry.
+// Background is used only when it differs from baseBackground (the theme's own BG).
+func diffEntryChromaColour(e chroma.StyleEntry, isDark bool, baseBackground chroma.Colour) chroma.Colour {
+	if e.Background.IsSet() && e.Background != baseBackground {
 		return e.Background
 	}
 	if e.Colour.IsSet() {
@@ -92,6 +97,25 @@ func GutterBackgroundHex(isDark, oldSide bool) string {
 	return "#eeeeee"
 }
 
+// GutterDimForegroundHex is the muted gray for context line numbers and for the old/new
+// column separator (│). It matches terrasort’s UXTheme.DimFg (see terrasort
+// internal/highlight/uxtheme.go).
+func GutterDimForegroundHex(isDark bool) string {
+	if isDark {
+		return "#919aa1"
+	}
+	return "#64646e"
+}
+
+// GutterHighlightForegroundHex is the gutter number color on delete/insert rows (on top of
+// semantic backgrounds). It matches terrasort’s UXTheme.GutterHighlightFg.
+func GutterHighlightForegroundHex(isDark bool) string {
+	if isDark {
+		return "#d1d7e0"
+	}
+	return "#14141e"
+}
+
 // LineFallbackFromTerminalRGB blends the terminal background toward semantic green/red
 // when no Chroma theme is available (same formula as terrasort's
 // lineFallbackFromTerminalRGB). Returns a Chroma colour for use with Lip Gloss or TTY.
@@ -140,10 +164,10 @@ func blendColourTowardRGB(c chroma.Colour, tr, tg, tb uint8, alpha float64) chro
 	)
 }
 
-// DiffLineMutedBackgroundColour returns the background for the full-line diff wash
-// (add/remove). It starts from [DiffLineBackgroundColour] and blends further toward
-// the terminal base so the line plane stays **more muted** than [WordSpanBackgroundColour]
-// on changed tokens.
+// DiffLineMutedBackgroundColour returns [DiffLineBackgroundColour] blended further
+// toward the terminal base (42%). Full-line rendering uses [DiffLineBackgroundColour]
+// directly (terrasort parity); this helper remains for tests or callers that want an
+// extra-muted plane.
 func DiffLineMutedBackgroundColour(style *chroma.Style, isDark, del bool) chroma.Colour {
 	base := DiffLineBackgroundColour(style, isDark, del)
 	if !base.IsSet() {
@@ -154,9 +178,8 @@ func DiffLineMutedBackgroundColour(style *chroma.Style, isDark, del bool) chroma
 }
 
 // WordSpanBackgroundColour returns a **brighter** semantic red (delete) or green (insert)
-// background for intra-line changed spans. It is derived from the same Chroma style as
-// [DiffLineBackgroundColour] but blended toward pure red/green so it reads stronger than
-// [DiffLineMutedBackgroundColour] on the full-line plane.
+// background for intra-line changed spans. It starts from [DiffLineBackgroundColour] and
+// blends toward pure red/green so changed tokens read stronger than the full-line plane.
 func WordSpanBackgroundColour(style *chroma.Style, isDark, del bool) chroma.Colour {
 	base := DiffLineBackgroundColour(style, isDark, del)
 	if !base.IsSet() {

@@ -25,6 +25,22 @@ func TestGutterBackgroundHex_matchesTerrasortPalette(t *testing.T) {
 	}
 }
 
+func TestGutterForegroundHex_matchesTerrasortUXTheme(t *testing.T) {
+	t.Parallel()
+	if g, w := GutterDimForegroundHex(true), "#919aa1"; g != w {
+		t.Errorf("GutterDimForegroundHex(true) = %q, want %q", g, w)
+	}
+	if g, w := GutterDimForegroundHex(false), "#64646e"; g != w {
+		t.Errorf("GutterDimForegroundHex(false) = %q, want %q", g, w)
+	}
+	if g, w := GutterHighlightForegroundHex(true), "#d1d7e0"; g != w {
+		t.Errorf("GutterHighlightForegroundHex(true) = %q, want %q", g, w)
+	}
+	if g, w := GutterHighlightForegroundHex(false), "#14141e"; g != w {
+		t.Errorf("GutterHighlightForegroundHex(false) = %q, want %q", g, w)
+	}
+}
+
 func TestDiffLineBackgroundColour_githubStyle_nonZero(t *testing.T) {
 	t.Parallel()
 	style := styles.Get("github")
@@ -73,21 +89,21 @@ func TestTerrasortParity_DiffLineBias_MonokaiAndGithubDark(t *testing.T) {
 	}
 }
 
-func TestWordSpanBrighterThanMutedLine_githubDark(t *testing.T) {
+func TestWordSpanBrighterThanDiffLinePlane_githubDark(t *testing.T) {
 	t.Parallel()
 	style := styles.Get("github-dark")
 	if style == nil {
 		t.Fatal("github-dark style")
 	}
-	mutedDel := DiffLineMutedBackgroundColour(style, true, true)
+	lineDel := DiffLineBackgroundColour(style, true, true)
 	wordDel := WordSpanBackgroundColour(style, true, true)
-	if wordDel.Red() <= mutedDel.Red() {
-		t.Fatalf("delete: word span R=%d should exceed muted line R=%d", wordDel.Red(), mutedDel.Red())
+	if wordDel.Red() <= lineDel.Red() {
+		t.Fatalf("delete: word span R=%d should exceed full-line R=%d", wordDel.Red(), lineDel.Red())
 	}
-	mutedIns := DiffLineMutedBackgroundColour(style, true, false)
+	lineIns := DiffLineBackgroundColour(style, true, false)
 	wordIns := WordSpanBackgroundColour(style, true, false)
-	if wordIns.Green() <= mutedIns.Green() {
-		t.Fatalf("insert: word span G=%d should exceed muted line G=%d", wordIns.Green(), mutedIns.Green())
+	if wordIns.Green() <= lineIns.Green() {
+		t.Fatalf("insert: word span G=%d should exceed full-line G=%d", wordIns.Green(), lineIns.Green())
 	}
 }
 

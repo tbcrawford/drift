@@ -70,7 +70,7 @@ func SelectTheme(requested string, isDark bool) *chroma.Style {
 		}
 		// Unknown theme name: fall through to auto-detect.
 	}
-	name := "monokai"
+	name := "github-dark"
 	if !isDark {
 		name = "github"
 	}
