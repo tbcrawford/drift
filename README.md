@@ -26,6 +26,8 @@ With a single path inside a Git worktree, `drift` compares the file on disk to t
 
 Common flags: `--algorithm` (`myers`, `patience`, `histogram`), `--split` (side-by-side), `--theme`, `--lang`, `--no-color`, `--context`, `--from` / `--to`.
 
+**Syntax theme:** When `--theme` is omitted on a Unix TTY with color output, `drift` queries the terminal palette (OSC 4) and picks the closest registered Chroma style. Piped stdout, `NO_COLOR`, or non-Unix environments use the usual dark/light defaults (`monokai` / `github`). The hidden flag `--show-theme` prints `drift: resolved syntax theme: <name>` to stderr so you can see which style was chosen.
+
 ## Library — functional API
 
 ```go

@@ -4,9 +4,11 @@ import (
 	"io"
 	"os"
 
+	"github.com/alecthomas/chroma/v2"
 	"github.com/charmbracelet/colorprofile"
 	"github.com/tylercrawford/drift/internal/highlight"
 	"github.com/tylercrawford/drift/internal/render"
+	"github.com/tylercrawford/drift/internal/terminal"
 	"github.com/tylercrawford/drift/internal/theme"
 )
 
@@ -33,7 +35,7 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 	isDark := theme.DetectDarkBackground(profile)
 
 	lexer := highlight.DetectLexer(cfg.lang, "", "")
-	style := highlight.SelectTheme(cfg.theme, isDark)
+	style := resolveChromaStyle(cfg, profile, w, isDark)
 	formatter := highlight.FormatterForProfile(profile)
 
 	// Wrap the writer for automatic ANSI downsampling when it is an *os.File.
@@ -72,7 +74,7 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 	isDark := theme.DetectDarkBackground(profile)
 
 	lexer := highlight.DetectLexer(cfg.lang, oldName, "")
-	style := highlight.SelectTheme(cfg.theme, isDark)
+	style := resolveChromaStyle(cfg, profile, w, isDark)
 	formatter := highlight.FormatterForProfile(profile)
 
 	wrapped := colorprofile.NewWriter(w, os.Environ())
@@ -95,6 +97,42 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 		return render.Split(result, wrapped, rcfg)
 	}
 	return render.Unified(result, wrapped, rcfg)
+}
+
+func autoThemeName(isDark bool) string {
+	if isDark {
+		return "monokai"
+	}
+	return "github"
+}
+
+func resolveChromaStyle(cfg *config, profile colorprofile.Profile, w io.Writer, isDark bool) *chroma.Style {
+	var style *chroma.Style
+	var name string
+
+	if cfg.theme != "" {
+		style = highlight.SelectTheme(cfg.theme, isDark)
+		name = cfg.theme
+	} else if cfg.noColor || profile == colorprofile.NoTTY || profile == colorprofile.Ascii {
+		style = highlight.SelectTheme("", isDark)
+		name = autoThemeName(isDark)
+	} else if _, ok := w.(*os.File); ok {
+		if palette, err := terminal.QueryANSIPalette(); err == nil && palette != nil && len(palette) > 0 {
+			name = highlight.BestMatchTheme(palette)
+			style = highlight.SelectTheme(name, isDark)
+		} else {
+			style = highlight.SelectTheme("", isDark)
+			name = autoThemeName(isDark)
+		}
+	} else {
+		style = highlight.SelectTheme("", isDark)
+		name = autoThemeName(isDark)
+	}
+
+	if cfg.themeResolved != nil {
+		cfg.themeResolved(name)
+	}
+	return style
 }
 
 // resolveProfile determines the terminal color profile for the given writer

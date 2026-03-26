@@ -111,6 +111,16 @@ func buildDriftOptions(cmd *cobra.Command) ([]drift.Option, error) {
 		opts = append(opts, drift.WithTheme(theme))
 	}
 
+	showTheme, err := cmd.Flags().GetBool("show-theme")
+	if err != nil {
+		return nil, err
+	}
+	if showTheme {
+		opts = append(opts, drift.WithThemeResolved(func(name string) {
+			fmt.Fprintf(os.Stderr, "drift: resolved syntax theme: %s\n", name)
+		}))
+	}
+
 	split, err := cmd.Flags().GetBool("split")
 	if err != nil {
 		return nil, err
@@ -202,6 +212,8 @@ func init() {
 	rootCmd.Flags().Int("context", 3, "lines of context around hunks")
 	rootCmd.Flags().String("from", "", "old text as a raw string (use with --to)")
 	rootCmd.Flags().String("to", "", "new text as a raw string (use with --from)")
+	rootCmd.Flags().Bool("show-theme", false, "print resolved Chroma theme to stderr after selection")
+	_ = rootCmd.Flags().MarkHidden("show-theme")
 }
 
 func main() {

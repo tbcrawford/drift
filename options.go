@@ -17,12 +17,13 @@ type Option func(*config)
 
 // config holds all diff configuration. Unexported — callers use Option functions.
 type config struct {
-	algorithm    Algorithm
-	contextLines int
-	noColor      bool
-	lang         string
-	theme        string
-	split        bool
+	algorithm     Algorithm
+	contextLines  int
+	noColor       bool
+	lang          string
+	theme         string
+	split         bool
+	themeResolved func(string)
 }
 
 // defaultConfig returns a config with production-ready defaults.
@@ -60,6 +61,12 @@ func WithLang(lang string) Option {
 // Use Chroma style names (e.g., "monokai", "github", "dracula").
 func WithTheme(theme string) Option {
 	return func(c *config) { c.theme = theme }
+}
+
+// WithThemeResolved registers a callback invoked with the resolved Chroma theme
+// name after style selection (including OSC 4 best-match on supported Unix TTYs).
+func WithThemeResolved(fn func(string)) Option {
+	return func(c *config) { c.themeResolved = fn }
 }
 
 // WithSplit enables side-by-side split diff rendering.
