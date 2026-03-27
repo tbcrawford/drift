@@ -19,25 +19,33 @@ const gutterNumberPadEachSide = 1
 // the heavy box-drawing vertical is U+2503 ┃).
 const gutterColumnSeparator = " │"
 
+// gutterColWidth returns the minimum gutter column width needed to display any of the
+// given line numbers: max(len(strconv.Itoa(n)) + 2*gutterNumberPadEachSide) for n > 0,
+// or 1 when no positive number is present.
+func gutterColWidth(nums []int) int {
+	w := 1
+	for _, n := range nums {
+		if n > 0 {
+			if dw := len(strconv.Itoa(n)) + 2*gutterNumberPadEachSide; dw > w {
+				w = dw
+			}
+		}
+	}
+	return w
+}
+
 // gutterWidths returns minimum column widths for old and new line numbers in a hunk.
 // Widths are based on the longest decimal string among lines with OldNum > 0 / NewNum > 0,
 // plus one space on each side of the number.
 // If no such line exists for a side, width is 1.
 func gutterWidths(lines []edittype.Line) (oldW, newW int) {
-	oldW, newW = 1, 1
-	for _, ln := range lines {
-		if ln.OldNum > 0 {
-			if w := len(strconv.Itoa(ln.OldNum)) + 2*gutterNumberPadEachSide; w > oldW {
-				oldW = w
-			}
-		}
-		if ln.NewNum > 0 {
-			if w := len(strconv.Itoa(ln.NewNum)) + 2*gutterNumberPadEachSide; w > newW {
-				newW = w
-			}
-		}
+	oldNums := make([]int, len(lines))
+	newNums := make([]int, len(lines))
+	for i, ln := range lines {
+		oldNums[i] = ln.OldNum
+		newNums[i] = ln.NewNum
 	}
-	return oldW, newW
+	return gutterColWidth(oldNums), gutterColWidth(newNums)
 }
 
 // gutterStyleForCell returns a Lip Gloss style for one gutter column on one logical line.
@@ -103,18 +111,11 @@ func GutterNumberRender(st lipgloss.Style, width int, n int) string {
 }
 
 func gutterPairWidths(pairs []linePair) (oldW, newW int) {
-	oldW, newW = 1, 1
-	for _, p := range pairs {
-		if p.leftOldNum > 0 {
-			if w := len(strconv.Itoa(p.leftOldNum)) + 2*gutterNumberPadEachSide; w > oldW {
-				oldW = w
-			}
-		}
-		if p.rightNewNum > 0 {
-			if w := len(strconv.Itoa(p.rightNewNum)) + 2*gutterNumberPadEachSide; w > newW {
-				newW = w
-			}
-		}
+	oldNums := make([]int, len(pairs))
+	newNums := make([]int, len(pairs))
+	for i, p := range pairs {
+		oldNums[i] = p.leftOldNum
+		newNums[i] = p.rightNewNum
 	}
-	return oldW, newW
+	return gutterColWidth(oldNums), gutterColWidth(newNums)
 }
