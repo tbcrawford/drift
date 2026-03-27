@@ -56,7 +56,10 @@
 - [x] **OSS-08**: Property-based tests verify algorithm correctness invariants (round-trip: `apply(diff(a,b), a) == b`)
 - [x] **OSS-09**: Project includes a `justfile` (or `Makefile`) for common repository maintenance tasks (test, lint, build, benchmark)
 
-## v2 Requirements
+### Maintenance
+
+- [x] **CRUFT-01**: All accumulated working-tree changes committed with conventional commit messages before cruft removal
+- [x] **CRUFT-02**: Dead/unreferenced exported symbols removed from internal packages
 
 ### Rendering
 
@@ -126,6 +129,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OSS-06 | Phase 6 — API Hardening & OSS Packaging | Pending |
 | OSS-07 | Phase 6 — API Hardening & OSS Packaging | Pending |
 
+| CRUFT-01 | Phase 14 — Deep Cruft Removal | Complete |
+| CRUFT-02 | Phase 14 — Deep Cruft Removal | Complete |
+
 **Coverage:**
 - v1 requirements: 35 total
 - Mapped to phases: 35
@@ -133,4 +139,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-25*
-*Last updated: 2026-03-25 after initial definition*
+*Last updated: 2026-03-27 after Phase 14 — CRUFT-01/02 added under Maintenance*
