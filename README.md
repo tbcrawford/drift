@@ -52,6 +52,16 @@ func main() {
 }
 ```
 
+Disable optional visual enhancements individually:
+
+```go
+// Line numbers are on by default; hide gutters:
+drift.Render(result, os.Stdout, drift.WithoutLineNumbers())
+
+// Word-level highlights and full-line diff styling are on by default; disable:
+drift.Render(result, os.Stdout, drift.WithWordDiff(false), drift.WithLineDiffStyle(false))
+```
+
 ## Library — builder API
 
 ```go
@@ -68,12 +78,20 @@ if err := b.Render(result, os.Stdout); err != nil {
 ## Rendering
 
 - **Unified** (default): classic `---` / `+++` / `@@` hunks, one column.
+- **Line numbers**: old/new gutters appear before the `+`/`-`/space prefix by default. Opt out with `drift.WithLineNumbers(false)`, `drift.WithoutLineNumbers()`, or the CLI flag `--no-line-numbers`.
 - **Split**: pass `drift.WithSplit()` to `Render` (or `b.Split()` on the builder) for two panels separated by ` │ `.
+- **Word diff** (`WithWordDiff`): word-level intra-line highlights on paired delete/insert lines (default: on). Disable with `drift.WithWordDiff(false)`.
+- **Full-line diff style** (`WithLineDiffStyle`): theme-derived full-line background colour on added and removed lines (default: on). Disable with `drift.WithLineDiffStyle(false)`.
 - **Theme** (`WithTheme`): Chroma style name (e.g. `github`, `monokai`).
 - **Language** (`WithLang`): Chroma lexer name (e.g. `go`, `python`) for highlighting.
 
 ```go
 drift.Render(result, w, drift.WithSplit(), drift.WithTheme("dracula"), drift.WithLang("go"))
+```
+
+```go
+// Default: gutters on. Hide gutters:
+drift.Render(result, w, drift.WithoutLineNumbers())
 ```
 
 ## License
