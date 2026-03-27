@@ -61,11 +61,10 @@ func shouldWordDiffPair(cfg *RenderConfig, left, right string, leftOp, rightOp e
 	return leftOp == edittype.Delete && rightOp == edittype.Insert
 }
 
-// highlightSegmented applies Chroma per segment, using wordBg for changed spans and
-// lineBg for unchanged spans. Both backgrounds are passed directly to highlightPiece
-// (which calls HighlightLineWithLineBackground per-token) so the background is embedded
-// in each token's ANSI escape — the outer-wrapper approach breaks because per-token
-// backgrounds already override any outer lipgloss wrap.
+// highlightSegmented highlights all segments with lineBg so syntax foreground colours
+// are consistent throughout the line, then replaces only the background ANSI escape on
+// changed spans with wordBg. This preserves font colour and only changes the background
+// for changed characters — the same visual contract as GitHub PR intra-line highlights.
 func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, segs []worddiff.Segment, lineBg, wordBg chroma.Colour) string {
 	if content == "" {
 		return ""
@@ -82,11 +81,12 @@ func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style,
 		if piece == "" {
 			continue
 		}
-		bg := lineBg
-		if seg.Changed && wordBg.IsSet() {
-			bg = wordBg
+		hl := highlightPiece(piece, lexer, style, formatter, lineBg)
+		if seg.Changed && wordBg.IsSet() && lineBg.IsSet() {
+			// Swap only the background escape — foreground/emphasis unchanged.
+			hl = highlight.ReplaceAnsiBackground(hl, lineBg, wordBg)
 		}
-		b.WriteString(highlightPiece(piece, lexer, style, formatter, bg))
+		b.WriteString(hl)
 	}
 	if b.Len() == 0 {
 		return highlightPiece(content, lexer, style, formatter, lineBg)
