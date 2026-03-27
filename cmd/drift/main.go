@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tylercrawford/drift"
+	"github.com/tylercrawford/drift/drift"
 )
 
 // stdinReader is swapped in tests via runCLI.
@@ -129,6 +129,14 @@ func buildDriftOptions(cmd *cobra.Command) ([]drift.Option, error) {
 		opts = append(opts, drift.WithSplit())
 	}
 
+	noLineNumbers, err := cmd.Flags().GetBool("no-line-numbers")
+	if err != nil {
+		return nil, err
+	}
+	if noLineNumbers {
+		opts = append(opts, drift.WithoutLineNumbers())
+	}
+
 	return opts, nil
 }
 
@@ -205,6 +213,7 @@ func executeDrift() int {
 
 func init() {
 	rootCmd.Flags().Bool("split", false, "side-by-side split view")
+	rootCmd.Flags().Bool("no-line-numbers", false, "hide old/new line-number gutters")
 	rootCmd.Flags().String("algorithm", "myers", "diff algorithm: myers, patience, histogram")
 	rootCmd.Flags().String("lang", "", "Chroma language override (e.g. go, python)")
 	rootCmd.Flags().String("theme", "", "Chroma style/theme override")

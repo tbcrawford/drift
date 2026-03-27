@@ -1,7 +1,7 @@
 // Package testhelpers provides test helpers for drift property-based and integration tests.
 package testhelpers
 
-import "github.com/tylercrawford/drift"
+import "github.com/tylercrawford/drift/drift"
 
 // Apply reconstructs the "new" file from a DiffResult and the original "old" lines.
 // Used to verify the round-trip invariant: Apply(Diff(old, new), oldLines) == newLines.

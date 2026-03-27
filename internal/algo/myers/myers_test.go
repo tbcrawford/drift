@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tylercrawford/drift"
+	"github.com/tylercrawford/drift/drift"
 	"github.com/tylercrawford/drift/internal/algo/myers"
 )
 
@@ -324,9 +324,10 @@ func Validate(cfg *Config) []string {
 		if strings.HasPrefix(line, "+++ ") || strings.HasPrefix(line, "--- ") {
 			continue
 		}
-		if line[0] == '+' {
+		switch line[0] {
+		case '+':
 			sysAdded++
-		} else if line[0] == '-' {
+		case '-':
 			sysRemoved++
 		}
 	}

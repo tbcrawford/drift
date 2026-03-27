@@ -3,22 +3,12 @@ package hunk_test
 import (
 	"testing"
 
-	"github.com/tylercrawford/drift"
+	"github.com/tylercrawford/drift/drift"
 	"github.com/tylercrawford/drift/internal/hunk"
 )
 
 // makeLines builds a simple []string slice from a variadic list of strings.
 func makeLines(lines ...string) []string { return lines }
-
-// makeNLines builds a slice of n strings: "1", "2", ..., "n".
-func makeNLines(n int) []string {
-	lines := make([]string, n)
-	for i := range lines {
-		lines[i] = string(rune('0'+((i+1)/10))) + string(rune('0'+((i+1)%10)))
-		// simpler: just use fmt but avoid import — use direct approach
-	}
-	return lines
-}
 
 // numberedLines builds lines like "line01", "line02", …
 func numberedLines(n int) []string {

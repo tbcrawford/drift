@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tylercrawford/drift"
+	"github.com/tylercrawford/drift/drift"
 )
 
 func main() {
