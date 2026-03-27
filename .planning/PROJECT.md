@@ -95,4 +95,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-26 after Phase 08 complete — OSC 4 palette query, `BestMatchTheme`, `WithThemeResolved`, hidden `--show-theme`*
+*Last updated: 2026-03-27 after Phase 12 complete — idiomatic project layout, `internal/testhelpers`, `diffConfig`/`renderConfig` split, doc.go + README API surface updated*
