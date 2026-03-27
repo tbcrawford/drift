@@ -94,7 +94,7 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 
 	style := cfg.Style
 	if style == nil {
-		style = highlight.SelectTheme("", true) // dark default; caller sets via cfg.Style
+		style = highlight.SelectTheme("", cfg.IsDark) // fallback; caller should always set cfg.Style
 	}
 
 	formatter := cfg.Formatter
@@ -133,7 +133,7 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 
 		// contentW is the width available for highlighted content (prefix already excluded).
 		// We use it to extend line backgrounds to the full terminal width.
-		const gutterSepWidth = 2 // " │"
+		const gutterSepWidth = 2  // " │"
 		contentW := termWidth - 1 // -1 for the +/-/space prefix
 		if cfg.ShowLineNumbers {
 			contentW -= oldW + gutterSepWidth + newW

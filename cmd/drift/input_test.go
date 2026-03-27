@@ -24,6 +24,7 @@ func TestResolveInputs_singleArg_gitMode(t *testing.T) {
 		"case \"$joined\" in\n" +
 		"  *rev-parse*--is-inside-work-tree*) echo true; exit 0 ;;\n" +
 		"  *rev-parse*--show-toplevel*) echo \"" + repoAbs + "\"; exit 0 ;;\n" +
+		"  *cat-file*-e*HEAD:f.go*) exit 0 ;;\n" +
 		"  *show*HEAD:f.go*) printf '%s' 'old\n'; exit 0 ;;\n" +
 		"esac\n" +
 		"echo \"fake git: $joined\" >&2\n" +

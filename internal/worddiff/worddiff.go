@@ -93,12 +93,7 @@ func pairWithTokenizer(old, new string, tok func(string) []Token) (oldSegs, newS
 	for _, e := range edits {
 		switch e.Op {
 		case edittype.Equal:
-			if e.OldLine > 0 && e.OldLine <= len(ot) {
-				oldChanged[e.OldLine-1] = false
-			}
-			if e.NewLine > 0 && e.NewLine <= len(nt) {
-				newChanged[e.NewLine-1] = false
-			}
+			// oldChanged and newChanged are already false from make(); no assignment needed.
 		case edittype.Delete:
 			if e.OldLine > 0 && e.OldLine <= len(ot) {
 				oldChanged[e.OldLine-1] = true

@@ -3,8 +3,9 @@
 // break the import cycle that would arise if internal packages (algo/myers,
 // hunk) imported the root drift package, which in turn imports them.
 //
-// Consumers should use the re-exported types in the root drift package:
+// Consumers should use the re-exported types in the public library package:
 //
+//	import "github.com/tylercrawford/drift/drift"
 //	drift.Op, drift.Edit, drift.Line, drift.Span, drift.Hunk, drift.DiffResult
 package edittype
 

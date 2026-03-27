@@ -89,6 +89,17 @@ func gitRevParseShowToplevel(gitDir string) (string, error) {
 }
 
 func gitShowHEADBlob(repoRoot, relpathSlash string) (string, error) {
+	// Use git cat-file -e to check existence before show — this is locale-independent
+	// (exit code 0 = object exists, non-zero = absent), unlike parsing English stderr.
+	_, _, checkErr := runGit(repoRoot, "cat-file", "-e", "HEAD:"+relpathSlash)
+	if checkErr != nil {
+		if errors.Is(checkErr, exec.ErrNotFound) {
+			return "", fmt.Errorf("git not found in PATH; use two paths to diff files without git: %w", checkErr)
+		}
+		// Object not present at HEAD — file is new/untracked; treat old content as empty.
+		return "", nil
+	}
+
 	out, stderr, err := runGit(repoRoot, "show", "HEAD:"+relpathSlash)
 	if err == nil {
 		return out, nil
@@ -96,17 +107,7 @@ func gitShowHEADBlob(repoRoot, relpathSlash string) (string, error) {
 	if errors.Is(err, exec.ErrNotFound) {
 		return "", fmt.Errorf("git not found in PATH; use two paths to diff files without git: %w", err)
 	}
-	if headBlobMissing(stderr) {
-		return "", nil
-	}
 	return "", fmt.Errorf("git show HEAD:%s failed: use two paths to diff without a working git repo: %w\n%s", relpathSlash, err, strings.TrimSpace(stderr))
-}
-
-func headBlobMissing(stderr string) bool {
-	s := strings.ToLower(stderr)
-	return strings.Contains(s, "exists on disk, but not in") ||
-		strings.Contains(s, "did not match any file") ||
-		strings.Contains(s, "fatal: path")
 }
 
 func runGit(gitDir string, args ...string) (stdout, stderr string, err error) {

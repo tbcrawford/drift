@@ -61,7 +61,7 @@ func FormatterForProfile(p colorprofile.Profile) chroma.Formatter {
 //
 // If requested is non-empty, it is looked up by exact name in the registry.
 // If the name is unknown, SelectTheme falls back to auto-detection.
-// Auto-detection uses "monokai" for dark terminals and "github" for light terminals.
+// Auto-detection uses "github-dark" for dark terminals and "github" for light terminals.
 // chromastyles.Fallback ("swapoff") is used as the last resort — it is always registered.
 func SelectTheme(requested string, isDark bool) *chroma.Style {
 	if requested != "" {

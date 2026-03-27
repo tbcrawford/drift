@@ -38,6 +38,7 @@ func TestResolveGitWorkingTreeVsHEAD_happyPath(t *testing.T) {
 		"case \"$joined\" in\n" +
 		"  *rev-parse*--is-inside-work-tree*) echo true; exit 0 ;;\n" +
 		"  *rev-parse*--show-toplevel*) echo \"" + repoAbs + "\"; exit 0 ;;\n" +
+		"  *cat-file*-e*HEAD:file.txt*) exit 0 ;;\n" +
 		"  *show*HEAD:file.txt*) printf '%s' 'oldcontent'; exit 0 ;;\n" +
 		"esac\n" +
 		"echo \"fake git: $joined\" >&2\n" +

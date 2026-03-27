@@ -104,7 +104,7 @@ func (h *Histogram) Diff(old, new []string) []edittype.Edit {
 
 		if !found {
 			fallback := m.Diff(old[f.os:f.oe], new[f.ns:f.ne])
-			applyOffset(fallback, f.os, f.ns)
+			algo.ApplyOffset(fallback, f.os, f.ns)
 			edits = append(edits, fallback...)
 			continue
 		}
@@ -143,7 +143,7 @@ func (h *Histogram) Diff(old, new []string) []edittype.Edit {
 // and new[f.ns:f.ne] where the old lines appear with the fewest occurrences,
 // following the jgit HistogramDiff approach.
 func findBestMatch(old, new []string, f stackItem, counts map[string]int) (matchResult, bool) {
-	lowcount := histogramMaxOccurrences + 1
+	lowcount := histogramMaxOccurrences
 	var best matchResult
 	found := false
 
@@ -192,17 +192,4 @@ func findBestMatch(old, new []string, f stackItem, counts map[string]int) (match
 	}
 
 	return best, found
-}
-
-// applyOffset adjusts OldLine/NewLine in a Myers fallback edit slice by the
-// subslice offsets used when calling Myers on a sub-region.
-func applyOffset(edits []edittype.Edit, oldOff, newOff int) {
-	for i := range edits {
-		if edits[i].OldLine > 0 {
-			edits[i].OldLine += oldOff
-		}
-		if edits[i].NewLine > 0 {
-			edits[i].NewLine += newOff
-		}
-	}
 }

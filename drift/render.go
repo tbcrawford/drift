@@ -18,6 +18,9 @@ import (
 // For non-file writers (e.g., bytes.Buffer), the profile is treated as NoTTY
 // and output is plain text. Use WithNoColor() to explicitly disable colors.
 //
+// Lexer detection uses the explicit lang option only; no filename or content
+// analysis is performed. Use RenderWithNames to enable extension-based detection.
+//
 // Example:
 //
 //	result, err := drift.Diff(old, new)
@@ -31,10 +34,85 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 		o(cfg)
 	}
 
+	pipeline := buildRenderPipeline(w, cfg, "")
+
+	rcfg := &render.RenderConfig{
+		Lang:            cfg.render.lang,
+		Lexer:           pipeline.lexer,
+		Style:           pipeline.style,
+		Formatter:       pipeline.formatter,
+		Profile:         pipeline.profile,
+		NoColor:         cfg.render.noColor,
+		TermWidth:       pipeline.termWidth,
+		ShowLineNumbers: cfg.render.lineNumbers,
+		IsDark:          pipeline.isDark,
+		LineDiffStyle:   cfg.render.lineDiffStyle,
+		WordDiff:        cfg.render.wordDiff,
+	}
+
+	if cfg.render.split {
+		return render.Split(result, pipeline.wrapped, rcfg)
+	}
+	return render.Unified(result, pipeline.wrapped, rcfg)
+}
+
+// RenderWithNames is like Render but includes file path labels in the diff header.
+//
+// oldName and newName appear in the "--- oldName" and "+++ newName" header lines,
+// matching the format produced by git diff. Pass empty strings to use the defaults
+// ("a/input" and "b/input").
+//
+// Lexer detection uses, in order: explicit lang option, oldName extension, then
+// falls back to plaintext. Content-based detection is not performed.
+func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, opts ...Option) error {
+	cfg := defaultConfig()
+	for _, o := range opts {
+		o(cfg)
+	}
+
+	pipeline := buildRenderPipeline(w, cfg, oldName)
+
+	rcfg := &render.RenderConfig{
+		OldName:         oldName,
+		NewName:         newName,
+		Lang:            cfg.render.lang,
+		Lexer:           pipeline.lexer,
+		Style:           pipeline.style,
+		Formatter:       pipeline.formatter,
+		Profile:         pipeline.profile,
+		NoColor:         cfg.render.noColor,
+		TermWidth:       pipeline.termWidth,
+		ShowLineNumbers: cfg.render.lineNumbers,
+		IsDark:          pipeline.isDark,
+		LineDiffStyle:   cfg.render.lineDiffStyle,
+		WordDiff:        cfg.render.wordDiff,
+	}
+
+	if cfg.render.split {
+		return render.Split(result, pipeline.wrapped, rcfg)
+	}
+	return render.Unified(result, pipeline.wrapped, rcfg)
+}
+
+// renderPipeline holds the resolved rendering dependencies for a single call.
+type renderPipeline struct {
+	profile   colorprofile.Profile
+	isDark    bool
+	lexer     chroma.Lexer
+	style     *chroma.Style
+	formatter chroma.Formatter
+	wrapped   io.Writer
+	termWidth int
+}
+
+// buildRenderPipeline resolves all rendering dependencies from w, cfg, and an
+// optional filename for lexer detection. It is shared by Render and RenderWithNames
+// to eliminate duplicated setup code.
+func buildRenderPipeline(w io.Writer, cfg *config, filename string) renderPipeline {
 	profile := resolveProfile(w, cfg)
 	isDark := theme.DetectDarkBackground(profile)
 
-	lexer := highlight.DetectLexer(cfg.render.lang, "", "")
+	lexer := highlight.DetectLexer(cfg.render.lang, filename, "")
 	style := resolveChromaStyle(cfg, profile, w, isDark)
 	formatter := highlight.FormatterForProfile(profile)
 
@@ -43,68 +121,15 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 
 	termWidth := render.TerminalWidth(w)
 
-	rcfg := &render.RenderConfig{
-		Lang:            cfg.render.lang,
-		Lexer:           lexer,
-		Style:           style,
-		Formatter:       formatter,
-		Profile:         profile,
-		NoColor:         cfg.render.noColor,
-		TermWidth:       termWidth,
-		ShowLineNumbers: cfg.render.lineNumbers,
-		IsDark:          isDark,
-		LineDiffStyle:   cfg.render.lineDiffStyle,
-		WordDiff:        cfg.render.wordDiff,
+	return renderPipeline{
+		profile:   profile,
+		isDark:    isDark,
+		lexer:     lexer,
+		style:     style,
+		formatter: formatter,
+		wrapped:   wrapped,
+		termWidth: termWidth,
 	}
-
-	if cfg.render.split {
-		return render.Split(result, wrapped, rcfg)
-	}
-	return render.Unified(result, wrapped, rcfg)
-}
-
-// RenderWithNames is like Render but includes file path labels in the diff header.
-//
-// oldName and newName appear in the "--- oldName" and "+++ newName" header lines,
-// matching the format produced by git diff. Pass empty strings to use the defaults
-// ("a/input" and "b/input").
-func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, opts ...Option) error {
-	cfg := defaultConfig()
-	for _, o := range opts {
-		o(cfg)
-	}
-
-	profile := resolveProfile(w, cfg)
-	isDark := theme.DetectDarkBackground(profile)
-
-	lexer := highlight.DetectLexer(cfg.render.lang, oldName, "")
-	style := resolveChromaStyle(cfg, profile, w, isDark)
-	formatter := highlight.FormatterForProfile(profile)
-
-	wrapped := colorprofile.NewWriter(w, os.Environ())
-
-	termWidth := render.TerminalWidth(w)
-
-	rcfg := &render.RenderConfig{
-		OldName:         oldName,
-		NewName:         newName,
-		Lang:            cfg.render.lang,
-		Lexer:           lexer,
-		Style:           style,
-		Formatter:       formatter,
-		Profile:         profile,
-		NoColor:         cfg.render.noColor,
-		TermWidth:       termWidth,
-		ShowLineNumbers: cfg.render.lineNumbers,
-		IsDark:          isDark,
-		LineDiffStyle:   cfg.render.lineDiffStyle,
-		WordDiff:        cfg.render.wordDiff,
-	}
-
-	if cfg.render.split {
-		return render.Split(result, wrapped, rcfg)
-	}
-	return render.Unified(result, wrapped, rcfg)
 }
 
 func autoThemeName(isDark bool) string {

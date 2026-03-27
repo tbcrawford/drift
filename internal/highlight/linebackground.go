@@ -57,12 +57,14 @@ func HighlightLineWithLineBackground(line string, lexer chroma.Lexer, style *chr
 // lipgloss v2 emits (\x1b[38;2;R;G;B;48;2;R;G;Bm). All other ANSI codes (foreground,
 // bold, italic, etc.) are preserved unchanged.
 //
-// This is used by the word-diff renderer to swap the line background for the brighter
-// word-span background on changed character spans without altering syntax foreground colours.
-//
 // The function only operates on the 24-bit TrueColor sub-sequence "48;2;R;G;B".
 // When the string uses a lower colour depth the call is a no-op — an acceptable
 // degradation because character-level highlights are most valuable in TrueColor terminals.
+//
+// Note: this function is not called by the current word-diff renderer, which uses
+// segment-based highlighting (highlightLineWithSegments) instead. It is retained
+// as a tested utility for a future renderer iteration that may require post-hoc
+// background replacement on pre-highlighted ANSI strings.
 func ReplaceAnsiBackground(s string, from, to chroma.Colour) string {
 	if !from.IsSet() || !to.IsSet() || from == to {
 		return s

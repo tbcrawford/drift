@@ -43,6 +43,12 @@ func (b *Builder) Theme(theme string) *Builder {
 	return b
 }
 
+// ThemeResolved appends WithThemeResolved(fn).
+func (b *Builder) ThemeResolved(fn func(string)) *Builder {
+	b.opts = append(b.opts, WithThemeResolved(fn))
+	return b
+}
+
 // Split appends WithSplit().
 func (b *Builder) Split() *Builder {
 	b.opts = append(b.opts, WithSplit())

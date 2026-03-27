@@ -154,7 +154,7 @@ func (p *Patience) Diff(old, new []string) []edittype.Edit {
 		// No anchors: Myers fallback
 		if len(anchors) == 0 {
 			sub := m.Diff(old[f.os:f.oe], new[f.ns:f.ne])
-			applyOffset(sub, f.os, f.ns)
+			algo.ApplyOffset(sub, f.os, f.ns)
 			edits = append(edits, sub...)
 			edits = append(edits, tailEdits...)
 			continue
@@ -281,18 +281,4 @@ func lcsAnchors(oldUniq, newUniq []lineIdx) []anchor {
 // anchor holds matched old/new 0-indexed positions from the LCS of unique lines.
 type anchor struct {
 	oldIdx, newIdx int
-}
-
-// applyOffset adjusts OldLine and NewLine in each edit by the given offsets.
-// Myers returns 1-indexed lines relative to the sub-slice; this converts them
-// to 1-indexed lines relative to the full file.
-func applyOffset(edits []edittype.Edit, oldOff, newOff int) {
-	for i := range edits {
-		if edits[i].OldLine > 0 {
-			edits[i].OldLine += oldOff
-		}
-		if edits[i].NewLine > 0 {
-			edits[i].NewLine += newOff
-		}
-	}
 }

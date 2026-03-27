@@ -14,6 +14,10 @@ import (
 //
 // Line endings are normalized: Windows \r\n is treated as \n.
 // When both inputs are identical, DiffResult.IsEqual is true and Hunks is empty.
+//
+// The returned error is currently always nil — no algorithm implementation can
+// fail on valid string input. The error return is reserved for future algorithm
+// variants (e.g., streaming or external implementations) that may need it.
 func Diff(old, new string, opts ...Option) (DiffResult, error) {
 	cfg := defaultConfig()
 	for _, o := range opts {
