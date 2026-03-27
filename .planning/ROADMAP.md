@@ -214,8 +214,8 @@ Plans:
 **Goal:** Clean up internal project layout for idiomatic Go library distribution: move the exported `testdata.Apply` test helper to `internal/testhelpers`, split the flat `config` struct into named `diffConfig` + `renderConfig` sub-structs for self-documenting separation of concerns, and update `doc.go` + README to reflect the full API surface added in phases 7–11.
 **Requirements**: LAYOUT-01, LAYOUT-02, LAYOUT-03
 **Depends on:** Phase 11
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 12-01-PLAN.md — Move testdata/apply.go → internal/testhelpers; split config struct into diffConfig + renderConfig
+- [x] 12-01-PLAN.md — Move testdata/apply.go → internal/testhelpers; split config struct into diffConfig + renderConfig
 - [ ] 12-02-PLAN.md — Update doc.go package overview + README.md with complete API surface (phases 7–11 additions)
