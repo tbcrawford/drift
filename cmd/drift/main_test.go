@@ -11,7 +11,8 @@ import (
 func TestRunCLI_identicalFromTo(t *testing.T) {
 	t.Helper()
 	var out, errOut bytes.Buffer
-	code := runCLI(&out, &errOut, strings.NewReader(""), []string{"--from", "same", "--to", "same"})
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--from", "same", "--to", "same"})
 	if code != 0 {
 		t.Fatalf("exit code %d, stderr: %s", code, errOut.String())
 	}
@@ -20,7 +21,8 @@ func TestRunCLI_identicalFromTo(t *testing.T) {
 func TestRunCLI_differs(t *testing.T) {
 	t.Helper()
 	var out, errOut bytes.Buffer
-	code := runCLI(&out, &errOut, strings.NewReader(""), []string{"--from", "a", "--to", "b"})
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--from", "a", "--to", "b"})
 	if code != 1 {
 		t.Fatalf("expected exit 1, got %d stderr=%q", code, errOut.String())
 	}
@@ -54,7 +56,8 @@ func TestRunCLI_gitSingleArg_differs(t *testing.T) {
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	var out, errOut bytes.Buffer
-	code := runCLI(&out, &errOut, strings.NewReader(""), []string{file})
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{file})
 	if code != 1 {
 		t.Fatalf("expected exit 1, got %d stderr=%q stdout=%q", code, errOut.String(), out.String())
 	}
@@ -66,7 +69,8 @@ func TestRunCLI_gitSingleArg_differs(t *testing.T) {
 func TestRunCLI_invalidAlgorithm(t *testing.T) {
 	t.Helper()
 	var out, errOut bytes.Buffer
-	code := runCLI(&out, &errOut, strings.NewReader(""), []string{"--algorithm", "nope", "--from", "a", "--to", "b"})
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--algorithm", "nope", "--from", "a", "--to", "b"})
 	if code != 2 {
 		t.Fatalf("expected exit 2, got %d", code)
 	}
@@ -78,11 +82,11 @@ func TestRunCLI_invalidAlgorithm(t *testing.T) {
 func TestHelpListsAllFlags(t *testing.T) {
 	t.Helper()
 	buf := new(bytes.Buffer)
-	rootCmd.SetOut(buf)
-	rootCmd.SetErr(buf)
-	rootCmd.SetArgs([]string{"--help"})
-	if err := rootCmd.Execute(); err != nil {
-		t.Fatal(err)
+	streams := IOStreams{In: strings.NewReader(""), Out: buf, Err: buf}
+	code := runCLI(streams, []string{"--help"})
+	// --help exits 0
+	if code != 0 {
+		t.Fatalf("expected exit 0 from --help, got %d", code)
 	}
 	out := buf.String()
 	for _, flag := range []string{

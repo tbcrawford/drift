@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -11,47 +10,8 @@ import (
 	"github.com/tylercrawford/drift/drift"
 )
 
-// stdinReader is swapped in tests via runCLI.
-var stdinReader io.Reader = os.Stdin
-
-var rootCmd = &cobra.Command{
-	Use:   "drift [flags] OLD NEW | FILE",
-	Short: "Pretty-print a diff between two inputs",
-	Long: `Pretty-print a diff between two inputs.
-With one path inside a git repository, diffs the working tree against HEAD.`,
-	SilenceUsage:  true,
-	SilenceErrors: true,
-	Args:          validateRootArgs,
-	RunE:          runRoot,
-}
-
-func validateRootArgs(cmd *cobra.Command, args []string) error {
-	from, err := cmd.Flags().GetString("from")
-	if err != nil {
-		return err
-	}
-	to, err := cmd.Flags().GetString("to")
-	if err != nil {
-		return err
-	}
-
-	if from != "" || to != "" {
-		if len(args) != 0 {
-			return fmt.Errorf("invalid arguments: with --from/--to do not pass file paths")
-		}
-		return nil
-	}
-
-	switch len(args) {
-	case 0:
-		return fmt.Errorf("invalid usage: expected drift [flags] OLD NEW, a single FILE in a git repo, or --from/--to")
-	case 1, 2:
-		return nil
-	default:
-		return fmt.Errorf("invalid usage: too many positional arguments")
-	}
-}
-
+// parseAlgorithm maps a flag string to a drift.Algorithm value.
+// Preserved here because flags.go calls it during resolveRootOptions.
 func parseAlgorithm(s string) (drift.Algorithm, error) {
 	switch strings.ToLower(strings.TrimSpace(s)) {
 	case "myers":
@@ -65,102 +25,52 @@ func parseAlgorithm(s string) (drift.Algorithm, error) {
 	}
 }
 
-func buildDriftOptions(cmd *cobra.Command) ([]drift.Option, error) {
-	var opts []drift.Option
+// newRootCmd constructs the root cobra command for a single CLI invocation.
+// All state is local — no package-level variables are shared across invocations.
+func newRootCmd(streams IOStreams) *cobra.Command {
+	flags := &rootFlags{}
 
-	algStr, err := cmd.Flags().GetString("algorithm")
-	if err != nil {
-		return nil, err
-	}
-	a, err := parseAlgorithm(algStr)
-	if err != nil {
-		return nil, err
-	}
-	opts = append(opts, drift.WithAlgorithm(a))
-
-	n, err := cmd.Flags().GetInt("context")
-	if err != nil {
-		return nil, err
-	}
-	if n < 0 {
-		return nil, newExitCode(2, "invalid context: must be non-negative")
-	}
-	opts = append(opts, drift.WithContext(n))
-
-	noColor, err := cmd.Flags().GetBool("no-color")
-	if err != nil {
-		return nil, err
-	}
-	if noColor {
-		opts = append(opts, drift.WithNoColor())
+	cmd := &cobra.Command{
+		Use:   "drift [flags] OLD NEW | FILE",
+		Short: "Pretty-print a diff between two inputs",
+		Long: `Pretty-print a diff between two inputs.
+With one path inside a git repository, diffs the working tree against HEAD.`,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          cobra.ArbitraryArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts, err := resolveRootOptions(flags, streams, args)
+			if err != nil {
+				return err
+			}
+			return runRoot(opts)
+		},
 	}
 
-	lang, err := cmd.Flags().GetString("lang")
-	if err != nil {
-		return nil, err
-	}
-	if lang != "" {
-		opts = append(opts, drift.WithLang(lang))
-	}
+	cmd.Flags().BoolVar(&flags.split, "split", false, "side-by-side split view")
+	cmd.Flags().BoolVar(&flags.noLineNumbers, "no-line-numbers", false, "hide old/new line-number gutters")
+	cmd.Flags().StringVar(&flags.algorithm, "algorithm", "myers", "diff algorithm: myers, patience, histogram")
+	cmd.Flags().StringVar(&flags.lang, "lang", "", "Chroma language override (e.g. go, python)")
+	cmd.Flags().StringVar(&flags.theme, "theme", "", "Chroma style/theme override")
+	cmd.Flags().BoolVar(&flags.noColor, "no-color", false, "disable ANSI colors")
+	cmd.Flags().IntVar(&flags.context, "context", 3, "lines of context around hunks")
+	cmd.Flags().StringVar(&flags.from, "from", "", "old text as a raw string (use with --to)")
+	cmd.Flags().StringVar(&flags.to, "to", "", "new text as a raw string (use with --from)")
+	cmd.Flags().BoolVar(&flags.showTheme, "show-theme", false, "print resolved Chroma theme to stderr after selection")
+	_ = cmd.Flags().MarkHidden("show-theme")
 
-	theme, err := cmd.Flags().GetString("theme")
-	if err != nil {
-		return nil, err
-	}
-	if theme != "" {
-		opts = append(opts, drift.WithTheme(theme))
-	}
-
-	showTheme, err := cmd.Flags().GetBool("show-theme")
-	if err != nil {
-		return nil, err
-	}
-	if showTheme {
-		opts = append(opts, drift.WithThemeResolved(func(name string) {
-			fmt.Fprintf(os.Stderr, "drift: resolved syntax theme: %s\n", name)
-		}))
-	}
-
-	split, err := cmd.Flags().GetBool("split")
-	if err != nil {
-		return nil, err
-	}
-	if split {
-		opts = append(opts, drift.WithSplit())
-	}
-
-	noLineNumbers, err := cmd.Flags().GetBool("no-line-numbers")
-	if err != nil {
-		return nil, err
-	}
-	if noLineNumbers {
-		opts = append(opts, drift.WithoutLineNumbers())
-	}
-
-	return opts, nil
+	return cmd
 }
 
-func runRoot(cmd *cobra.Command, args []string) error {
-	from, err := cmd.Flags().GetString("from")
-	if err != nil {
-		return err
-	}
-	to, err := cmd.Flags().GetString("to")
-	if err != nil {
-		return err
-	}
-
-	old, newText, oldName, newName, err := resolveInputs(args, from, to, stdinReader)
+// runRoot is a thin orchestrator: it calls resolveInputs, drift.Diff, and drift.RenderWithNames
+// in sequence. No flag parsing or I/O decisions live here.
+func runRoot(opts *rootOptions) error {
+	old, newText, oldName, newName, err := resolveInputs(opts.args, opts.from, opts.to, opts.streams.In)
 	if err != nil {
 		return err
 	}
 
-	opts, err := buildDriftOptions(cmd)
-	if err != nil {
-		return err
-	}
-
-	result, err := drift.Diff(old, newText, opts...)
+	result, err := drift.Diff(old, newText, opts.driftOpts...)
 	if err != nil {
 		return newExitCode(2, err.Error())
 	}
@@ -169,7 +79,7 @@ func runRoot(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if err := drift.RenderWithNames(result, cmd.OutOrStdout(), oldName, newName, opts...); err != nil {
+	if err := drift.RenderWithNames(result, opts.streams.Out, oldName, newName, opts.driftOpts...); err != nil {
 		return newExitCode(2, err.Error())
 	}
 
@@ -177,20 +87,16 @@ func runRoot(cmd *cobra.Command, args []string) error {
 	return newExitCode(1, "")
 }
 
-func runCLI(stdout, stderr io.Writer, stdin io.Reader, args []string) int {
-	prev := stdinReader
-	stdinReader = stdin
-	defer func() { stdinReader = prev }()
+// runCLI creates a fresh cobra command tree for each invocation, executes it,
+// and returns an exit code. Injecting IOStreams makes every call independently testable.
+func runCLI(streams IOStreams, args []string) int {
+	cmd := newRootCmd(streams)
+	cmd.SetIn(streams.In)
+	cmd.SetOut(streams.Out)
+	cmd.SetErr(streams.Err)
+	cmd.SetArgs(args)
 
-	// Tests and repeated invocations share rootCmd; clear flags so prior --from/--to do not leak.
-	_ = rootCmd.Flags().Set("from", "")
-	_ = rootCmd.Flags().Set("to", "")
-
-	rootCmd.SetOut(stdout)
-	rootCmd.SetErr(stderr)
-	rootCmd.SetArgs(args)
-
-	err := rootCmd.Execute()
+	err := cmd.Execute()
 	if err == nil {
 		return 0
 	}
@@ -198,31 +104,18 @@ func runCLI(stdout, stderr io.Writer, stdin io.Reader, args []string) int {
 	var ec *exitCodeErr
 	if errors.As(err, &ec) {
 		if ec.msg != "" {
-			fmt.Fprintln(stderr, ec.msg)
+			fmt.Fprintln(streams.Err, ec.msg)
 		}
 		return ec.code
 	}
 
-	fmt.Fprintln(stderr, err)
+	fmt.Fprintln(streams.Err, err)
 	return 2
 }
 
+// executeDrift wires real OS I/O and runs the CLI. Called from main() and testscript.
 func executeDrift() int {
-	return runCLI(os.Stdout, os.Stderr, os.Stdin, os.Args[1:])
-}
-
-func init() {
-	rootCmd.Flags().Bool("split", false, "side-by-side split view")
-	rootCmd.Flags().Bool("no-line-numbers", false, "hide old/new line-number gutters")
-	rootCmd.Flags().String("algorithm", "myers", "diff algorithm: myers, patience, histogram")
-	rootCmd.Flags().String("lang", "", "Chroma language override (e.g. go, python)")
-	rootCmd.Flags().String("theme", "", "Chroma style/theme override")
-	rootCmd.Flags().Bool("no-color", false, "disable ANSI colors")
-	rootCmd.Flags().Int("context", 3, "lines of context around hunks")
-	rootCmd.Flags().String("from", "", "old text as a raw string (use with --to)")
-	rootCmd.Flags().String("to", "", "new text as a raw string (use with --from)")
-	rootCmd.Flags().Bool("show-theme", false, "print resolved Chroma theme to stderr after selection")
-	_ = rootCmd.Flags().MarkHidden("show-theme")
+	return runCLI(System(), os.Args[1:])
 }
 
 func main() {
