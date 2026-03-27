@@ -61,6 +61,13 @@
 - [x] **CRUFT-01**: All accumulated working-tree changes committed with conventional commit messages before cruft removal
 - [x] **CRUFT-02**: Dead/unreferenced exported symbols removed from internal packages
 
+### Architecture
+
+- [x] **ARCH-01**: CLI entry point has zero package-level mutable state (no `var rootCmd`, no `var stdinReader`)
+- [x] **ARCH-02**: CLI uses `IOStreams` abstraction — no code below `main()` writes directly to `os.Stdout`/`os.Stderr`/`os.Stdin`
+- [x] **ARCH-03**: CLI follows Flags → Options → run() lifecycle: `rootFlags`, `rootOptions`, `resolveRootOptions()`, `runRoot()`
+- [x] **ARCH-04**: `RunE` is a two-liner; no business logic inside cobra command handlers
+
 ### Rendering
 
 - **REND-V2-01**: Intra-line word-level diff highlighting (character-level changes within a modified line)
@@ -131,6 +138,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | CRUFT-01 | Phase 14 — Deep Cruft Removal | Complete |
 | CRUFT-02 | Phase 14 — Deep Cruft Removal | Complete |
+| ARCH-01 | Phase 15 — Architecture-driven Refactor | Complete |
+| ARCH-02 | Phase 15 — Architecture-driven Refactor | Complete |
+| ARCH-03 | Phase 15 — Architecture-driven Refactor | Complete |
+| ARCH-04 | Phase 15 — Architecture-driven Refactor | Complete |
 
 **Coverage:**
 - v1 requirements: 35 total
@@ -139,4 +150,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-25*
-*Last updated: 2026-03-27 after Phase 14 — CRUFT-01/02 added under Maintenance*
+*Last updated: 2026-03-27 after Phase 15 — ARCH-01/02/03/04 added under Architecture*
