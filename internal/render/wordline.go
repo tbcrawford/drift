@@ -61,41 +61,105 @@ func shouldWordDiffPair(cfg *RenderConfig, left, right string, leftOp, rightOp e
 	return leftOp == edittype.Delete && rightOp == edittype.Insert
 }
 
-// highlightSegmented highlights all segments with lineBg so syntax foreground colours
-// are consistent throughout the line, then replaces only the background ANSI escape on
-// changed spans with wordBg. This preserves font colour and only changes the background
-// for changed characters — the same visual contract as GitHub PR intra-line highlights.
-func highlightSegmented(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, segs []worddiff.Segment, lineBg, wordBg chroma.Colour) string {
-	if content == "" {
+// highlightLineWithSegments tokenises line exactly once (preserving full token context),
+// then renders each Chroma token split at segment boundaries:
+//   - unchanged positions → lineBg background, Chroma foreground/emphasis
+//   - changed positions   → wordBg background, same Chroma foreground/emphasis
+//
+// Because every token is classified from the full line, the foreground colour is
+// identical across the changed and unchanged spans — only the background differs.
+// This is the "multipass" fix for single-character changes that previously caused
+// font colour differences due to out-of-context re-tokenisation.
+//
+// Falls back to plain formatter output when lineBg is unset.
+func highlightLineWithSegments(line string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, segs []worddiff.Segment, lineBg, wordBg chroma.Colour) string {
+	if line == "" {
 		return ""
 	}
-	if len(segs) == 0 {
-		return highlightPiece(content, lexer, style, formatter, lineBg)
+	// Without a line background we cannot apply token-level backgrounds; use the
+	// standard formatter path which handles colour-only diffs gracefully.
+	if !lineBg.IsSet() || lexer == nil || style == nil {
+		return highlightPanel(line, lexer, style, formatter)
 	}
+
+	iterator, err := lexer.Tokenise(nil, line)
+	if err != nil {
+		return highlightPanel(line, lexer, style, formatter)
+	}
+
 	var b strings.Builder
-	for _, seg := range segs {
-		if seg.Start < 0 || seg.End > len(content) || seg.Start >= seg.End {
+	bytePos := 0 // tracks position in original line as we consume tokens
+
+	for tok := iterator(); tok != chroma.EOF; tok = iterator() {
+		if tok.Value == "" {
 			continue
 		}
-		piece := content[seg.Start:seg.End]
-		if piece == "" {
-			continue
+		entry := style.Get(tok.Type)
+		tokEnd := bytePos + len(tok.Value)
+
+		// Walk the token in pieces, splitting wherever a segment boundary falls.
+		cur := bytePos
+		for cur < tokEnd {
+			next := segBoundaryBefore(cur, tokEnd, segs)
+			piece := tok.Value[cur-bytePos : next-bytePos]
+
+			bg := lineBg
+			if wordBg.IsSet() && changedAt(cur, segs) {
+				bg = wordBg
+			}
+
+			s := lipgloss.NewStyle().Background(lipgloss.Color(bg.String()))
+			if entry.Colour.IsSet() {
+				s = s.Foreground(lipgloss.Color(entry.Colour.String()))
+			}
+			if entry.Bold == chroma.Yes {
+				s = s.Bold(true)
+			}
+			if entry.Italic == chroma.Yes {
+				s = s.Italic(true)
+			}
+			if entry.Underline == chroma.Yes {
+				s = s.Underline(true)
+			}
+			b.WriteString(s.Render(piece))
+			cur = next
 		}
-		hl := highlightPiece(piece, lexer, style, formatter, lineBg)
-		if seg.Changed && wordBg.IsSet() && lineBg.IsSet() {
-			// Swap only the background escape — foreground/emphasis unchanged.
-			hl = highlight.ReplaceAnsiBackground(hl, lineBg, wordBg)
-		}
-		b.WriteString(hl)
+		bytePos = tokEnd
 	}
+
 	if b.Len() == 0 {
-		return highlightPiece(content, lexer, style, formatter, lineBg)
+		return line
 	}
 	return b.String()
 }
 
-// highlightPiece highlights a substring; when bg is set, uses terrasort-style per-token
-// lipgloss with that background so the colour extends through token boundaries.
+// changedAt reports whether byte position pos falls inside a changed segment.
+func changedAt(pos int, segs []worddiff.Segment) bool {
+	for _, seg := range segs {
+		if seg.Changed && pos >= seg.Start && pos < seg.End {
+			return true
+		}
+	}
+	return false
+}
+
+// segBoundaryBefore returns the nearest segment boundary strictly after pos and
+// at most limit. Boundaries are the Start and End of every segment.
+func segBoundaryBefore(pos, limit int, segs []worddiff.Segment) int {
+	next := limit
+	for _, seg := range segs {
+		if seg.Start > pos && seg.Start < next {
+			next = seg.Start
+		}
+		if seg.End > pos && seg.End < next {
+			next = seg.End
+		}
+	}
+	return next
+}
+
+// highlightPiece highlights a single string with a uniform background.
+// Used for non-word-diff lines (context lines, solo delete/insert with no pair).
 func highlightPiece(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, bg chroma.Colour) string {
 	if bg.IsSet() {
 		h, err := highlight.HighlightLineWithLineBackground(content, lexer, style, bg)
@@ -116,21 +180,21 @@ func wordSpanBg(style *chroma.Style, isDark, noColor, del bool) chroma.Colour {
 	return highlight.WordSpanBackgroundColour(style, isDark, del)
 }
 
-// splitHighlightPair returns highlighted left/right panel strings, using word-level
+// splitHighlightPair returns highlighted left/right panel strings, using character-level
 // segments when paired delete/insert lines are both non-empty; otherwise per-line
 // highlight with terrasort-style line backgrounds when LineDiffStyle is on.
 func splitHighlightPair(cfg *RenderConfig, style *chroma.Style, pair linePair, lexer chroma.Lexer, formatter chroma.Formatter) (string, string) {
 	if shouldWordDiffPair(cfg, pair.left, pair.right, pair.leftOp, pair.rightOp) {
 		oldSegs, newSegs := worddiff.PairCharSegments(pair.left, pair.right)
-		var delLineBg, insLineBg, delWordBg, insWordBg chroma.Colour
+		var delLineBg, insLineBg chroma.Colour
 		if cfg.LineDiffStyle && !cfg.NoColor {
 			delLineBg, _ = highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark)
 			insLineBg, _ = highlight.DiffLineStyle(style, edittype.Insert, cfg.IsDark)
 		}
-		delWordBg = wordSpanBg(style, cfg.IsDark, cfg.NoColor, true)
-		insWordBg = wordSpanBg(style, cfg.IsDark, cfg.NoColor, false)
-		l := highlightSegmented(pair.left, lexer, style, formatter, oldSegs, delLineBg, delWordBg)
-		r := highlightSegmented(pair.right, lexer, style, formatter, newSegs, insLineBg, insWordBg)
+		delWordBg := wordSpanBg(style, cfg.IsDark, cfg.NoColor, true)
+		insWordBg := wordSpanBg(style, cfg.IsDark, cfg.NoColor, false)
+		l := highlightLineWithSegments(pair.left, lexer, style, formatter, oldSegs, delLineBg, delWordBg)
+		r := highlightLineWithSegments(pair.right, lexer, style, formatter, newSegs, insLineBg, insWordBg)
 		return l, r
 	}
 	l := highlightSplitPanel(cfg, style, pair, true, pair.left, lexer, formatter)
@@ -152,7 +216,7 @@ func unifiedHighlightPair(cfg *RenderConfig, style *chroma.Style, del, ins editt
 	}
 	delWordBg := wordSpanBg(style, cfg.IsDark, cfg.NoColor, true)
 	insWordBg := wordSpanBg(style, cfg.IsDark, cfg.NoColor, false)
-	hlDel = highlightSegmented(del.Content, lexer, style, formatter, oldSegs, delLineBg, delWordBg)
-	hlIns = highlightSegmented(ins.Content, lexer, style, formatter, newSegs, insLineBg, insWordBg)
+	hlDel = highlightLineWithSegments(del.Content, lexer, style, formatter, oldSegs, delLineBg, delWordBg)
+	hlIns = highlightLineWithSegments(ins.Content, lexer, style, formatter, newSegs, insLineBg, insWordBg)
 	return hlDel, hlIns, true
 }
