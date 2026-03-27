@@ -225,8 +225,8 @@ Plans:
 **Goal:** Move all 13 root-level library `.go` files into a `drift/` subdirectory so the module root contains only metadata files (go.mod, go.sum, README.md, LICENSE, justfile). Update all import paths from `github.com/tylercrawford/drift` to `github.com/tylercrawford/drift/drift`, add `.gitignore`, and update documentation.
 **Requirements**: LAYOUT-04
 **Depends on:** Phase 12
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 13-01-PLAN.md — Move 13 root .go files to drift/ subdir; update all import paths; verify go test ./... passes
+- [x] 13-01-PLAN.md — Move 13 root .go files to drift/ subdir; update all import paths; verify go test ./... passes
 - [ ] 13-02-PLAN.md — Add .gitignore; update README.md and doc.go with new import path
