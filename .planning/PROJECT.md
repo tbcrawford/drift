@@ -95,4 +95,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after Phase 14 complete — 6 accumulated changes committed; `DiffLineMutedBackgroundColour` dead code removed; `.gitignore` root-anchored; CRUFT-01/02 added to REQUIREMENTS.md*
+*Last updated: 2026-03-27 after Phase 15 complete — CLI refactored to ARCHITECTURE.md: `IOStreams`, `rootFlags`/`rootOptions`/`resolveRootOptions()`, `newRootCmd(streams)`, zero globals, zero `init()`, two-liner `RunE`*
