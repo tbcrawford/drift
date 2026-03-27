@@ -1,0 +1,13 @@
+# Compiled binaries
+drift
+drift.exe
+
+# OS metadata
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Test cache / fuzz corpus (testdata/rapid/ is already in place; don't ignore testdata/ entirely)
