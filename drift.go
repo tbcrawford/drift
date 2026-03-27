@@ -35,7 +35,7 @@ func Diff(old, new string, opts ...Option) (DiffResult, error) {
 
 	// Dispatch to algorithm
 	var differ algoInterface
-	switch cfg.algorithm {
+	switch cfg.diff.algorithm {
 	case Patience:
 		differ = patience.New()
 	case Histogram:
@@ -45,7 +45,7 @@ func Diff(old, new string, opts ...Option) (DiffResult, error) {
 	}
 
 	edits := differ.Diff(oldLines, newLines)
-	hunks := hunk.Build(edits, oldLines, newLines, cfg.contextLines)
+	hunks := hunk.Build(edits, oldLines, newLines, cfg.diff.contextLines)
 
 	return DiffResult{
 		Hunks:   hunks,
