@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
-status: Milestone complete
-stopped_at: Completed 14-deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes/14-02-PLAN.md
-last_updated: "2026-03-27T14:55:11.530Z"
+status: Ready to execute
+stopped_at: Completed 15-architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli/15-01-PLAN.md
+last_updated: "2026-03-27T17:43:05.520Z"
 progress:
-  total_phases: 14
+  total_phases: 15
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tylercrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 14 — deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes
+**Current focus:** Phase 15 — architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli
 
 ## Current Position
 
-Phase: 14
-Plan: Not started
+Phase: 15 (architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Plan: Not started
 | Phase 13-refactor-project-layout-no-go-files-in-root-directory P02 | 105 | 2 tasks | 2 files |
 | Phase 14-deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes P01 | 3 | 2 tasks | 6 files |
 | Phase 14-deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes P02 | 1 | 2 tasks | 2 files |
+| Phase 15-architecture-driven-refactor P15-01 | 69 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,8 @@ Recent decisions affecting current work:
 - [Phase 14]: gutterColumnSeparator uses U+2502 BOX DRAWINGS LIGHT VERTICAL (│), not ASCII pipe — matches Unicode box-drawing TUI convention
 - [Phase 14]: DiffLineStyle returns chroma.Colour not lipgloss.Style — leaner API, callers apply directly to rendering pipeline
 - [Phase 14]: DiffLineMutedBackgroundColour removed — had zero callers since phase 11 terrasort parity refactor; .gitignore root-anchored to /drift to protect drift/ library subdirectory
+- [Phase Phase 15]: IOStreams defined in its own file for single-responsibility I/O abstraction contract
+- [Phase Phase 15]: resolveRootOptions centralizes all I/O decisions; show-theme callback uses streams.Err not os.Stderr
 
 ### Roadmap Evolution
 
@@ -111,6 +114,7 @@ Recent decisions affecting current work:
 - Phase 12 added: Restructure project layout for idiomatic Go library and CLI
 - Phase 13 added: Refactor project layout: no Go files in root directory
 - Phase 14 added: Deep cruft removal: clean code, comments, and commit uncommitted changes
+- Phase 15 added: Architecture-driven refactor: apply ARCHITECTURE.md principles to library and CLI
 
 ### Quick Tasks Completed
 
@@ -135,6 +139,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T14:51:20.166Z
-Stopped at: Completed 14-deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes/14-02-PLAN.md
+Last session: 2026-03-27T17:43:05.515Z
+Stopped at: Completed 15-architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli/15-01-PLAN.md
 Resume file: None
