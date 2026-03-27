@@ -121,7 +121,7 @@ func wordSpanBg(style *chroma.Style, isDark, noColor, del bool) chroma.Colour {
 // highlight with terrasort-style line backgrounds when LineDiffStyle is on.
 func splitHighlightPair(cfg *RenderConfig, style *chroma.Style, pair linePair, lexer chroma.Lexer, formatter chroma.Formatter) (string, string) {
 	if shouldWordDiffPair(cfg, pair.left, pair.right, pair.leftOp, pair.rightOp) {
-		oldSegs, newSegs := worddiff.PairSegments(pair.left, pair.right)
+		oldSegs, newSegs := worddiff.PairCharSegments(pair.left, pair.right)
 		var delLineBg, insLineBg, delWordBg, insWordBg chroma.Colour
 		if cfg.LineDiffStyle && !cfg.NoColor {
 			delLineBg, _ = highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark)
@@ -144,7 +144,7 @@ func unifiedHighlightPair(cfg *RenderConfig, style *chroma.Style, del, ins editt
 	if !shouldWordDiffPair(cfg, del.Content, ins.Content, del.Op, ins.Op) {
 		return "", "", false
 	}
-	oldSegs, newSegs := worddiff.PairSegments(del.Content, ins.Content)
+	oldSegs, newSegs := worddiff.PairCharSegments(del.Content, ins.Content)
 	var delLineBg, insLineBg chroma.Colour
 	if cfg.LineDiffStyle && !cfg.NoColor {
 		delLineBg, _ = highlight.DiffLineStyle(style, edittype.Delete, cfg.IsDark)
