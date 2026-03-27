@@ -241,3 +241,14 @@ Plans:
 Plans:
 - [x] 14-01-PLAN.md — Commit 6 pending modified files (.golangci.yml, justfile, main_test.go, diff_line.go, gutter.go, split_test.go)
 - [x] 14-02-PLAN.md — Remove dead DiffLineMutedBackgroundColour export from diffcolors.go
+
+### Phase 15: Architecture-driven refactor: apply ARCHITECTURE.md principles to library and CLI
+
+**Goal:** Eliminate global state, init() flag registration, and direct os.Stderr writes from cmd/drift by introducing IOStreams injection and a Flags → Options → run() lifecycle that matches the ARCHITECTURE.md canonical pattern.
+**Requirements**: ARCH-01, ARCH-02, ARCH-03, ARCH-04
+**Depends on:** Phase 14
+**Plans:** 2 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — Define IOStreams struct + rootFlags/rootOptions lifecycle contracts (iostreams.go, flags.go)
+- [ ] 15-02-PLAN.md — Rewrite cmd/drift/main.go: newRootCmd(), runRoot(opts), runCLI(IOStreams) — no globals, no init()
