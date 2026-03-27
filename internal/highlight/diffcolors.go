@@ -182,19 +182,6 @@ func blendColourTowardRGB(c chroma.Colour, tr, tg, tb uint8, alpha float64) chro
 	)
 }
 
-// DiffLineMutedBackgroundColour returns [DiffLineBackgroundColour] blended further
-// toward the terminal base (42%). Full-line rendering uses [DiffLineBackgroundColour]
-// directly (terrasort parity); this helper remains for tests or callers that want an
-// extra-muted plane.
-func DiffLineMutedBackgroundColour(style *chroma.Style, isDark, del bool) chroma.Colour {
-	base := DiffLineBackgroundColour(style, isDark, del)
-	if !base.IsSet() {
-		return chroma.Colour(0)
-	}
-	tr, tg, tb := terminalBaseRGB(isDark)
-	return blendColourTowardRGB(base, tr, tg, tb, 0.42)
-}
-
 // WordSpanBackgroundColour returns a **brighter** semantic red (delete) or green (insert)
 // background for intra-line changed spans. It starts from [DiffLineBackgroundColour] and
 // blends toward pure red/green so changed tokens read stronger than the full-line plane.
