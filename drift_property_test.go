@@ -8,7 +8,7 @@ import (
 	"pgregory.net/rapid"
 
 	"github.com/tylercrawford/drift"
-	"github.com/tylercrawford/drift/testdata"
+	"github.com/tylercrawford/drift/internal/testhelpers"
 )
 
 // TestProperty_RoundTrip verifies the fundamental diff invariant:
@@ -49,7 +49,7 @@ func TestProperty_RoundTrip(t *testing.T) {
 			t.Fatalf("Diff returned unexpected error: %v", err)
 		}
 
-		got := testdata.Apply(result, oldLines)
+		got := testhelpers.Apply(result, oldLines)
 
 		// Compare as joined text. Note: drift normalizes trailing newlines by
 		// stripping a trailing empty element from splitLines. So the invariant
@@ -168,7 +168,7 @@ func TestProperty_RoundTrip_Patience(t *testing.T) {
 			t.Fatalf("Diff returned unexpected error: %v", err)
 		}
 
-		got := testdata.Apply(result, oldLines)
+		got := testhelpers.Apply(result, oldLines)
 
 		gotText := strings.Join(got, "\n")
 		wantText := strings.Join(canonicalLines(newText), "\n")
@@ -202,7 +202,7 @@ func TestProperty_RoundTrip_Histogram(t *testing.T) {
 			t.Fatalf("Diff returned unexpected error: %v", err)
 		}
 
-		got := testdata.Apply(result, oldLines)
+		got := testhelpers.Apply(result, oldLines)
 
 		gotText := strings.Join(got, "\n")
 		wantText := strings.Join(canonicalLines(newText), "\n")

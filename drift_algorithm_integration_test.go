@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/tylercrawford/drift"
-	"github.com/tylercrawford/drift/testdata"
+	"github.com/tylercrawford/drift/internal/testhelpers"
 )
 
 // integrationCanonicalLines splits text into lines the same way drift internals do.
@@ -34,7 +34,7 @@ func TestWithAlgorithm_Patience_RoundTrip(t *testing.T) {
 		t.Fatal("expected IsEqual=false for differing inputs")
 	}
 
-	got := testdata.Apply(result, integrationCanonicalLines(integrationOld))
+	got := testhelpers.Apply(result, integrationCanonicalLines(integrationOld))
 	gotText := strings.Join(got, "\n")
 	wantText := strings.Join(integrationCanonicalLines(integrationNew), "\n")
 	if gotText != wantText {
@@ -51,7 +51,7 @@ func TestWithAlgorithm_Histogram_RoundTrip(t *testing.T) {
 		t.Fatal("expected IsEqual=false for differing inputs")
 	}
 
-	got := testdata.Apply(result, integrationCanonicalLines(integrationOld))
+	got := testhelpers.Apply(result, integrationCanonicalLines(integrationOld))
 	gotText := strings.Join(got, "\n")
 	wantText := strings.Join(integrationCanonicalLines(integrationNew), "\n")
 	if gotText != wantText {
@@ -68,7 +68,7 @@ func TestWithAlgorithm_Myers_StillDefault(t *testing.T) {
 		t.Fatal("expected IsEqual=false for differing inputs")
 	}
 
-	got := testdata.Apply(result, integrationCanonicalLines(integrationOld))
+	got := testhelpers.Apply(result, integrationCanonicalLines(integrationOld))
 	gotText := strings.Join(got, "\n")
 	wantText := strings.Join(integrationCanonicalLines(integrationNew), "\n")
 	if gotText != wantText {
@@ -96,7 +96,7 @@ func TestAllAlgorithmsCorrect(t *testing.T) {
 					t.Fatalf("Diff returned unexpected error: %v", err)
 				}
 
-				got := testdata.Apply(result, integrationCanonicalLines(tc.old))
+				got := testhelpers.Apply(result, integrationCanonicalLines(tc.old))
 				gotText := strings.Join(got, "\n")
 				wantText := strings.Join(integrationCanonicalLines(tc.new), "\n")
 				if gotText != wantText {

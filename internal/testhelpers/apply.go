@@ -1,5 +1,5 @@
-// Package testdata provides test helpers for drift property-based tests.
-package testdata
+// Package testhelpers provides test helpers for drift property-based and integration tests.
+package testhelpers
 
 import "github.com/tylercrawford/drift"
 
