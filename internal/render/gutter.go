@@ -14,6 +14,11 @@ import (
 // line number digits inside the gutter cell (see [GutterNumberRender]).
 const gutterNumberPadEachSide = 1
 
+// gutterColumnSeparator is space plus U+2502 (BOX DRAWINGS LIGHT VERTICAL, │). That is
+// the conventional thin vertical for TUI / line-drawing borders (not ASCII U+007C |;
+// the heavy box-drawing vertical is U+2503 ┃).
+const gutterColumnSeparator = " │"
+
 // gutterWidths returns minimum column widths for old and new line numbers in a hunk.
 // Widths are based on the longest decimal string among lines with OldNum > 0 / NewNum > 0,
 // plus one space on each side of the number.
@@ -45,30 +50,34 @@ func gutterStyleForCell(style *chroma.Style, isDark, noColor bool, oldColumn boo
 	if noColor {
 		return lipgloss.NewStyle()
 	}
-	fg := gutterForegroundColor(isDark)
+	dim := highlight.GutterDimForegroundHex(isDark)
+	high := highlight.GutterHighlightForegroundHex(isDark)
 	switch {
 	case style != nil && oldColumn && lineOp == edittype.Delete:
 		c := highlight.WordSpanBackgroundColour(style, isDark, true)
 		if !c.IsSet() {
-			return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, true))).Foreground(lipgloss.Color(fg))
+			return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, true))).Foreground(lipgloss.Color(high))
 		}
-		return lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Foreground(lipgloss.Color(fg))
+		return lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Foreground(lipgloss.Color(high))
 	case style != nil && !oldColumn && lineOp == edittype.Insert:
 		c := highlight.WordSpanBackgroundColour(style, isDark, false)
 		if !c.IsSet() {
-			return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, false))).Foreground(lipgloss.Color(fg))
+			return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, false))).Foreground(lipgloss.Color(high))
 		}
-		return lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Foreground(lipgloss.Color(fg))
+		return lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Foreground(lipgloss.Color(high))
 	default:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color(fg))
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(dim))
 	}
 }
 
-func gutterForegroundColor(isDark bool) string {
-	if isDark {
-		return "252"
+// styledGutterColumnSeparator returns gutterColumnSeparator with dim foreground when color is on.
+func styledGutterColumnSeparator(cfg *RenderConfig) string {
+	if cfg == nil || cfg.NoColor {
+		return gutterColumnSeparator
 	}
-	return "240"
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(highlight.GutterDimForegroundHex(cfg.IsDark))).
+		Render(gutterColumnSeparator)
 }
 
 // GutterNumberRender renders a line number (or blank when n==0) in a fixed display width.

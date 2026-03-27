@@ -87,6 +87,7 @@ func TestHelpListsAllFlags(t *testing.T) {
 	out := buf.String()
 	for _, flag := range []string{
 		"--split",
+		"--no-line-numbers",
 		"--algorithm",
 		"--lang",
 		"--theme",

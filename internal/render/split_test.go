@@ -72,11 +72,8 @@ func TestSplit_NoColorSeparator(t *testing.T) {
 		t.Fatalf("Split error: %v", err)
 	}
 	output := buf.String()
-	if strings.Contains(output, "│") {
-		t.Errorf("NoColor output must not contain '│' Unicode separator; got:\n%s", output)
-	}
-	if !strings.Contains(output, "|") {
-		t.Errorf("NoColor output must contain ASCII '|' separator; got:\n%s", output)
+	if !strings.Contains(output, "│") {
+		t.Errorf("NoColor output must use '│' separator; got:\n%s", output)
 	}
 }
 
@@ -160,6 +157,44 @@ func TestSplit_Width120_NoLineOverflow(t *testing.T) {
 		if w > 120 {
 			t.Errorf("output line exceeds 120 columns (got %d): %q", w, line)
 		}
+	}
+}
+
+func TestSplit_WordDiffPairedDeleteInsert(t *testing.T) {
+	result := edittype.DiffResult{
+		Hunks: []edittype.Hunk{
+			{
+				OldStart: 1, OldLines: 1, NewStart: 1, NewLines: 1,
+				Lines: []edittype.Line{
+					{Op: edittype.Delete, Content: "let x = foo bar baz", OldNum: 1},
+					{Op: edittype.Insert, Content: "let x = foo qux baz", NewNum: 1},
+				},
+			},
+		},
+	}
+	cfg := &RenderConfig{
+		Lexer:         highlight.DetectLexer("go", "", ""),
+		Style:         styles.Get("github"),
+		Formatter:     formatters.TTY16m,
+		Profile:       colorprofile.TrueColor,
+		TermWidth:     120,
+		WordDiff:      true,
+		LineDiffStyle: true,
+		IsDark:        false,
+	}
+	if cfg.Style == nil {
+		cfg.Style = highlight.SelectTheme("", false)
+	}
+	var buf bytes.Buffer
+	if err := Split(result, &buf, cfg); err != nil {
+		t.Fatalf("Split error: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "\033[") {
+		t.Fatalf("expected ANSI in word-diff split output:\n%s", out)
+	}
+	if !strings.Contains(out, "bar") || !strings.Contains(out, "qux") {
+		t.Fatalf("expected both sides of substitution in output:\n%s", out)
 	}
 }
 

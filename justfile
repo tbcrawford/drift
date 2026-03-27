@@ -18,6 +18,10 @@ bench:
 build:
     go build ./cmd/drift/...
 
+# Install CLI to $GOBIN or `go env GOPATH`/bin; add that directory to PATH to run `drift`
+install:
+    go install ./cmd/drift
+
 # Run linter
 lint:
     golangci-lint run ./...

@@ -1,6 +1,9 @@
+# golangci-lint v2 — https://golangci-lint.run/docs/product/migration-guide/
+version: "2"
+
 run:
-  timeout: 5m
   go: "1.21"
+  timeout: 5m
 
 linters:
   enable:
@@ -8,11 +11,27 @@ linters:
     - staticcheck
     - errcheck
     - unused
-    - gosimple
     - ineffassign
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
-issues:
-  exclude-rules:
-    - path: "_test.go"
-      linters:
-        - errcheck
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
