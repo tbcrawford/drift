@@ -219,3 +219,14 @@ Plans:
 Plans:
 - [x] 12-01-PLAN.md — Move testdata/apply.go → internal/testhelpers; split config struct into diffConfig + renderConfig
 - [x] 12-02-PLAN.md — Update doc.go package overview + README.md with complete API surface (phases 7–11 additions)
+
+### Phase 13: Refactor project layout: no Go files in root directory
+
+**Goal:** Move all 13 root-level library `.go` files into a `drift/` subdirectory so the module root contains only metadata files (go.mod, go.sum, README.md, LICENSE, justfile). Update all import paths from `github.com/tylercrawford/drift` to `github.com/tylercrawford/drift/drift`, add `.gitignore`, and update documentation.
+**Requirements**: LAYOUT-04
+**Depends on:** Phase 12
+**Plans:** 2 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Move 13 root .go files to drift/ subdir; update all import paths; verify go test ./... passes
+- [ ] 13-02-PLAN.md — Add .gitignore; update README.md and doc.go with new import path
