@@ -230,3 +230,14 @@ Plans:
 Plans:
 - [x] 13-01-PLAN.md — Move 13 root .go files to drift/ subdir; update all import paths; verify go test ./... passes
 - [x] 13-02-PLAN.md — Add .gitignore; update README.md and doc.go with new import path
+
+### Phase 14: Deep cruft removal: clean code, comments, and commit uncommitted changes
+
+**Goal:** Commit 6 pending working-tree changes accumulated during phases 11–13, and remove the dead exported function `DiffLineMutedBackgroundColour` from the internal highlight package.
+**Requirements**: CRUFT-01, CRUFT-02
+**Depends on:** Phase 13
+**Plans:** 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Commit 6 pending modified files (.golangci.yml, justfile, main_test.go, diff_line.go, gutter.go, split_test.go)
+- [ ] 14-02-PLAN.md — Remove dead DiffLineMutedBackgroundColour export from diffcolors.go
