@@ -1,13 +1,13 @@
 ---
 phase: 14-deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes
 verified: 2026-03-27T15:10:00Z
-status: gaps_found
-score: 7/8 must-haves verified
+status: passed
+score: 8/8 must-haves verified
 re_verification: false
 gaps:
   - truth: "CRUFT-01 and CRUFT-02 requirement IDs are defined in REQUIREMENTS.md"
-    status: failed
-    reason: "Both CRUFT-01 and CRUFT-02 are referenced in ROADMAP.md, 14-01-PLAN.md, 14-02-PLAN.md, and their SUMMARYs, but neither ID appears anywhere in .planning/REQUIREMENTS.md. They are fully orphaned — no traceability entry, no requirement definition."
+    status: resolved
+    reason: "Fixed post-verification: CRUFT-01 and CRUFT-02 definitions and traceability entries added to REQUIREMENTS.md in commit de46d71."
     artifacts:
       - path: ".planning/REQUIREMENTS.md"
         issue: "CRUFT-01 and CRUFT-02 are absent; file ends at OSS-09 with only a single Phase 1 entry in the Traceability table"

@@ -95,4 +95,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after Phase 13 complete — library moved to `drift/` subdirectory; import path is now `github.com/tylercrawford/drift/drift`; zero `.go` files at module root; `.gitignore` added*
+*Last updated: 2026-03-27 after Phase 14 complete — 6 accumulated changes committed; `DiffLineMutedBackgroundColour` dead code removed; `.gitignore` root-anchored; CRUFT-01/02 added to REQUIREMENTS.md*
