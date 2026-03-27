@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
-status: Ready to execute
-stopped_at: Completed 15-architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli/15-01-PLAN.md
-last_updated: "2026-03-27T17:43:05.520Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 15-architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli/15-02-PLAN.md
+last_updated: "2026-03-27T17:49:31.628Z"
 progress:
   total_phases: 15
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -59,6 +59,7 @@ Plan: 2 of 2
 | Phase 14-deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes P01 | 3 | 2 tasks | 6 files |
 | Phase 14-deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes P02 | 1 | 2 tasks | 2 files |
 | Phase 15-architecture-driven-refactor P15-01 | 69 | 2 tasks | 2 files |
+| Phase 15-architecture-driven-refactor P15-02 | 4 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,8 @@ Recent decisions affecting current work:
 - [Phase 14]: DiffLineMutedBackgroundColour removed — had zero callers since phase 11 terrasort parity refactor; .gitignore root-anchored to /drift to protect drift/ library subdirectory
 - [Phase Phase 15]: IOStreams defined in its own file for single-responsibility I/O abstraction contract
 - [Phase Phase 15]: resolveRootOptions centralizes all I/O decisions; show-theme callback uses streams.Err not os.Stderr
+- [Phase Phase 15]: runCLI signature changed from (stdout, stderr, stdin, args) to (streams IOStreams, args) — all tests updated for cleaner IOStreams-first architecture
+- [Phase Phase 15]: newRootCmd(streams IOStreams) constructor produces fresh cobra.Command per invocation — eliminates need for flag-reset hacks between test runs
 
 ### Roadmap Evolution
 
@@ -139,6 +142,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T17:43:05.515Z
-Stopped at: Completed 15-architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli/15-01-PLAN.md
+Last session: 2026-03-27T17:49:31.623Z
+Stopped at: Completed 15-architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli/15-02-PLAN.md
 Resume file: None

@@ -247,8 +247,8 @@ Plans:
 **Goal:** Eliminate global state, init() flag registration, and direct os.Stderr writes from cmd/drift by introducing IOStreams injection and a Flags → Options → run() lifecycle that matches the ARCHITECTURE.md canonical pattern.
 **Requirements**: ARCH-01, ARCH-02, ARCH-03, ARCH-04
 **Depends on:** Phase 14
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 15-01-PLAN.md — Define IOStreams struct + rootFlags/rootOptions lifecycle contracts (iostreams.go, flags.go)
-- [ ] 15-02-PLAN.md — Rewrite cmd/drift/main.go: newRootCmd(), runRoot(opts), runCLI(IOStreams) — no globals, no init()
+- [x] 15-02-PLAN.md — Rewrite cmd/drift/main.go: newRootCmd(), runRoot(opts), runCLI(IOStreams) — no globals, no init()
