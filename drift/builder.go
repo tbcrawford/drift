@@ -49,6 +49,30 @@ func (b *Builder) Split() *Builder {
 	return b
 }
 
+// LineNumbers appends WithLineNumbers(v).
+func (b *Builder) LineNumbers(v bool) *Builder {
+	b.opts = append(b.opts, WithLineNumbers(v))
+	return b
+}
+
+// WithoutLineNumbers appends WithoutLineNumbers().
+func (b *Builder) WithoutLineNumbers() *Builder {
+	b.opts = append(b.opts, WithoutLineNumbers())
+	return b
+}
+
+// LineDiffStyle appends WithLineDiffStyle(v).
+func (b *Builder) LineDiffStyle(v bool) *Builder {
+	b.opts = append(b.opts, WithLineDiffStyle(v))
+	return b
+}
+
+// WordDiff appends WithWordDiff(v).
+func (b *Builder) WordDiff(v bool) *Builder {
+	b.opts = append(b.opts, WithWordDiff(v))
+	return b
+}
+
 // Diff runs the line-level diff with the accumulated options.
 func (b *Builder) Diff(old, new string) (DiffResult, error) {
 	return Diff(old, new, b.opts...)

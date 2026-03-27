@@ -198,8 +198,8 @@ func TestRender_WithSplit_ContainsSeparator(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "|") {
-		t.Errorf("WithSplit output must contain '|' separator; got:\n%s", output)
+	if !strings.Contains(output, "│") {
+		t.Errorf("WithSplit output must contain '│' separator; got:\n%s", output)
 	}
 }
 
