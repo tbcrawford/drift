@@ -15,13 +15,16 @@ import (
 // Line endings are normalized: Windows \r\n is treated as \n.
 // When both inputs are identical, DiffResult.IsEqual is true and Hunks is empty.
 //
-// The returned error is currently always nil — no algorithm implementation can
-// fail on valid string input. The error return is reserved for future algorithm
-// variants (e.g., streaming or external implementations) that may need it.
+// An error is returned when the configuration is invalid, for example when
+// WithContext is called with a negative value.
 func Diff(old, new string, opts ...Option) (DiffResult, error) {
 	cfg := defaultConfig()
 	for _, o := range opts {
 		o(cfg)
+	}
+
+	if err := cfg.validate(); err != nil {
+		return DiffResult{}, err
 	}
 
 	// Normalize line endings: \r\n → \n

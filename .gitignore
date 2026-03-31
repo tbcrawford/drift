@@ -11,3 +11,6 @@ drift.exe
 *.iml
 
 # Test cache / fuzz corpus (testdata/rapid/ is already in place; don't ignore testdata/ entirely)
+
+# goreleaser build output
+/dist/

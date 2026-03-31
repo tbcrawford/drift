@@ -1,5 +1,7 @@
 package drift
 
+import "fmt"
+
 // Algorithm selects the diff algorithm to use.
 type Algorithm int
 
@@ -118,4 +120,13 @@ func WithLineDiffStyle(v bool) Option {
 // lines in unified and split output. The default is true when using Render.
 func WithWordDiff(v bool) Option {
 	return func(c *config) { c.render.wordDiff = v }
+}
+
+// validate checks that all config fields hold valid values.
+// It is called by Diff() before any diff work begins.
+func (c *config) validate() error {
+	if c.diff.contextLines < 0 {
+		return fmt.Errorf("drift: WithContext value must be non-negative, got %d", c.diff.contextLines)
+	}
+	return nil
 }
