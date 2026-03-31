@@ -12,8 +12,9 @@ drift.exe
 
 # Test cache / fuzz corpus (testdata/rapid/ is already in place; don't ignore testdata/ entirely)
 
-# goreleaser build output
-/dist/
+# goreleaser build output (exclude config source file)
+/dist/*
+!/dist/config.yaml
 
 # Go workspace checksum file (generated, not committed; go.work itself is committed)
 go.work.sum

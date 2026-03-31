@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test (Go ${{ matrix.go }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.21.x', 'stable']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test (library + CLI via go.work)
+        run: go test -race ./...
+
+      - name: Test (CLI sub-module explicit)
+        run: go test -race ./...
+        working-directory: cmd/drift
+
+      - name: Lint
+        if: matrix.go == 'stable'
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: ./...
