@@ -131,6 +131,11 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 }
 
 // pairHunkLines pairs Delete and Insert lines for side-by-side display.
+// Delete/insert blocks are bottom-aligned: when the block is asymmetric
+// (more deletes than inserts, or vice versa), the surplus lines at the top
+// of the longer side receive blank placeholders on the opposite panel, and
+// the shorter side aligns against the bottom of the longer side.
+// This matches git's split-view visual convention.
 func pairHunkLines(lines []edittype.Line) []linePair {
 	var pairs []linePair
 	i := 0
@@ -159,27 +164,49 @@ func pairHunkLines(lines []edittype.Line) []linePair {
 			i++
 		}
 
-		maxLen := len(deletes)
-		if len(inserts) > maxLen {
-			maxLen = len(inserts)
-		}
-		for j := 0; j < maxLen; j++ {
-			var pair linePair
-			if j < len(deletes) {
-				pair.left = deletes[j].Content
-				pair.leftOp = edittype.Delete
-				pair.leftOldNum = deletes[j].OldNum
-			} else {
-				pair.leftOp = edittype.Equal
+		d, ins := len(deletes), len(inserts)
+		if d >= ins {
+			// More deletes than inserts: top (d-ins) deletes get blank right side.
+			for j := 0; j < d-ins; j++ {
+				pairs = append(pairs, linePair{
+					left:       deletes[j].Content,
+					leftOp:     edittype.Delete,
+					leftOldNum: deletes[j].OldNum,
+					rightOp:    edittype.Equal,
+				})
 			}
-			if j < len(inserts) {
-				pair.right = inserts[j].Content
-				pair.rightOp = edittype.Insert
-				pair.rightNewNum = inserts[j].NewNum
-			} else {
-				pair.rightOp = edittype.Equal
+			// Bottom ins deletes pair with all inserts.
+			for j := 0; j < ins; j++ {
+				pairs = append(pairs, linePair{
+					left:        deletes[d-ins+j].Content,
+					leftOp:      edittype.Delete,
+					leftOldNum:  deletes[d-ins+j].OldNum,
+					right:       inserts[j].Content,
+					rightOp:     edittype.Insert,
+					rightNewNum: inserts[j].NewNum,
+				})
 			}
-			pairs = append(pairs, pair)
+		} else {
+			// More inserts than deletes: top (ins-d) inserts get blank left side.
+			for j := 0; j < ins-d; j++ {
+				pairs = append(pairs, linePair{
+					leftOp:      edittype.Equal,
+					right:       inserts[j].Content,
+					rightOp:     edittype.Insert,
+					rightNewNum: inserts[j].NewNum,
+				})
+			}
+			// All deletes pair with bottom ins inserts.
+			for j := 0; j < d; j++ {
+				pairs = append(pairs, linePair{
+					left:        deletes[j].Content,
+					leftOp:      edittype.Delete,
+					leftOldNum:  deletes[j].OldNum,
+					right:       inserts[ins-d+j].Content,
+					rightOp:     edittype.Insert,
+					rightNewNum: inserts[ins-d+j].NewNum,
+				})
+			}
 		}
 	}
 	return pairs
