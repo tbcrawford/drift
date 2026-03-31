@@ -1,6 +1,4 @@
 # Compiled binaries
-/drift
-!/drift/
 drift.exe
 
 # OS metadata
@@ -15,3 +13,6 @@ drift.exe
 
 # goreleaser build output
 /dist/
+
+# Go workspace checksum file (generated, not committed; go.work itself is committed)
+go.work.sum
