@@ -161,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 13. Refactor: no Go files in root | 2/2 | Complete | 2026-03-26 |
 | 14. Deep cruft removal | 2/2 | Complete | 2026-03-27 |
 | 15. Architecture-driven refactor | 2/2 | Complete | 2026-03-27 |
-| 16. Fix v1.0.0 blockers | 2/3 | In Progress|  |
+| 16. Fix v1.0.0 blockers | 3/3 | Complete | 2026-03-31 |
 
 ### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
 
@@ -268,9 +268,9 @@ Plans:
 **Goal:** Resolve three v1.0.0 blockers: (1) replace the O((N+M)²) trace-snapshot Myers implementation with a Hirschberg linear-space divide-and-conquer variant; (2) add validation so `WithContext(-1)` returns an error from `drift.Diff()` instead of silently expanding context to the entire file; (3) create `.goreleaser.yaml` for multi-platform binary releases (darwin/amd64, darwin/arm64, linux/amd64, windows/amd64).
 **Requirements**: PERF-01, API-01, OSS-04
 **Depends on:** Phase 15
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 16-01-PLAN.md — Hirschberg linear-space Myers: replace trace-snapshot O((N+M)²) with divide-and-conquer O(N+M) space
+- [x] 16-01-PLAN.md — Hirschberg linear-space Myers: replace trace-snapshot O((N+M)²) with divide-and-conquer O(N+M) space
 - [x] 16-02-PLAN.md — WithContext validation: drift.Diff() returns error for negative contextLines
 - [x] 16-03-PLAN.md — goreleaser config: .goreleaser.yaml for multi-platform CLI binary releases

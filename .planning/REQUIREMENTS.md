@@ -49,7 +49,7 @@
 - [x] **OSS-01**: Project has a valid `go.mod` with module path `github.com/tylercrawford/drift`
 - [ ] **OSS-02**: All exported types, functions, and options have godoc comments
 - [ ] **OSS-03**: `examples/` directory contains runnable `basic/` and `builder/` examples
-- [ ] **OSS-04**: `go install github.com/tylercrawford/drift/cmd/drift@latest` installs the CLI correctly
+- [x] **OSS-04**: `go install github.com/tylercrawford/drift/cmd/drift@latest` installs the CLI correctly
 - [x] **OSS-05**: Project includes an MIT `LICENSE` file
 - [ ] **OSS-06**: `README.md` covers installation, CLI usage, library API, and rendering examples
 - [ ] **OSS-07**: Benchmarks exist for diffing a 10,000-line file (unified and split views)
@@ -129,7 +129,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLI-05 | Phase 5 — CLI | Pending |
 | CLI-06 | Phase 5 — CLI | Pending |
 | CLI-07 | Phase 5 — CLI | Pending |
-| OSS-04 | Phase 5 — CLI | Pending |
+| OSS-04 | Phase 5 — CLI | Complete |
 | CORE-05 | Phase 6 — API Hardening & OSS Packaging | Pending |
 | OSS-02 | Phase 6 — API Hardening & OSS Packaging | Pending |
 | OSS-03 | Phase 6 — API Hardening & OSS Packaging | Pending |

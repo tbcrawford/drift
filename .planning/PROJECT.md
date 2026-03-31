@@ -37,6 +37,12 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] Benchmarks for large (~10k line) diff and unified/split render — Validated in Phase 06: api-hardening-oss-packaging
 - [x] Optional OSC 4 terminal palette query on Unix TTY; `BestMatchTheme` picks closest Chroma style when `WithTheme` is omitted — Validated in Phase 08: terminal-palette-best-match-chroma-theme
 
+### Validated (Phase 16)
+
+- [x] Myers diff peak memory is O(N+M) — Hirschberg linear-space divide-and-conquer replaces O((N+M)²) trace-snapshot — Validated in Phase 16
+- [x] `WithContext(-1)` returns a non-nil error from `drift.Diff()`; zero context is valid — Validated in Phase 16
+- [x] `.goreleaser.yaml` ships multi-platform CLI binaries (darwin/amd64, darwin/arm64, linux/amd64, windows/amd64) with `goreleaser build --snapshot` — Validated in Phase 16
+
 ### Active
 
 - [ ] Lip Gloss used for terminal layout and styling; Bubble Tea available for interactive scenarios
@@ -95,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after Phase 15 complete — CLI refactored to ARCHITECTURE.md: `IOStreams`, `rootFlags`/`rootOptions`/`resolveRootOptions()`, `newRootCmd(streams)`, zero globals, zero `init()`, two-liner `RunE`*
+*Last updated: 2026-03-31 after Phase 16 complete — all v1.0.0 blockers resolved: Hirschberg linear-space Myers (O(N+M) peak memory), `WithContext` negative-value validation, goreleaser multi-platform release config*
