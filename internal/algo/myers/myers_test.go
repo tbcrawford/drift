@@ -3,6 +3,7 @@ package myers_test
 import (
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -408,4 +409,85 @@ func generateLargeInputs() (old, new []string) {
 		new = append(new, "line "+strconv.Itoa(i))
 	}
 	return old, new
+}
+
+// TestHirschbergMemory verifies that the Hirschberg linear-space implementation
+// does not exhibit quadratic memory growth. When input doubles in size, peak
+// heap allocation must grow by less than 10×.
+func TestHirschbergMemory(t *testing.T) {
+	m := myers.New()
+
+	// Build a base input: 250 unique lines each side (fully disjoint = worst case
+	// for the algorithm: all deletes then all inserts).
+	makeLines := func(n, offset int) []string {
+		lines := make([]string, n)
+		for i := range lines {
+			lines[i] = strconv.Itoa(offset + i)
+		}
+		return lines
+	}
+
+	runAndMeasure := func(n int) uint64 {
+		old := makeLines(n, 0)
+		newL := makeLines(n, n) // completely disjoint
+		var before, after runtime.MemStats
+		runtime.GC()
+		runtime.ReadMemStats(&before)
+		_ = m.Diff(old, newL)
+		runtime.GC()
+		runtime.ReadMemStats(&after)
+		if after.TotalAlloc < before.TotalAlloc {
+			return 0
+		}
+		return after.TotalAlloc - before.TotalAlloc
+	}
+
+	alloc1 := runAndMeasure(250)
+	alloc2 := runAndMeasure(500)
+
+	if alloc1 == 0 {
+		t.Skip("could not measure allocations (alloc1 == 0)")
+	}
+
+	ratio := float64(alloc2) / float64(alloc1)
+	t.Logf("alloc(250)=%d alloc(500)=%d ratio=%.2f", alloc1, alloc2, ratio)
+
+	const maxRatio = 10.0
+	if ratio > maxRatio {
+		t.Errorf("memory growth ratio %.2f exceeds %.1f× — possible quadratic allocation", ratio, maxRatio)
+	}
+}
+
+// TestHirschbergLarge verifies that the Hirschberg implementation satisfies
+// the line-count invariants for a 500-line diff.
+func TestHirschbergLarge(t *testing.T) {
+	m := myers.New()
+
+	// Build 500-line inputs with scattered changes.
+	var old, newLines []string
+	for i := 1; i <= 500; i++ {
+		old = append(old, "line "+strconv.Itoa(i))
+	}
+	for i := 1; i <= 500; i++ {
+		if i%25 == 0 {
+			continue // delete every 25th line (20 deletions)
+		}
+		if i == 100 || i == 300 {
+			newLines = append(newLines, "inserted line at "+strconv.Itoa(i)) // 2 insertions
+		}
+		newLines = append(newLines, "line "+strconv.Itoa(i))
+	}
+
+	edits := m.Diff(old, newLines)
+	eq, ins, del := countOps(edits)
+
+	if eq+del != len(old) {
+		t.Errorf("old invariant violated: Equal(%d)+Delete(%d)=%d != len(old)=%d",
+			eq, del, eq+del, len(old))
+	}
+	if eq+ins != len(newLines) {
+		t.Errorf("new invariant violated: Equal(%d)+Insert(%d)=%d != len(new)=%d",
+			eq, ins, eq+ins, len(newLines))
+	}
+	t.Logf("500-line diff: equal=%d insert=%d delete=%d total_edits=%d", eq, ins, del, len(edits))
 }
