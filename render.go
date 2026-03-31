@@ -120,6 +120,9 @@ func buildRenderPipeline(w io.Writer, cfg *config, filename string) renderPipeli
 	wrapped := colorprofile.NewWriter(w, os.Environ())
 
 	termWidth := render.TerminalWidth(w)
+	if cfg.render.termWidth > 0 {
+		termWidth = cfg.render.termWidth
+	}
 
 	return renderPipeline{
 		profile:   profile,

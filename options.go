@@ -32,6 +32,7 @@ type renderConfig struct {
 	lineNumbers   bool
 	lineDiffStyle bool
 	wordDiff      bool
+	termWidth     int
 	themeResolved func(string)
 }
 
@@ -120,6 +121,14 @@ func WithLineDiffStyle(v bool) Option {
 // lines in unified and split output. The default is true when using Render.
 func WithWordDiff(v bool) Option {
 	return func(c *config) { c.render.wordDiff = v }
+}
+
+// WithTermWidth sets a fixed terminal width for split diff rendering.
+// Use this to produce deterministic output in tests or non-TTY environments
+// where the terminal width cannot be detected automatically. A value of 0
+// (the default) falls back to automatic detection (80 columns for non-TTYs).
+func WithTermWidth(w int) Option {
+	return func(c *config) { c.render.termWidth = w }
 }
 
 // validate checks that all config fields hold valid values.
