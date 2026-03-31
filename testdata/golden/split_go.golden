@@ -1,0 +1,14 @@
+@@ -1,9 +1,12 @@
+ 1 package main                                             │ 1  package main                                           
+ 2                                                          │ 2                                                         
+                                                            │ 3  import (                                               
+                                                            │ 4      "fmt"                                              
+                                                            │ 5      "strings"                                          
+ 3 import "fmt"                                             │ 6  )                                                      
+ 4                                                          │ 7                                                         
+ 5 func greet(name string) string {                         │ 8  func greet(name string) string {                       
+ 6     return fmt.Sprintf("Hello, %s!", name)               │ 9      return fmt.Sprintf("Hello, %s!",                   
+ 7 }                                                        │    strings.TrimSpace(name))                               
+ 8                                                          │ 10 }                                                      
+ 9 func main() {                                            │ 11                                                        
+                                                              12 func main() {                                          
