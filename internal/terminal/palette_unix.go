@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/term"
+	"github.com/charmbracelet/x/term"
 
 	"github.com/tylercrawford/drift/internal/highlight"
 )
@@ -24,11 +24,11 @@ func QueryANSIPalette() ([]color.RGBA, error) {
 	}
 	defer func() { _ = tty.Close() }()
 
-	oldState, err := term.MakeRaw(int(tty.Fd()))
+	oldState, err := term.MakeRaw(tty.Fd())
 	if err != nil {
 		return nil, fmt.Errorf("set raw mode: %w", err)
 	}
-	defer func() { _ = term.Restore(int(tty.Fd()), oldState) }()
+	defer func() { _ = term.Restore(tty.Fd(), oldState) }()
 
 	var query strings.Builder
 	for n := 0; n < 16; n++ {
