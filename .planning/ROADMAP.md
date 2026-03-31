@@ -163,7 +163,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 14. Deep cruft removal | 2/2 | Complete | 2026-03-27 |
 | 15. Architecture-driven refactor | 2/2 | Complete | 2026-03-27 |
 | 16. Fix v1.0.0 blockers | 3/3 | Complete | 2026-03-31 |
-| 17. Address medium-priority council review issues | 1/5 | In Progress|  |
+| 17. Address medium-priority council review issues | 4/5 | In Progress|  |
 
 ### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
 
@@ -275,13 +275,13 @@ Plans:
 (5) audit and clean up the dual `golang.org/x/term` + `charmbracelet/x/term` direct dependencies.
 **Requirements**: REVIEW-05, REVIEW-06, REVIEW-07, REVIEW-08, REVIEW-09
 **Depends on:** Phase 16
-**Plans:** 1/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 - [x] 17-01-PLAN.md — Library-to-root migration: git mv 13 library files from drift/ to root, create cmd/drift/go.mod + go.work, update all import sites
-- [ ] 17-02-PLAN.md — Remove Line.Spans stub: remove Spans field from Line struct; keep Span as internal-only type
-- [ ] 17-03-PLAN.md — Golden file tests: add goldie v2 snapshot tests for unified, split, and no-color rendering at testdata/golden/
-- [ ] 17-04-PLAN.md — pairHunkLines bottom-aligned pairing: surplus deletes/inserts align to bottom of asymmetric block
+- [x] 17-02-PLAN.md — Remove Line.Spans stub: remove Spans field from Line struct; keep Span as internal-only type
+- [x] 17-03-PLAN.md — Golden file tests: add goldie v2 snapshot tests for unified, split, and no-color rendering at testdata/golden/
+- [x] 17-04-PLAN.md — pairHunkLines bottom-aligned pairing: surplus deletes/inserts align to bottom of asymmetric block
 - [ ] 17-05-PLAN.md — Dual term dep cleanup: audit import sites, consolidate to one direct term dependency
 
 ### Phase 16: Fix v1.0.0 blockers: Hirschberg Myers, WithContext validation, goreleaser

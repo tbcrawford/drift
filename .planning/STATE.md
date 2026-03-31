@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Ready to execute
-stopped_at: Completed 17-01-PLAN.md
-last_updated: "2026-03-31T17:09:07.412Z"
+stopped_at: Completed 17-02-PLAN.md
+last_updated: "2026-03-31T17:13:48.161Z"
 progress:
   total_phases: 17
   completed_phases: 5
   total_plans: 16
-  completed_plans: 12
+  completed_plans: 15
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 ## Current Position
 
 Phase: 17 (address-medium-priority-council-review-issues) — EXECUTING
-Plan: 2 of 5
+Plan: 5 of 5
 
 ## Performance Metrics
 
@@ -63,6 +63,9 @@ Plan: 2 of 5
 | Phase 16 P03 | 147 | 4 tasks | 2 files |
 | Phase 16-fix-v1-blockers-hirschberg-myers-context-validation-goreleaser P16-02 | 406 | 4 tasks | 4 files |
 | Phase 17-address-medium-priority-council-review-issues P17-01 | 12 | 3 tasks | 21 files |
+| Phase 17-address-medium-priority-council-review-issues P17-04 | 4 | 2 tasks | 2 files |
+| Phase 17-address-medium-priority-council-review-issues P02 | 4 | 2 tasks | 2 files |
+| Phase 17-address-medium-priority-council-review-issues P03 | 8 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -114,6 +117,10 @@ Recent decisions affecting current work:
 - [Phase 16]: validate() called at Diff() time (not WithContext() time) — standard Go functional-options pattern: validate on use, not on set
 - [Phase 17-01]: go.work replace directive used for local CLI module dev: replace github.com/tylercrawford/drift => ../.. in cmd/drift/go.mod enables go mod tidy without published module
 - [Phase 17-01]: git mv used for all 13 library files to preserve file history when moving from drift/ to module root
+- [Phase 17]: Bottom-aligned pairHunkLines: for D>I top (D-I) deletes get blank right; for I>D top (I-D) inserts get blank left — matches git split-view convention (REVIEW-08)
+- [Phase 17]: Span struct retained in internal/edittype as internal-only for future word-diff; Line.Spans []Span field removed from public API at v1.0 (zero-value stub is API smell)
+- [Phase 17-03]: WithTermWidth(w int) added to public API to allow deterministic split-view width in tests; wired through buildRenderPipeline
+- [Phase 17-03]: Golden fixtures use WithNoColor() — plain text, no ANSI, CI-portable; goldie.WithFixtureDir(testdata/golden) for explicit fixture location
 
 ### Roadmap Evolution
 
@@ -149,6 +156,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T17:09:07.406Z
-Stopped at: Completed 17-01-PLAN.md
+Last session: 2026-03-31T17:13:40.764Z
+Stopped at: Completed 17-02-PLAN.md
 Resume file: None
