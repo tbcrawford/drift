@@ -1,6 +1,7 @@
 package drift
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -37,5 +38,33 @@ func TestWithNoColor_SetsFlag(t *testing.T) {
 	WithNoColor()(cfg)
 	if !cfg.render.noColor {
 		t.Error("config.render.noColor after WithNoColor() = false; want true")
+	}
+}
+
+// TestWithContextNegative verifies that passing WithContext(-1) to Diff() returns
+// a non-nil error containing "non-negative".
+func TestWithContextNegative(t *testing.T) {
+	old := "line1\nline2\nline3"
+	new := "line1\nlineX\nline3"
+	_, err := Diff(old, new, WithContext(-1))
+	if err == nil {
+		t.Fatal("expected non-nil error for WithContext(-1), got nil")
+	}
+	if !strings.Contains(err.Error(), "non-negative") {
+		t.Errorf("error message should mention 'non-negative', got: %s", err.Error())
+	}
+}
+
+// TestWithContextZero verifies that passing WithContext(0) to Diff() succeeds
+// and returns a non-equal diff result (zero context lines is a valid choice).
+func TestWithContextZero(t *testing.T) {
+	old := "line1\nline2\nline3"
+	new := "line1\nlineX\nline3"
+	result, err := Diff(old, new, WithContext(0))
+	if err != nil {
+		t.Fatalf("unexpected error for WithContext(0): %v", err)
+	}
+	if result.IsEqual {
+		t.Error("expected non-equal diff result")
 	}
 }
