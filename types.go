@@ -21,17 +21,9 @@ const (
 // It is an alias for edittype.Edit.
 type Edit = edittype.Edit
 
-// Span marks a character range within a Line for intra-line highlighting.
-// Start and End are byte offsets into Line.Content. Reserved for v1.x.
-// It is an alias for edittype.Span.
-type Span = edittype.Span
-
 // Line represents a single rendered line in a diff hunk.
 // It carries the operation, content, and original line numbers.
 // It is an alias for edittype.Line.
-//
-// Note: the Spans field (intra-line highlight ranges) is always nil in v1.0.
-// It is reserved for a future v1.x release.
 type Line = edittype.Line
 
 // Hunk represents a contiguous block of changes with surrounding context lines.

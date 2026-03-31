@@ -6,7 +6,7 @@
 // Consumers should use the re-exported types in the public library package:
 //
 //	import "github.com/tylercrawford/drift"
-//	drift.Op, drift.Edit, drift.Line, drift.Span, drift.Hunk, drift.DiffResult
+//	drift.Op, drift.Edit, drift.Line, drift.Hunk, drift.DiffResult
 package edittype
 
 // Op represents the operation type for a diff edit or line.
@@ -44,8 +44,6 @@ type Line struct {
 	Content string // line text without trailing newline
 	OldNum  int    // 1-indexed old file line number; 0 if inserted
 	NewNum  int    // 1-indexed new file line number; 0 if deleted
-	// Spans holds intra-line word-level diff spans (nil in v1.0; reserved for v1.x).
-	Spans []Span
 }
 
 // Hunk represents a contiguous block of changes with surrounding context lines.
