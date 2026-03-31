@@ -245,11 +245,12 @@ func TestPairHunkLines_MoreDeletesThanInserts(t *testing.T) {
 	if len(pairs) != 2 {
 		t.Fatalf("expected 2 pairs, got %d", len(pairs))
 	}
-	if pairs[0].left != "del1" || pairs[0].right != "ins1" {
-		t.Errorf("pair[0]: left=%q right=%q; want left='del1' right='ins1'", pairs[0].left, pairs[0].right)
+	// Bottom-aligned: surplus delete at top gets blank right; last delete pairs with insert.
+	if pairs[0].left != "del1" || pairs[0].right != "" {
+		t.Errorf("pair[0]: left=%q right=%q; want left='del1' right=''", pairs[0].left, pairs[0].right)
 	}
-	if pairs[1].left != "del2" || pairs[1].right != "" {
-		t.Errorf("pair[1]: left=%q right=%q; want left='del2' right=''", pairs[1].left, pairs[1].right)
+	if pairs[1].left != "del2" || pairs[1].right != "ins1" {
+		t.Errorf("pair[1]: left=%q right=%q; want left='del2' right='ins1'", pairs[1].left, pairs[1].right)
 	}
 }
 
@@ -263,11 +264,12 @@ func TestPairHunkLines_MoreInsertsThanDeletes(t *testing.T) {
 	if len(pairs) != 2 {
 		t.Fatalf("expected 2 pairs, got %d", len(pairs))
 	}
-	if pairs[0].left != "del1" || pairs[0].right != "ins1" {
-		t.Errorf("pair[0]: left=%q right=%q; want left='del1' right='ins1'", pairs[0].left, pairs[0].right)
+	// Bottom-aligned: surplus insert at top gets blank left; delete pairs with last insert.
+	if pairs[0].left != "" || pairs[0].right != "ins1" {
+		t.Errorf("pair[0]: left=%q right=%q; want left='' right='ins1'", pairs[0].left, pairs[0].right)
 	}
-	if pairs[1].left != "" || pairs[1].right != "ins2" {
-		t.Errorf("pair[1]: left=%q right=%q; want left='' right='ins2'", pairs[1].left, pairs[1].right)
+	if pairs[1].left != "del1" || pairs[1].right != "ins2" {
+		t.Errorf("pair[1]: left=%q right=%q; want left='del1' right='ins2'", pairs[1].left, pairs[1].right)
 	}
 }
 
@@ -301,4 +303,65 @@ func TestPairHunkLines_OnlyInserts(t *testing.T) {
 			t.Errorf("pair[%d].left = %q; want '' (blank) for Insert-only hunk", i, p.left)
 		}
 	}
+}
+
+// TestPairHunkLines_BottomAligned verifies asymmetric delete/insert blocks are
+// bottom-aligned: surplus lines at the top of the longer side get blank
+// placeholders; the shorter side aligns against the bottom.
+func TestPairHunkLines_BottomAligned(t *testing.T) {
+	del := func(content string, oldNum int) edittype.Line {
+		return edittype.Line{Op: edittype.Delete, Content: content, OldNum: oldNum}
+	}
+	ins := func(content string, newNum int) edittype.Line {
+		return edittype.Line{Op: edittype.Insert, Content: content, NewNum: newNum}
+	}
+
+	t.Run("3del_1ins", func(t *testing.T) {
+		pairs := pairHunkLines([]edittype.Line{del("a", 1), del("b", 2), del("c", 3), ins("x", 1)})
+		if len(pairs) != 3 {
+			t.Fatalf("want 3 pairs, got %d", len(pairs))
+		}
+		// Rows 0-1: blank right side
+		if pairs[0].right != "" || pairs[0].rightOp != edittype.Equal {
+			t.Errorf("row 0: want blank right, got %q op=%v", pairs[0].right, pairs[0].rightOp)
+		}
+		if pairs[1].right != "" || pairs[1].rightOp != edittype.Equal {
+			t.Errorf("row 1: want blank right, got %q op=%v", pairs[1].right, pairs[1].rightOp)
+		}
+		// Row 2: last delete pairs with insert
+		if pairs[2].left != "c" || pairs[2].right != "x" {
+			t.Errorf("row 2: want (c, x), got (%q, %q)", pairs[2].left, pairs[2].right)
+		}
+	})
+
+	t.Run("1del_3ins", func(t *testing.T) {
+		pairs := pairHunkLines([]edittype.Line{del("a", 1), ins("x", 1), ins("y", 2), ins("z", 3)})
+		if len(pairs) != 3 {
+			t.Fatalf("want 3 pairs, got %d", len(pairs))
+		}
+		// Rows 0-1: blank left side
+		if pairs[0].left != "" || pairs[0].leftOp != edittype.Equal {
+			t.Errorf("row 0: want blank left, got %q op=%v", pairs[0].left, pairs[0].leftOp)
+		}
+		if pairs[1].left != "" || pairs[1].leftOp != edittype.Equal {
+			t.Errorf("row 1: want blank left, got %q op=%v", pairs[1].left, pairs[1].leftOp)
+		}
+		// Row 2: delete pairs with last insert
+		if pairs[2].left != "a" || pairs[2].right != "z" {
+			t.Errorf("row 2: want (a, z), got (%q, %q)", pairs[2].left, pairs[2].right)
+		}
+	})
+
+	t.Run("2del_2ins_unchanged", func(t *testing.T) {
+		pairs := pairHunkLines([]edittype.Line{del("a", 1), del("b", 2), ins("x", 1), ins("y", 2)})
+		if len(pairs) != 2 {
+			t.Fatalf("want 2 pairs, got %d", len(pairs))
+		}
+		if pairs[0].left != "a" || pairs[0].right != "x" {
+			t.Errorf("row 0: want (a, x), got (%q, %q)", pairs[0].left, pairs[0].right)
+		}
+		if pairs[1].left != "b" || pairs[1].right != "y" {
+			t.Errorf("row 1: want (b, y), got (%q, %q)", pairs[1].left, pairs[1].right)
+		}
+	})
 }
