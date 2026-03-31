@@ -27,7 +27,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 13: Refactor: no Go files in root** - move library files to drift/ subdir (completed 2026-03-26)
 - [x] **Phase 14: Deep cruft removal** - commit pending changes, remove dead exports (completed 2026-03-27)
 - [x] **Phase 15: Architecture-driven refactor** - IOStreams, Flags→Options→run() lifecycle (completed 2026-03-27)
-- [ ] **Phase 16: Fix v1.0.0 blockers** - Hirschberg Myers, WithContext validation, goreleaser
+- [x] **Phase 16: Fix v1.0.0 blockers** - Hirschberg Myers, WithContext validation, goreleaser (completed 2026-03-31)
+- [ ] **Phase 17: Address medium-priority council review issues** - Import path docs, Line.Spans removal, golden tests, bottom-aligned split pairing, term dep cleanup
 
 ## Phase Details
 
@@ -162,6 +163,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 14. Deep cruft removal | 2/2 | Complete | 2026-03-27 |
 | 15. Architecture-driven refactor | 2/2 | Complete | 2026-03-27 |
 | 16. Fix v1.0.0 blockers | 3/3 | Complete | 2026-03-31 |
+| 17. Address medium-priority council review issues | 0/5 | Pending | — |
 
 ### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
 
@@ -262,6 +264,25 @@ Plans:
 Plans:
 - [x] 15-01-PLAN.md — Define IOStreams struct + rootFlags/rootOptions lifecycle contracts (iostreams.go, flags.go)
 - [x] 15-02-PLAN.md — Rewrite cmd/drift/main.go: newRootCmd(), runRoot(opts), runCLI(IOStreams) — no globals, no init()
+
+### Phase 17: Address medium-priority council review issues
+
+**Goal:** Resolve all five medium-priority issues identified in `.reviews/drift-library/REVIEW.md`:
+(1) migrate the library package from `drift/` to the module root so the canonical import is `import "github.com/tylercrawford/drift"` (CLI gets its own `go.mod` + `go.work` workspace);
+(2) remove the stub `Spans []Span` field from the public `Line` struct;
+(3) add goldie v2 golden file tests for the rendering pipeline;
+(4) improve `pairHunkLines` to use bottom-aligned split pairing matching git's behavior;
+(5) audit and clean up the dual `golang.org/x/term` + `charmbracelet/x/term` direct dependencies.
+**Requirements**: REVIEW-05, REVIEW-06, REVIEW-07, REVIEW-08, REVIEW-09
+**Depends on:** Phase 16
+**Plans:** 0/5 plans complete
+
+Plans:
+- [ ] 17-01-PLAN.md — Library-to-root migration: git mv 13 library files from drift/ to root, create cmd/drift/go.mod + go.work, update all import sites
+- [ ] 17-02-PLAN.md — Remove Line.Spans stub: remove Spans field from Line struct; keep Span as internal-only type
+- [ ] 17-03-PLAN.md — Golden file tests: add goldie v2 snapshot tests for unified, split, and no-color rendering at testdata/golden/
+- [ ] 17-04-PLAN.md — pairHunkLines bottom-aligned pairing: surplus deletes/inserts align to bottom of asymmetric block
+- [ ] 17-05-PLAN.md — Dual term dep cleanup: audit import sites, consolidate to one direct term dependency
 
 ### Phase 16: Fix v1.0.0 blockers: Hirschberg Myers, WithContext validation, goreleaser
 
