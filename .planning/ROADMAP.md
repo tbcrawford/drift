@@ -23,6 +23,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Dual line-number gutters** - old/new gutters, unified and split (completed 2026-03-26)
 - [x] **Phase 10: Theme-aware full-line diff styling** - depends on Phase 9 (completed 2026-03-26)
 - [x] **Phase 11: GitHub PR-style intra-line highlights** - depends on Phase 10 (completed 2026-03-26)
+- [x] **Phase 12: Restructure project layout** - idiomatic Go library layout (completed 2026-03-26)
+- [x] **Phase 13: Refactor: no Go files in root** - move library files to drift/ subdir (completed 2026-03-26)
+- [x] **Phase 14: Deep cruft removal** - commit pending changes, remove dead exports (completed 2026-03-27)
+- [x] **Phase 15: Architecture-driven refactor** - IOStreams, Flags→Options→run() lifecycle (completed 2026-03-27)
+- [ ] **Phase 16: Fix v1.0.0 blockers** - Hirschberg Myers, WithContext validation, goreleaser
 
 ## Phase Details
 
@@ -152,6 +157,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 9. Dual line-number gutters | 2/2 | Complete | 2026-03-26 |
 | 10. Theme-aware full-line diff styling | 1/1 | Complete | 2026-03-26 |
 | 11. Intra-line word highlights | 2/2 | Complete    | 2026-03-26 |
+| 12. Restructure project layout | 2/2 | Complete | 2026-03-26 |
+| 13. Refactor: no Go files in root | 2/2 | Complete | 2026-03-26 |
+| 14. Deep cruft removal | 2/2 | Complete | 2026-03-27 |
+| 15. Architecture-driven refactor | 2/2 | Complete | 2026-03-27 |
+| 16. Fix v1.0.0 blockers | 1/3 | In Progress|  |
 
 ### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
 
@@ -252,3 +262,15 @@ Plans:
 Plans:
 - [x] 15-01-PLAN.md — Define IOStreams struct + rootFlags/rootOptions lifecycle contracts (iostreams.go, flags.go)
 - [x] 15-02-PLAN.md — Rewrite cmd/drift/main.go: newRootCmd(), runRoot(opts), runCLI(IOStreams) — no globals, no init()
+
+### Phase 16: Fix v1.0.0 blockers: Hirschberg Myers, WithContext validation, goreleaser
+
+**Goal:** Resolve three v1.0.0 blockers: (1) replace the O((N+M)²) trace-snapshot Myers implementation with a Hirschberg linear-space divide-and-conquer variant; (2) add validation so `WithContext(-1)` returns an error from `drift.Diff()` instead of silently expanding context to the entire file; (3) create `.goreleaser.yaml` for multi-platform binary releases (darwin/amd64, darwin/arm64, linux/amd64, windows/amd64).
+**Requirements**: PERF-01, API-01, OSS-04
+**Depends on:** Phase 15
+**Plans:** 1/3 plans executed
+
+Plans:
+- [ ] 16-01-PLAN.md — Hirschberg linear-space Myers: replace trace-snapshot O((N+M)²) with divide-and-conquer O(N+M) space
+- [ ] 16-02-PLAN.md — WithContext validation: drift.Diff() returns error for negative contextLines
+- [x] 16-03-PLAN.md — goreleaser config: .goreleaser.yaml for multi-platform CLI binary releases

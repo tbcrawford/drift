@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0.0
-milestone_name: milestone
-status: Milestone complete
-stopped_at: Completed 15-architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli/15-02-PLAN.md
-last_updated: "2026-03-27T17:54:04.035Z"
+milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
+status: Ready to execute
+stopped_at: Completed 16-fix-v1-blockers-hirschberg-myers-context-validation-goreleaser/16-03-PLAN.md
+last_updated: "2026-03-31T13:58:46.573Z"
 progress:
-  total_phases: 15
+  total_phases: 16
   completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 11
+  completed_plans: 9
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tylercrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 15 — architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli
+**Current focus:** Phase 16 — fix-v1-blockers-hirschberg-myers-context-validation-goreleaser
 
 ## Current Position
 
-Phase: 15
-Plan: Not started
+Phase: 16 (fix-v1-blockers-hirschberg-myers-context-validation-goreleaser) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Plan: Not started
 | Phase 14-deep-cruft-removal-clean-code-comments-and-commit-uncommitted-changes P02 | 1 | 2 tasks | 2 files |
 | Phase 15-architecture-driven-refactor P15-01 | 69 | 2 tasks | 2 files |
 | Phase 15-architecture-driven-refactor P15-02 | 4 | 1 tasks | 2 files |
+| Phase 16 P03 | 147 | 4 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,7 @@ Recent decisions affecting current work:
 - [Phase Phase 15]: resolveRootOptions centralizes all I/O decisions; show-theme callback uses streams.Err not os.Stderr
 - [Phase Phase 15]: runCLI signature changed from (stdout, stderr, stdin, args) to (streams IOStreams, args) — all tests updated for cleaner IOStreams-first architecture
 - [Phase Phase 15]: newRootCmd(streams IOStreams) constructor produces fresh cobra.Command per invocation — eliminates need for flag-reset hacks between test runs
+- [Phase 16]: goreleaser v2 config: formats plural array, snapshot.version_template, CGO_ENABLED=0 static binaries, linux/arm64+windows/arm64 excluded pending CI runners
 
 ### Roadmap Evolution
 
@@ -142,6 +144,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T17:49:31.623Z
-Stopped at: Completed 15-architecture-driven-refactor-apply-architecture-md-principles-to-library-and-cli/15-02-PLAN.md
+Last session: 2026-03-31T13:58:46.569Z
+Stopped at: Completed 16-fix-v1-blockers-hirschberg-myers-context-validation-goreleaser/16-03-PLAN.md
 Resume file: None
