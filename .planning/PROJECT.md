@@ -43,6 +43,15 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - [x] `WithContext(-1)` returns a non-nil error from `drift.Diff()`; zero context is valid — Validated in Phase 16
 - [x] `.goreleaser.yaml` ships multi-platform CLI binaries (darwin/amd64, darwin/arm64, linux/amd64, windows/amd64) with `goreleaser build --snapshot` — Validated in Phase 16
 
+### Validated (Phase 17)
+
+- [x] Canonical import path is `import "github.com/tylercrawford/drift"` — library at module root, drift/ subdirectory removed — Validated in Phase 17
+- [x] CLI (`cmd/drift`) is a separate Go module (`go.mod` at `cmd/drift/`) with `go.work` workspace for local development — Validated in Phase 17
+- [x] `Line` struct has no stub fields — `Spans []Span` removed, `Span` type unexported — Validated in Phase 17
+- [x] Golden file regression tests using `goldie v2` with NoColor plain-text fixtures in `testdata/golden/` — Validated in Phase 17
+- [x] `pairHunkLines` uses git-style bottom-aligned pairing for asymmetric delete/insert blocks — Validated in Phase 17
+- [x] Single term package dep: `charmbracelet/x/term` only; `golang.org/x/term` removed from `go.mod` — Validated in Phase 17
+
 ### Active
 
 - [ ] Lip Gloss used for terminal layout and styling; Bubble Tea available for interactive scenarios
@@ -52,7 +61,7 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - HTML render target — terminal ANSI only for v1; web rendering deferred
 - Interactive scrollable TUI (vimdiff-style) — static output only for v1
 - Real-time / streaming diff (watching files) — not a v1 goal
-- Separate library and CLI modules — single module simplifies distribution
+- Separate library and CLI modules as completely independent repos — CLI is separate module within the same repo, linked via go.work
 
 ## Context
 
@@ -101,4 +110,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-31 after Phase 16 complete — all v1.0.0 blockers resolved: Hirschberg linear-space Myers (O(N+M) peak memory), `WithContext` negative-value validation, goreleaser multi-platform release config*
+*Last updated: 2026-03-31 after Phase 17 complete — all medium-priority council review issues resolved: canonical import path at module root, clean public API (no Spans stub), golden regression tests, bottom-aligned split rendering, consolidated term deps*
