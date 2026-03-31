@@ -5,7 +5,7 @@
 //
 // Consumers should use the re-exported types in the public library package:
 //
-//	import "github.com/tylercrawford/drift/drift"
+//	import "github.com/tylercrawford/drift"
 //	drift.Op, drift.Edit, drift.Line, drift.Span, drift.Hunk, drift.DiffResult
 package edittype
 

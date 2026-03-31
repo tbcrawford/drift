@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tylercrawford/drift/drift"
+	"github.com/tylercrawford/drift"
 )
 
 // parseAlgorithm maps a flag string to a drift.Algorithm value.

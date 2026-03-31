@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/tylercrawford/drift/drift"
+	"github.com/tylercrawford/drift"
 )
 
 // rootFlags holds the raw values parsed by cobra from the command line.

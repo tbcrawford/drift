@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tylercrawford/drift/drift"
+	"github.com/tylercrawford/drift"
 )
 
 // TestRender_WithNoColor verifies that WithNoColor() produces plain text

@@ -3,7 +3,7 @@ package hunk_test
 import (
 	"testing"
 
-	"github.com/tylercrawford/drift/drift"
+	"github.com/tylercrawford/drift"
 	"github.com/tylercrawford/drift/internal/hunk"
 )
 

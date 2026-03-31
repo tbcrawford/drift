@@ -7,7 +7,7 @@ import (
 
 	"pgregory.net/rapid"
 
-	"github.com/tylercrawford/drift/drift"
+	"github.com/tylercrawford/drift"
 	"github.com/tylercrawford/drift/internal/testhelpers"
 )
 
