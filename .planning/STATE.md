@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
-status: Complete
-stopped_at: Phase 17 planned, ready to execute
-last_updated: "2026-03-31T16:50:12.348Z"
+status: Ready to execute
+stopped_at: Completed 17-01-PLAN.md
+last_updated: "2026-03-31T17:09:07.412Z"
 progress:
   total_phases: 17
   completed_phases: 5
   total_plans: 16
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tylercrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 17 — planned, ready to execute (Plan 01: library-to-root migration)
+**Current focus:** Phase 17 — address-medium-priority-council-review-issues
 
 ## Current Position
 
-Phase: 17 (address-medium-priority-council-review-issues) — planned, ready to execute
-Plan: 0 of 5
+Phase: 17 (address-medium-priority-council-review-issues) — EXECUTING
+Plan: 2 of 5
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Plan: 0 of 5
 | Phase 15-architecture-driven-refactor P15-02 | 4 | 1 tasks | 2 files |
 | Phase 16 P03 | 147 | 4 tasks | 2 files |
 | Phase 16-fix-v1-blockers-hirschberg-myers-context-validation-goreleaser P16-02 | 406 | 4 tasks | 4 files |
+| Phase 17-address-medium-priority-council-review-issues P17-01 | 12 | 3 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,8 @@ Recent decisions affecting current work:
 - [Phase Phase 15]: newRootCmd(streams IOStreams) constructor produces fresh cobra.Command per invocation — eliminates need for flag-reset hacks between test runs
 - [Phase 16]: goreleaser v2 config: formats plural array, snapshot.version_template, CGO_ENABLED=0 static binaries, linux/arm64+windows/arm64 excluded pending CI runners
 - [Phase 16]: validate() called at Diff() time (not WithContext() time) — standard Go functional-options pattern: validate on use, not on set
+- [Phase 17-01]: go.work replace directive used for local CLI module dev: replace github.com/tylercrawford/drift => ../.. in cmd/drift/go.mod enables go mod tidy without published module
+- [Phase 17-01]: git mv used for all 13 library files to preserve file history when moving from drift/ to module root
 
 ### Roadmap Evolution
 
@@ -146,6 +149,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T16:50:12.343Z
-Stopped at: Phase 17 context gathered
-Resume file: .planning/phases/17-address-medium-priority-council-review-issues/17-CONTEXT.md
+Last session: 2026-03-31T17:09:07.406Z
+Stopped at: Completed 17-01-PLAN.md
+Resume file: None
