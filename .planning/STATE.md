@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Phase complete — ready for verification
-stopped_at: Completed 17-03-PLAN.md
-last_updated: "2026-03-31T17:14:02.103Z"
+stopped_at: Completed 17-05-PLAN.md
+last_updated: "2026-03-31T17:14:11.770Z"
 progress:
   total_phases: 17
   completed_phases: 6
@@ -122,6 +122,7 @@ Recent decisions affecting current work:
 - [Phase 17]: Span struct retained in internal/edittype as internal-only for future word-diff; Line.Spans []Span field removed from public API at v1.0 (zero-value stub is API smell)
 - [Phase 17-03]: WithTermWidth(w int) added to public API to allow deterministic split-view width in tests; wired through buildRenderPipeline
 - [Phase 17-03]: Golden fixtures use WithNoColor() — plain text, no ANSI, CI-portable; goldie.WithFixtureDir(testdata/golden) for explicit fixture location
+- [Phase 17-05]: Migrated palette_unix.go from golang.org/x/term to charmbracelet/x/term; charmbracelet/x/term takes uintptr fd (tty.Fd() returns uintptr directly — no int() cast needed)
 
 ### Roadmap Evolution
 
@@ -157,6 +158,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T17:13:51.488Z
-Stopped at: Completed 17-03-PLAN.md
+Last session: 2026-03-31T17:14:11.765Z
+Stopped at: Completed 17-05-PLAN.md
 Resume file: None
