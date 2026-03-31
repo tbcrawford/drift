@@ -1,5 +1,6 @@
 # Compiled binaries
 drift.exe
+/cmd/drift/drift
 
 # OS metadata
 .DS_Store
