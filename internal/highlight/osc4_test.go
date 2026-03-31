@@ -4,7 +4,7 @@ import (
 	"image/color"
 	"testing"
 
-	"github.com/tylercrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/highlight"
 )
 
 func TestParseOSC4Responses_twoSlots(t *testing.T) {

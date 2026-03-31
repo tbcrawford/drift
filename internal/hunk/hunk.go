@@ -3,7 +3,7 @@
 package hunk
 
 import (
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 // Build converts a slice of Edits (as returned by a diff algorithm) into a

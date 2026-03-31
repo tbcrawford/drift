@@ -58,7 +58,7 @@ created: 2026-03-25
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| `go install …@latest` on unpublished module | OSS-04 | Requires `GOPROXY` or local replace during dev | After tag/publish: run `go install github.com/tylercrawford/drift/cmd/drift@latest` from a temp env; verify `drift --help` |
+| `go install …@latest` on unpublished module | OSS-04 | Requires `GOPROXY` or local replace during dev | After tag/publish: run `go install github.com/tbcrawford/drift/cmd/drift@latest` from a temp env; verify `drift --help` |
 
 *Automated path: `go build` / `go test` with `testscript` using locally built binary.*
 

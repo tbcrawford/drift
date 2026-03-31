@@ -2,7 +2,7 @@
 
 **Gathered:** 2026-03-25  
 **Status:** Ready for planning  
-**Context note:** No `06-CONTEXT.md` present; research derived from ROADMAP, REQUIREMENTS, STATE, and current `github.com/tylercrawford/drift` source.
+**Context note:** No `06-CONTEXT.md` present; research derived from ROADMAP, REQUIREMENTS, STATE, and current `github.com/tbcrawford/drift` source.
 
 ---
 
@@ -42,8 +42,8 @@ result, err := drift.New().Algorithm(drift.Histogram).WithTheme("github").Diff(a
 
 **Tooling:**
 
-- `go doc github.com/tylercrawford/drift` — package summary
-- `go doc -all github.com/tylercrawford/drift` — every exported symbol
+- `go doc github.com/tbcrawford/drift` — package summary
+- `go doc -all github.com/tbcrawford/drift` — every exported symbol
 - `staticcheck` / `golangci-lint` may include comment checks if enabled
 
 **Convention:** Every exported name needs a comment starting with the name (`// Diff computes...`). Constants in a block can share a lead comment plus per-value comments where non-obvious (`Myers`, `Patience`, `Histogram` already partially documented).
@@ -115,7 +115,7 @@ result, err := drift.New().Algorithm(drift.Histogram).WithTheme("github").Diff(a
 | Builder parity | `go test ./... -run Builder` (or named test) | After builder implementation |
 | Examples | `go run ./examples/basic/` and `go run ./examples/builder/` | After examples plan |
 | Benchmarks | `go test -bench=. -benchmem ./...` (subset flags) | After bench plan |
-| Godoc spot-check | `go doc -all github.com/tylercrawford/drift \| head` | After godoc plan |
+| Godoc spot-check | `go doc -all github.com/tbcrawford/drift \| head` | After godoc plan |
 
 **Nyquist sampling:** Run `go test ./...` after each committed task; run full bench suite once per wave before merge.
 

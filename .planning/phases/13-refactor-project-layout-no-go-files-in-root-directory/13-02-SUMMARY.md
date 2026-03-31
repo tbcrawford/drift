@@ -43,7 +43,7 @@ metrics:
 
 # Phase 13 Plan 02: Update Documentation and .gitignore for New Import Path
 
-**One-liner:** Added .gitignore for binaries/IDE artifacts and updated README.md import path from `github.com/tylercrawford/drift` to `github.com/tylercrawford/drift/drift` following Phase 13-01 library move to drift/ subdirectory.
+**One-liner:** Added .gitignore for binaries/IDE artifacts and updated README.md import path from `github.com/tbcrawford/drift` to `github.com/tbcrawford/drift/drift` following Phase 13-01 library move to drift/ subdirectory.
 
 ## What Was Built
 
@@ -52,9 +52,9 @@ Two focused documentation cleanup tasks completing the Phase 13 refactor:
 1. **`.gitignore`** — Created at repo root, ignoring compiled binaries (`drift`, `drift.exe`), OS metadata (`.DS_Store`), and IDE directories (`.idea/`, `.vscode/`, `*.iml`). The `testdata/` directory is explicitly NOT ignored since the rapid fuzz corpus lives there and should be tracked.
 
 2. **`README.md` import path update** — Two lines updated:
-   - `go get github.com/tylercrawford/drift@latest` → `go get github.com/tylercrawford/drift/drift@latest`
-   - Import in library code example: `"github.com/tylercrawford/drift"` → `"github.com/tylercrawford/drift/drift"`
-   - CLI install command (`go install github.com/tylercrawford/drift/cmd/drift@latest`) was already correct and unchanged.
+   - `go get github.com/tbcrawford/drift@latest` → `go get github.com/tbcrawford/drift/drift@latest`
+   - Import in library code example: `"github.com/tbcrawford/drift"` → `"github.com/tbcrawford/drift/drift"`
+   - CLI install command (`go install github.com/tbcrawford/drift/cmd/drift@latest`) was already correct and unchanged.
 
 3. **`drift/doc.go`** — Examined; contained no bare import path strings in comments or examples (only Go identifiers like `drift.Diff`, `drift.Render`, etc.). No changes were needed.
 
@@ -71,7 +71,7 @@ All plan verification steps passed:
 
 - ✅ `.gitignore` exists with `drift` binary entry
 - ✅ `drift` binary no longer shows as untracked in `git status`
-- ✅ No bare `"github.com/tylercrawford/drift"` remains in README.md or drift/doc.go
+- ✅ No bare `"github.com/tbcrawford/drift"` remains in README.md or drift/doc.go
 - ✅ `go build ./...` passes
 - ✅ `go test ./...` passes (219 tests, 16 packages)
 

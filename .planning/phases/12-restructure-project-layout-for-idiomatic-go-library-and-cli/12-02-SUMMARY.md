@@ -47,7 +47,7 @@ This plan:
 
 ## Verification
 
-- `go doc github.com/tylercrawford/drift` — renders full 108-line overview with no errors ✅
+- `go doc github.com/tbcrawford/drift` — renders full 108-line overview with no errors ✅
 - `grep -c "WithWordDiff\|WithLineDiffStyle" README.md` — returns 3 (≥2 required) ✅
 - `go test ./...` — 219 tests pass across 16 packages ✅
 - `go build ./...` — builds cleanly ✅

@@ -5,9 +5,9 @@
 package histogram
 
 import (
-	"github.com/tylercrawford/drift/internal/algo"
-	"github.com/tylercrawford/drift/internal/algo/myers"
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/algo"
+	"github.com/tbcrawford/drift/internal/algo/myers"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 const histogramMaxOccurrences = 64

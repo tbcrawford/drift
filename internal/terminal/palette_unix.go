@@ -11,7 +11,7 @@ import (
 
 	"github.com/charmbracelet/x/term"
 
-	"github.com/tylercrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/highlight"
 )
 
 // QueryANSIPalette queries the terminal for ANSI palette slots 0–15 via OSC 4,

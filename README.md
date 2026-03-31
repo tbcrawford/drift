@@ -7,8 +7,8 @@ In a color-capable TTY, output uses ANSI styles; when stdout is piped or you pas
 ## Installation
 
 ```bash
-go get github.com/tylercrawford/drift/drift@latest
-go install github.com/tylercrawford/drift/cmd/drift@latest
+go get github.com/tbcrawford/drift/drift@latest
+go install github.com/tbcrawford/drift/cmd/drift@latest
 ```
 
 ## CLI usage
@@ -37,7 +37,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tylercrawford/drift/drift"
+	"github.com/tbcrawford/drift/drift"
 )
 
 func main() {

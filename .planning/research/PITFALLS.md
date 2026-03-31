@@ -285,19 +285,19 @@ Go's struct literal positional initialization is technically valid but brittle. 
 ### Pitfall 13: Go Module Major Version in Import Path Not Updated
 
 **What goes wrong:**
-When the library releases v2.0.0 with breaking changes, the `go.mod` module path is not updated to `github.com/tylercrawford/drift/v2`. Users who `go get github.com/tylercrawford/drift@v2.0.0` get a confusing error — the module system treats the old and new paths as different modules, and tooling like `go get` will not automatically resolve to the v2 path.
+When the library releases v2.0.0 with breaking changes, the `go.mod` module path is not updated to `github.com/tbcrawford/drift/v2`. Users who `go get github.com/tbcrawford/drift@v2.0.0` get a confusing error — the module system treats the old and new paths as different modules, and tooling like `go get` will not automatically resolve to the v2 path.
 
 **Why it happens:**
 Go module major versioning requires updating the import path for v2+. This is a Go-specific convention that catches many library authors off-guard — the Go module system treats `github.com/foo/bar` and `github.com/foo/bar/v2` as completely separate modules. Forgetting this means breaking changes ship under the same import path, violating the Go module contract.
 
 **How to avoid:**
 - Commit to the current pre-v1.0 period to stabilize the API — avoid releasing v1.0.0 until the public API is solid.
-- When breaking changes are needed post-v1.0, bump the `module` line in `go.mod` to `github.com/tylercrawford/drift/v2` and update all internal imports.
-- Use `go.mod`'s `module` directive correctly from day one: `module github.com/tylercrawford/drift`.
+- When breaking changes are needed post-v1.0, bump the `module` line in `go.mod` to `github.com/tbcrawford/drift/v2` and update all internal imports.
+- Use `go.mod`'s `module` directive correctly from day one: `module github.com/tbcrawford/drift`.
 - Pin to `v0.x` as long as the API is still evolving — the Go community understands `v0` means "no stability guarantee."
 
 **Warning signs:**
-- `go get github.com/tylercrawford/drift@v2.0.0` fails with "unknown revision" errors.
+- `go get github.com/tbcrawford/drift@v2.0.0` fails with "unknown revision" errors.
 - Internal imports still use the old path after a major version bump.
 - The CHANGELOG doesn't distinguish breaking vs. non-breaking changes.
 
@@ -356,19 +356,19 @@ The natural first instinct for testing output is `assert.Equal(t, expected, got)
 ### Pitfall 16: Single `go.mod` — `go install` Path Must Point to `cmd/drift/main.go`
 
 **What goes wrong:**
-Users run `go install github.com/tylercrawford/drift@latest` and get an error (`go: github.com/tylercrawford/drift@latest: module github.com/tylercrawford/drift: no Go files in root`) because the root package is a library (`package drift`) and there's no `main` package at the root.
+Users run `go install github.com/tbcrawford/drift@latest` and get an error (`go: github.com/tbcrawford/drift@latest: module github.com/tbcrawford/drift: no Go files in root`) because the root package is a library (`package drift`) and there's no `main` package at the root.
 
 **Why it happens:**
-`go install` on a module root requires `package main` at the root directory. A library package at the root with a CLI in `cmd/drift/` is the correct layout — but the install path for the CLI must include the subdirectory: `go install github.com/tylercrawford/drift/cmd/drift@latest`.
+`go install` on a module root requires `package main` at the root directory. A library package at the root with a CLI in `cmd/drift/` is the correct layout — but the install path for the CLI must include the subdirectory: `go install github.com/tbcrawford/drift/cmd/drift@latest`.
 
 **How to avoid:**
-- Document the correct install command prominently in the README: `go install github.com/tylercrawford/drift/cmd/drift@latest`.
+- Document the correct install command prominently in the README: `go install github.com/tbcrawford/drift/cmd/drift@latest`.
 - Verify the install path works from a clean `GOPATH` as part of the release checklist.
 - Never put `package main` at the module root for a library+CLI module.
-- The import path for library users (`go get github.com/tylercrawford/drift`) and the install path for CLI users (`go install github.com/tylercrawford/drift/cmd/drift@latest`) are intentionally different — both are correct.
+- The import path for library users (`go get github.com/tbcrawford/drift`) and the install path for CLI users (`go install github.com/tbcrawford/drift/cmd/drift@latest`) are intentionally different — both are correct.
 
 **Warning signs:**
-- `go install github.com/tylercrawford/drift@latest` produces "no Go files" or "no main package" errors.
+- `go install github.com/tbcrawford/drift@latest` produces "no Go files" or "no main package" errors.
 - README shows the wrong install path.
 - CI release checks only verify `go build` not `go install`.
 
@@ -439,7 +439,7 @@ Users run `go install github.com/tylercrawford/drift@latest` and get an error (`
 - [ ] **Side-by-side layout:** Tested with terminal width of 80, 120, and 40 columns (narrow terminal edge case).
 - [ ] **ANSI strip before width:** Confirmed `lipgloss.Width(chromaLine) == lipgloss.Width(plainLine)` for same logical content.
 - [ ] **Piped output:** Verified `drift file1 file2 | cat` produces clean unified diff without ANSI codes.
-- [ ] **`go install` path:** Verified `go install github.com/tylercrawford/drift/cmd/drift@latest` works from a clean environment.
+- [ ] **`go install` path:** Verified `go install github.com/tbcrawford/drift/cmd/drift@latest` works from a clean environment.
 - [ ] **Nil lexer handling:** Tested with an unknown file extension (`.xyz`) — no panic, graceful plain-text fallback.
 - [ ] **Dark/light detection timeout:** Verified the CLI does not hang on startup when not in an xterm-compatible terminal.
 - [ ] **`\r\n` line endings:** Tested with Windows-style line endings — no `\r` suffix visible in diff output.

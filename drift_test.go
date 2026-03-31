@@ -3,7 +3,7 @@ package drift_test
 import (
 	"testing"
 
-	"github.com/tylercrawford/drift"
+	"github.com/tbcrawford/drift"
 )
 
 // TestDiff_IdenticalInputs verifies that identical inputs return IsEqual=true

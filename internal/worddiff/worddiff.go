@@ -6,8 +6,8 @@ package worddiff
 import (
 	"regexp"
 
-	"github.com/tylercrawford/drift/internal/algo/myers"
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/algo/myers"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 var tokenRE = regexp.MustCompile(`\S+|\s+`)

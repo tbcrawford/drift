@@ -45,7 +45,7 @@ metrics:
 
 # Phase 13 Plan 01: Move Library Files to drift/ Subdirectory Summary
 
-**One-liner:** Moved 13 root-level Go library files into `drift/` subdirectory and updated all 10 dependent import paths from `github.com/tylercrawford/drift` to `github.com/tylercrawford/drift/drift`.
+**One-liner:** Moved 13 root-level Go library files into `drift/` subdirectory and updated all 10 dependent import paths from `github.com/tbcrawford/drift` to `github.com/tbcrawford/drift/drift`.
 
 ## What Was Built
 
@@ -117,7 +117,7 @@ Relocated all library source files from the Go module root to a `drift/` subdire
 
 2. **Single atomic `git mv` command** — All 13 files moved in one operation to keep the rename-to-move history clean and atomic.
 
-3. **`internal/` directory structure unchanged** — Per Go's internal package visibility rules, `github.com/tylercrawford/drift/drift` can still import `github.com/tylercrawford/drift/internal/...` packages because the drift package's module root is `github.com/tylercrawford/drift`.
+3. **`internal/` directory structure unchanged** — Per Go's internal package visibility rules, `github.com/tbcrawford/drift/drift` can still import `github.com/tbcrawford/drift/internal/...` packages because the drift package's module root is `github.com/tbcrawford/drift`.
 
 ## Known Stubs
 

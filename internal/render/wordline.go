@@ -6,9 +6,9 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/alecthomas/chroma/v2"
 	"github.com/charmbracelet/colorprofile"
-	"github.com/tylercrawford/drift/internal/edittype"
-	"github.com/tylercrawford/drift/internal/highlight"
-	"github.com/tylercrawford/drift/internal/worddiff"
+	"github.com/tbcrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/worddiff"
 )
 
 // styledDiffPrefix returns the +/-/space prefix character styled with bg when bg is set.

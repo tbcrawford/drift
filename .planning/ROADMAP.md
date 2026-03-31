@@ -41,11 +41,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Identical inputs return an empty `DiffResult` immediately (verifiable via benchmark: zero allocations)
   3. Files with Windows `\r\n` line endings produce the same diff output as Unix `\n` files
   4. Property-based tests pass: `apply(diff(a, b), a) == b` holds for all generated inputs
-  5. `go.mod` exists at module root with path `github.com/tylercrawford/drift`, MIT LICENSE file present, and `just test` / `just build` / `just lint` run successfully
+  5. `go.mod` exists at module root with path `github.com/tbcrawford/drift`, MIT LICENSE file present, and `just test` / `just build` / `just lint` run successfully
 **Plans**: 5 plans
 
 Plans:
-- [x] 01-01-PLAN.md — Module scaffold: go.mod (github.com/tylercrawford/drift), MIT LICENSE, justfile, golangci-lint config
+- [x] 01-01-PLAN.md — Module scaffold: go.mod (github.com/tbcrawford/drift), MIT LICENSE, justfile, golangci-lint config
 - [x] 01-02-PLAN.md — Exported data model: Op, Edit, Hunk, Line, DiffResult, Option/config, internal algo.Differ interface
 - [x] 01-03-PLAN.md — Myers algorithm (TDD): implement internal/algo/myers/ with table-driven + cross-validated tests
 - [x] 01-04-PLAN.md — Hunk builder + drift.Diff() API: internal/hunk/, drift.go, \r\n normalization
@@ -112,14 +112,14 @@ Plans:
   2. `cat a.txt | drift - b.txt` and `drift --from 'text a' --to 'text b'` both produce correct diff output
   3. All flags work: `--algorithm`, `--lang`, `--theme`, `--no-color`, `--context N`, `--split`
   4. CLI exits with code `1` when inputs differ and `0` when identical (verified with `echo $?`)
-  5. `go install github.com/tylercrawford/drift/cmd/drift@latest` installs the binary successfully and `drift --help` runs
+  5. `go install github.com/tbcrawford/drift/cmd/drift@latest` installs the binary successfully and `drift --help` runs
 **Plans**: TBD
 
 Plans:
 - [x] 05-01: Implement `cmd/drift/main.go` with Cobra root command and flag definitions
 - [x] 05-02: Implement file path, stdin pipe, and `--from`/`--to` raw string input handling
 - [x] 05-03: Wire all flags through to library options; implement exit code logic
-- [x] 05-04: Verify `go install github.com/tylercrawford/drift/cmd/drift@latest` and test all input modes end-to-end
+- [x] 05-04: Verify `go install github.com/tbcrawford/drift/cmd/drift@latest` and test all input modes end-to-end
 
 ### Phase 6: API Hardening & OSS Packaging
 **Goal**: The library is ready for `v1.0.0` — public API is stable, documented, exemplified, and benchmarked
@@ -127,7 +127,7 @@ Plans:
 **Requirements**: CORE-05, OSS-02, OSS-03, OSS-06, OSS-07
 **Success Criteria** (what must be TRUE):
   1. `drift.New().Algorithm(drift.Histogram).WithTheme("github").Diff(a, b)` compiles and returns correct output (builder API works)
-  2. Every exported type, function, and option has a godoc comment; `go doc github.com/tylercrawford/drift` renders clean documentation with no missing entries
+  2. Every exported type, function, and option has a godoc comment; `go doc github.com/tbcrawford/drift` renders clean documentation with no missing entries
   3. `examples/basic/` and `examples/builder/` directories contain runnable programs; `go run examples/basic/main.go` produces visible diff output
   4. Benchmark for 10,000-line file diff completes in under 1 second for both unified and split renderers (verifiable with `go test -bench=.`)
   5. `README.md` covers installation, CLI usage, library functional API, builder API, and rendering examples with at least one code snippet each
@@ -234,7 +234,7 @@ Plans:
 
 ### Phase 13: Refactor project layout: no Go files in root directory
 
-**Goal:** Move all 13 root-level library `.go` files into a `drift/` subdirectory so the module root contains only metadata files (go.mod, go.sum, README.md, LICENSE, justfile). Update all import paths from `github.com/tylercrawford/drift` to `github.com/tylercrawford/drift/drift`, add `.gitignore`, and update documentation.
+**Goal:** Move all 13 root-level library `.go` files into a `drift/` subdirectory so the module root contains only metadata files (go.mod, go.sum, README.md, LICENSE, justfile). Update all import paths from `github.com/tbcrawford/drift` to `github.com/tbcrawford/drift/drift`, add `.gitignore`, and update documentation.
 **Requirements**: LAYOUT-04
 **Depends on:** Phase 12
 **Plans:** 2/2 plans complete
@@ -268,7 +268,7 @@ Plans:
 ### Phase 17: Address medium-priority council review issues
 
 **Goal:** Resolve all five medium-priority issues identified in `.reviews/drift-library/REVIEW.md`:
-(1) migrate the library package from `drift/` to the module root so the canonical import is `import "github.com/tylercrawford/drift"` (CLI gets its own `go.mod` + `go.work` workspace);
+(1) migrate the library package from `drift/` to the module root so the canonical import is `import "github.com/tbcrawford/drift"` (CLI gets its own `go.mod` + `go.work` workspace);
 (2) remove the stub `Spans []Span` field from the public `Line` struct;
 (3) add goldie v2 golden file tests for the rendering pipeline;
 (4) improve `pairHunkLines` to use bottom-aligned split pairing matching git's behavior;

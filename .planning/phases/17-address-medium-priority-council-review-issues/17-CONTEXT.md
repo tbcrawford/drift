@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-This phase delivers five sequential code-quality improvements identified in the council review at `.reviews/drift-library/REVIEW.md`. The biggest structural change is moving the library package from `drift/` to the module root — making `import "github.com/tylercrawford/drift"` the canonical import path. The remaining four plans fix API surface issues, add golden regression tests, improve rendering correctness, and clean up a duplicate terminal dependency.
+This phase delivers five sequential code-quality improvements identified in the council review at `.reviews/drift-library/REVIEW.md`. The biggest structural change is moving the library package from `drift/` to the module root — making `import "github.com/tbcrawford/drift"` the canonical import path. The remaining four plans fix API surface issues, add golden regression tests, improve rendering correctness, and clean up a duplicate terminal dependency.
 
 All 223 existing tests must pass after each plan before the next plan begins.
 
@@ -17,9 +17,9 @@ All 223 existing tests must pass after each plan before the next plan begins.
 
 ### CLI Module Strategy
 
-- **D-01:** The CLI (`cmd/drift`) gets its own `go.mod` — a separate module from the library. This keeps the library's dependency graph clean for importers and allows the CLI to add heavier TUI deps in the future without affecting `go get github.com/tylercrawford/drift`.
+- **D-01:** The CLI (`cmd/drift`) gets its own `go.mod` — a separate module from the library. This keeps the library's dependency graph clean for importers and allows the CLI to add heavier TUI deps in the future without affecting `go get github.com/tbcrawford/drift`.
 - **D-02:** A `go.work` workspace file at the repo root links the library module and the CLI module for local development. This avoids needing a `replace` directive or a published tag during development.
-- **D-03:** `go install github.com/tylercrawford/drift/cmd/drift@latest` must continue to work from either layout (confirmed: works with separate `go.mod` inside `cmd/drift/`).
+- **D-03:** `go install github.com/tbcrawford/drift/cmd/drift@latest` must continue to work from either layout (confirmed: works with separate `go.mod` inside `cmd/drift/`).
 
 ### Phase 17 Plan Structure
 
@@ -82,7 +82,7 @@ No external specs or ADRs beyond the above — requirements fully captured in de
 - Package declaration changes from `package drift` (in `drift/`) to `package drift` (at root) — name stays the same
 
 ### Import Sites to Update (Plan 1)
-- `cmd/drift/main.go` — imports `"github.com/tylercrawford/drift/drift"` → `"github.com/tylercrawford/drift"`
+- `cmd/drift/main.go` — imports `"github.com/tbcrawford/drift/drift"` → `"github.com/tbcrawford/drift"`
 - `cmd/drift/flags.go` — same
 - `examples/basic/main.go` — same
 - `examples/builder/main.go` — same
@@ -108,7 +108,7 @@ No external specs or ADRs beyond the above — requirements fully captured in de
 <specifics>
 ## Specific Ideas
 
-- Library import path becomes `"github.com/tylercrawford/drift"` — exactly what a Go developer would expect and what PROJECT.md's core value statement describes
+- Library import path becomes `"github.com/tbcrawford/drift"` — exactly what a Go developer would expect and what PROJECT.md's core value statement describes
 - The `go.work` workspace pattern follows how `golang.org/x/tools` and other multi-module Go repos handle library + CLI separation
 - Golden test fixtures in NoColor mode should be human-readable — a developer should be able to open a `.golden` file and understand what the diff output looks like structurally
 

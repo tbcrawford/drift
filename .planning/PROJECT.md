@@ -6,7 +6,7 @@
 
 ## Core Value
 
-A Go developer can `import "github.com/tylercrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
+A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
 
 ## Requirements
 
@@ -45,7 +45,7 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 
 ### Validated (Phase 17)
 
-- [x] Canonical import path is `import "github.com/tylercrawford/drift"` — library at module root, drift/ subdirectory removed — Validated in Phase 17
+- [x] Canonical import path is `import "github.com/tbcrawford/drift"` — library at module root, drift/ subdirectory removed — Validated in Phase 17
 - [x] CLI (`cmd/drift`) is a separate Go module (`go.mod` at `cmd/drift/`) with `go.work` workspace for local development — Validated in Phase 17
 - [x] `Line` struct has no stub fields — `Spans []Span` removed, `Span` type unexported — Validated in Phase 17
 - [x] Golden file regression tests using `goldie v2` with NoColor plain-text fixtures in `testdata/golden/` — Validated in Phase 17
@@ -70,7 +70,7 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - Lip Gloss (github.com/charmbracelet/lipgloss) is the dominant Go terminal layout/styling library
 - Bubble Tea (github.com/charmbracelet/bubbletea) is the established Go TUI framework (same org)
 - Myers algorithm is the standard in most diff tools; Patience/Histogram handle code-specific edge cases (moved blocks, refactors) better
-- Go module layout: single go.mod at root, `package drift` importable at `github.com/tylercrawford/drift`, CLI at `cmd/drift/main.go`
+- Go module layout: single go.mod at root, `package drift` importable at `github.com/tbcrawford/drift`, CLI at `cmd/drift/main.go`
 - Terminal theme auto-detection should inspect $COLORFGBG, $TERM, or terminal background color queries to pick a light vs dark Chroma theme
 
 ## Constraints
@@ -78,8 +78,8 @@ A Go developer can `import "github.com/tylercrawford/drift"` and get a productio
 - **Tech Stack**: Go stdlib + Chroma + Lip Gloss — no unnecessary dependencies
 - **API Stability**: Public API should be stable enough to version at v1.0.0
 - **Compatibility**: Go 1.21+ (generics available, modern stdlib)
-- **Distribution**: `go install github.com/tylercrawford/drift/cmd/drift@latest` must work
-- **Importability**: Library usable with `go get github.com/tylercrawford/drift` by third-party projects
+- **Distribution**: `go install github.com/tbcrawford/drift/cmd/drift@latest` must work
+- **Importability**: Library usable with `go get github.com/tbcrawford/drift` by third-party projects
 
 ## Key Decisions
 

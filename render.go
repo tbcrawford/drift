@@ -6,10 +6,10 @@ import (
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/charmbracelet/colorprofile"
-	"github.com/tylercrawford/drift/internal/highlight"
-	"github.com/tylercrawford/drift/internal/render"
-	"github.com/tylercrawford/drift/internal/terminal"
-	"github.com/tylercrawford/drift/internal/theme"
+	"github.com/tbcrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/render"
+	"github.com/tbcrawford/drift/internal/terminal"
+	"github.com/tbcrawford/drift/internal/theme"
 )
 
 // Render writes a unified diff of result to w with Chroma syntax highlighting.

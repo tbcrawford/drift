@@ -335,9 +335,9 @@ The switch statement in `drift.go` needs two new imports and two new cases. No c
 
 ```go
 import (
-    "github.com/tylercrawford/drift/internal/algo/histogram"
-    "github.com/tylercrawford/drift/internal/algo/patience"
-    "github.com/tylercrawford/drift/internal/algo/myers"
+    "github.com/tbcrawford/drift/internal/algo/histogram"
+    "github.com/tbcrawford/drift/internal/algo/patience"
+    "github.com/tbcrawford/drift/internal/algo/myers"
 )
 
 switch cfg.algorithm {

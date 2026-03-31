@@ -35,7 +35,7 @@ Full `go test ./...` exercises phases 1–5 packages (algorithms, render, CLI te
 ## Success criteria (ROADMAP)
 
 1. **Builder** — `drift.New()` chain mirrors `With*` options; parity tests in `builder_test.go`.
-2. **Godoc** — `go doc -all github.com/tylercrawford/drift` documents exports; package overview includes functional + builder quick starts.
+2. **Godoc** — `go doc -all github.com/tbcrawford/drift` documents exports; package overview includes functional + builder quick starts.
 3. **Examples** — `examples/basic` and `examples/builder` run without extra modules; deterministic via `WithNoColor` / `NoColor()`.
 4. **Benchmarks** — `benchmark_test.go`: `BenchmarkDiff10k`, `BenchmarkRenderUnified10k`, `BenchmarkRenderSplit10k` at 10,000 lines, `WithNoColor` / `WithSplit` as specified.
 5. **README** — Installation, CLI, functional API, builder API, rendering; includes `go install .../cmd/drift@latest`.

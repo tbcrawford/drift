@@ -7,8 +7,8 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/tylercrawford/drift/internal/edittype"
-	"github.com/tylercrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/highlight"
 )
 
 func TestGutterNumberRender_padsSingleDigitWithSpaces(t *testing.T) {

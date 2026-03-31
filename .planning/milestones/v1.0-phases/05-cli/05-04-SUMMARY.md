@@ -48,6 +48,6 @@ Added `testscript.Main` mapping `drift` → `executeDrift()`, three scripts unde
 
 After the module is published with a version tag, run:
 
-`go install github.com/tylercrawford/drift/cmd/drift@vX.Y.Z`
+`go install github.com/tbcrawford/drift/cmd/drift@vX.Y.Z`
 
 then `drift --help` to confirm the installed binary matches release documentation.

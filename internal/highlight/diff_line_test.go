@@ -7,7 +7,7 @@ import (
 
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/alecthomas/chroma/v2/styles"
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 func TestDiffLineStyle_Equal(t *testing.T) {

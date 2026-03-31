@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tylercrawford/drift"
-	"github.com/tylercrawford/drift/internal/testhelpers"
+	"github.com/tbcrawford/drift"
+	"github.com/tbcrawford/drift/internal/testhelpers"
 )
 
 // integrationCanonicalLines splits text into lines the same way drift internals do.

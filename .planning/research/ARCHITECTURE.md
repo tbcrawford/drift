@@ -97,7 +97,7 @@
 
 ```
 drift/
-├── go.mod                    # module: github.com/tylercrawford/drift
+├── go.mod                    # module: github.com/tbcrawford/drift
 ├── go.sum
 ├── drift.go                  # package drift — public API surface
 ├── options.go                # Option type + WithAlgorithm, WithLang, WithTheme, etc.
@@ -134,7 +134,7 @@ drift/
 
 ### Structure Rationale
 
-- **Root package (`package drift`):** Library importers get a clean `import "github.com/tylercrawford/drift"` with no sub-path required. Public types (`DiffResult`, `Hunk`, `Line`, `Op`) and the two API styles live here. Mirrors Go community best practice for library+CLI repos (Cobra, Viper, goldmark all use this pattern).
+- **Root package (`package drift`):** Library importers get a clean `import "github.com/tbcrawford/drift"` with no sub-path required. Public types (`DiffResult`, `Hunk`, `Line`, `Op`) and the two API styles live here. Mirrors Go community best practice for library+CLI repos (Cobra, Viper, goldmark all use this pattern).
 - **`internal/`:** All implementation details. Compiler-enforced; third-party consumers can't import internals. Algorithms, hunk building, highlighting, rendering are all internal.
 - **`cmd/drift/`:** Thin CLI wrapper. `main.go` should stay under ~50 lines — parse flags, call library, handle errors, exit. No business logic here.
 - **`examples/`:** Runnable examples for godoc and onboarding. Shows both functional + builder styles.

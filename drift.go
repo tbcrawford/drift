@@ -3,10 +3,10 @@ package drift
 import (
 	"strings"
 
-	"github.com/tylercrawford/drift/internal/algo/histogram"
-	"github.com/tylercrawford/drift/internal/algo/myers"
-	"github.com/tylercrawford/drift/internal/algo/patience"
-	"github.com/tylercrawford/drift/internal/hunk"
+	"github.com/tbcrawford/drift/internal/algo/histogram"
+	"github.com/tbcrawford/drift/internal/algo/myers"
+	"github.com/tbcrawford/drift/internal/algo/patience"
+	"github.com/tbcrawford/drift/internal/hunk"
 )
 
 // Diff computes the line-level diff between old and new using the configured

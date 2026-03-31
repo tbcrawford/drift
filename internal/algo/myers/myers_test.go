@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tylercrawford/drift"
-	"github.com/tylercrawford/drift/internal/algo/myers"
+	"github.com/tbcrawford/drift"
+	"github.com/tbcrawford/drift/internal/algo/myers"
 )
 
 // countOps counts edits of each Op type.

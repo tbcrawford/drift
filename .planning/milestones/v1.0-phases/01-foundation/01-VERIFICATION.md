@@ -29,7 +29,7 @@ human_verification: []
 | 5 | Windows `\r\n` line endings are normalized before diffing | ✓ VERIFIED | `drift.go` L22-23: `strings.ReplaceAll(old/new, "\r\n", "\n")`; `TestDiff_CRLFNormalization` passes |
 | 6 | Hunk builder groups edits into context windows (default 3, configurable) | ✓ VERIFIED | `internal/hunk/hunk.go` L20-72: `Build()` expands/merges ranges by contextLines; 6 hunk tests pass; `TestDiff_WithContextZero` passes |
 | 7 | Property-based test: `apply(diff(a,b), a) == b` for all generated inputs | ✓ VERIFIED | `drift_property_test.go` + `testdata/apply.go`: `TestProperty_RoundTrip` runs 1000 rapid iterations, all pass |
-| 8 | Project has MIT license, valid go.mod at `github.com/tylercrawford/drift`, justfile with dev recipes | ✓ VERIFIED | `LICENSE` L1-3: MIT + Tyler Crawford 2026; `go.mod` L1,3: correct module path + `go 1.21`; `justfile` L6-38: all 9 recipes present |
+| 8 | Project has MIT license, valid go.mod at `github.com/tbcrawford/drift`, justfile with dev recipes | ✓ VERIFIED | `LICENSE` L1-3: MIT + Tyler Crawford 2026; `go.mod` L1,3: correct module path + `go 1.21`; `justfile` L6-38: all 9 recipes present |
 | 9 | Fuzz test runs without panic or incorrect output | ✓ VERIFIED | `myers_fuzz_test.go`: `FuzzMyers` with 10-seed corpus; ran 10s clean; structural validity checked via `verifyEdits` including round-trip |
 | 10 | `go test ./...` passes: 43 tests, 5 packages, race-clean | ✓ VERIFIED | All 43 tests pass; `go test -race ./...` passes; `go vet ./...` clean |
 
@@ -41,7 +41,7 @@ human_verification: []
 
 | Artifact | Provides | Status | Details |
 |----------|----------|--------|---------|
-| `go.mod` | Module declaration `github.com/tylercrawford/drift` | ✓ VERIFIED | 5 lines; correct module path, `go 1.21`, `pgregory.net/rapid v1.2.0` |
+| `go.mod` | Module declaration `github.com/tbcrawford/drift` | ✓ VERIFIED | 5 lines; correct module path, `go 1.21`, `pgregory.net/rapid v1.2.0` |
 | `LICENSE` | MIT license | ✓ VERIFIED | 21 lines; "MIT License", "Copyright (c) 2026 Tyler Crawford" |
 | `justfile` | Developer task runner | ✓ VERIFIED | 39 lines; test, test-race, bench, build, lint, vet, tidy, test-property, fuzz recipes |
 | `.golangci.yml` | Linter configuration | ✓ VERIFIED | 18 lines; govet, staticcheck, errcheck, unused, gosimple, ineffassign; 5m timeout; Go 1.21 |
@@ -67,7 +67,7 @@ human_verification: []
 | `drift.go` | `internal/algo/myers` | `myers.New()` dispatch | ✓ WIRED | L6,40,42: import + `differ = myers.New()` in switch |
 | `drift.go` | `internal/hunk` | `hunk.Build(edits, oldLines, newLines, cfg.contextLines)` | ✓ WIRED | L7,46: import + call at L46 |
 | `drift.go` | `strings.ReplaceAll` | `\r\n` → `\n` normalization | ✓ WIRED | L4,22-23: both old and new normalized |
-| `drift_property_test.go` | `testdata.Apply` | round-trip invariant | ✓ WIRED | L12: `"github.com/tylercrawford/drift/testdata"` import; L52: `testdata.Apply(result, oldLines)` |
+| `drift_property_test.go` | `testdata.Apply` | round-trip invariant | ✓ WIRED | L12: `"github.com/tbcrawford/drift/testdata"` import; L52: `testdata.Apply(result, oldLines)` |
 | `drift_property_test.go` | `drift.Diff` | property test driver | ✓ WIRED | L47,93,124: three test functions all call `drift.Diff(...)` |
 | `internal/algo/myers/myers.go` | `internal/algo/algo.go` | `Differ` interface satisfaction | ✓ WIRED | L12: `var _ algo.Differ = (*Myers)(nil)` compile-time check |
 | `types.go` | `internal/edittype` | type alias re-export | ✓ WIRED | L3: import; all types defined as `= edittype.TypeName` aliases |
@@ -112,7 +112,7 @@ The library is a pure computation engine (no state, no rendering, no network). A
 | CORE-04 | 01-02, 01-04 | Library exposes `drift.Diff(a, b string, opts ...Option) DiffResult` | ✓ SATISFIED | `drift.go` L15: `func Diff(old, new string, opts ...Option) (DiffResult, error)` |
 | CORE-06 | 01-04, 01-05 | `Diff()` returns empty result immediately when both inputs are identical | ✓ SATISFIED | `drift.go` L26-28: string equality fast path before any allocation |
 | CORE-07 | 01-04 | Library normalizes `\r\n` → `\n` on input | ✓ SATISFIED | `drift.go` L22-23: `strings.ReplaceAll`; `TestDiff_CRLFNormalization` passes |
-| OSS-01 | 01-01 | Valid `go.mod` with module path `github.com/tylercrawford/drift` | ✓ SATISFIED | `go.mod` L1: `module github.com/tylercrawford/drift`; L3: `go 1.21` |
+| OSS-01 | 01-01 | Valid `go.mod` with module path `github.com/tbcrawford/drift` | ✓ SATISFIED | `go.mod` L1: `module github.com/tbcrawford/drift`; L3: `go 1.21` |
 | OSS-05 | 01-01 | MIT LICENSE file | ✓ SATISFIED | `LICENSE`: "MIT License", "Copyright (c) 2026 Tyler Crawford" |
 | OSS-08 | 01-05 | Property-based tests verify `apply(diff(a,b), a) == b` | ✓ SATISFIED | `drift_property_test.go` `TestProperty_RoundTrip` + `testdata/apply.go` |
 | OSS-09 | 01-01 | `justfile` for common repository maintenance tasks | ✓ SATISFIED | `justfile` with test, test-race, bench, build, lint, vet, tidy, test-property, fuzz |
@@ -162,7 +162,7 @@ No gaps. All phase 1 must-haves are verified:
 - ✅ Fuzz test (seed corpus, structural validity checks)
 - ✅ All 10 requirements satisfied (CORE-01/02/03/04/06/07, OSS-01/05/08/09)
 
-The phase goal is fully achieved: a caller can `import "github.com/tylercrawford/drift"`, call `drift.Diff(old, new)`, and receive a correct structured `DiffResult` backed by a proven Myers implementation. 43 tests confirm correctness across unit, integration, property, and fuzz dimensions.
+The phase goal is fully achieved: a caller can `import "github.com/tbcrawford/drift"`, call `drift.Diff(old, new)`, and receive a correct structured `DiffResult` backed by a proven Myers implementation. 43 tests confirm correctness across unit, integration, property, and fuzz dimensions.
 
 ---
 

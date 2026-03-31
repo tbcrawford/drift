@@ -2,7 +2,7 @@ package highlight
 
 import (
 	"github.com/alecthomas/chroma/v2"
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 // DiffLineStyle returns the background colour for insert/delete full lines. It matches

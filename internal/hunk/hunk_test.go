@@ -3,8 +3,8 @@ package hunk_test
 import (
 	"testing"
 
-	"github.com/tylercrawford/drift"
-	"github.com/tylercrawford/drift/internal/hunk"
+	"github.com/tbcrawford/drift"
+	"github.com/tbcrawford/drift/internal/hunk"
 )
 
 // makeLines builds a simple []string slice from a variadic list of strings.

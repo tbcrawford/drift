@@ -26,11 +26,11 @@ human_verification: []
 | 1  | No `.go` files exist in the module root directory                      | ✓ VERIFIED | `ls *.go 2>/dev/null` → 0 results; shell returns "no matches found"                            |
 | 2  | `go build ./...` succeeds with no errors                               | ✓ VERIFIED | `go build ./...` → exit 0, no output                                                            |
 | 3  | `go test ./...` passes all 219+ tests                                  | ✓ VERIFIED | `go test ./...` → 219 passed in 16 packages, 0 failures                                        |
-| 4  | The library is importable as `github.com/tylercrawford/drift/drift`    | ✓ VERIFIED | 10 files use the new import path; `go build ./...` compiles cleanly                             |
+| 4  | The library is importable as `github.com/tbcrawford/drift/drift`    | ✓ VERIFIED | 10 files use the new import path; `go build ./...` compiles cleanly                             |
 | 5  | The CLI still builds and runs correctly                                | ✓ VERIFIED | `go build -o /tmp/drift_verify_test ./cmd/drift/` → builds; `--help` prints usage correctly    |
-| 6  | README.md shows the correct new import path                           | ✓ VERIFIED | README line 10: `go get github.com/tylercrawford/drift/drift@latest`; line 40 code example uses `"github.com/tylercrawford/drift/drift"` |
+| 6  | README.md shows the correct new import path                           | ✓ VERIFIED | README line 10: `go get github.com/tbcrawford/drift/drift@latest`; line 40 code example uses `"github.com/tbcrawford/drift/drift"` |
 | 7  | Compiled `drift` binary is gitignored                                  | ✓ VERIFIED | `.gitignore` line 2: `drift`; binary no longer appears as untracked in `git status`             |
-| 8  | `drift/doc.go` import path example is correct                         | ✓ VERIFIED | `grep "github.com/tylercrawford/drift" drift/doc.go` → 0 matches; doc.go uses only Go identifiers (no bare import string needed) |
+| 8  | `drift/doc.go` import path example is correct                         | ✓ VERIFIED | `grep "github.com/tbcrawford/drift" drift/doc.go` → 0 matches; doc.go uses only Go identifiers (no bare import string needed) |
 
 **Score:** 8/8 truths verified
 
@@ -57,9 +57,9 @@ human_verification: []
 
 | From                          | To                                              | Via                                  | Status     | Details                                                        |
 |-------------------------------|-------------------------------------------------|--------------------------------------|------------|----------------------------------------------------------------|
-| `drift/drift.go`              | `github.com/tylercrawford/drift/internal/algo/*` | absolute import paths (unchanged)   | ✓ WIRED    | `grep "tylercrawford/drift/internal"` in drift/drift.go → present |
-| `cmd/drift/main.go`           | `github.com/tylercrawford/drift/drift`           | updated import statement             | ✓ WIRED    | Line 11: `"github.com/tylercrawford/drift/drift"` confirmed    |
-| `README.md`                   | `github.com/tylercrawford/drift/drift`           | go get instruction and code example  | ✓ WIRED    | Lines 10 and 40 both show new import path                      |
+| `drift/drift.go`              | `github.com/tbcrawford/drift/internal/algo/*` | absolute import paths (unchanged)   | ✓ WIRED    | `grep "tbcrawford/drift/internal"` in drift/drift.go → present |
+| `cmd/drift/main.go`           | `github.com/tbcrawford/drift/drift`           | updated import statement             | ✓ WIRED    | Line 11: `"github.com/tbcrawford/drift/drift"` confirmed    |
+| `README.md`                   | `github.com/tbcrawford/drift/drift`           | go get instruction and code example  | ✓ WIRED    | Lines 10 and 40 both show new import path                      |
 
 **All dependent consumers updated (10 files total):**
 - `cmd/drift/main.go` — CLI entry point
@@ -87,8 +87,8 @@ Not applicable. This phase is a pure structural refactor (file moves + import pa
 |---------------------------------------|-----------------------------------------------------------------------------------------------------------|-------------------------------------------|---------|
 | Module root has zero `.go` files      | `ls *.go 2>/dev/null \| wc -l`                                                                            | `0`                                       | ✓ PASS  |
 | `drift/` has exactly 13 `.go` files   | `ls drift/*.go \| wc -l`                                                                                  | `13`                                      | ✓ PASS  |
-| Old import path eliminated            | `grep -r '"github.com/tylercrawford/drift"' --include="*.go" . \| grep -v ".planning" \| wc -l`         | `0`                                       | ✓ PASS  |
-| New import path present (≥10 matches) | `grep -r '"github.com/tylercrawford/drift/drift"' --include="*.go" . \| grep -v ".planning" \| wc -l`   | `10`                                      | ✓ PASS  |
+| Old import path eliminated            | `grep -r '"github.com/tbcrawford/drift"' --include="*.go" . \| grep -v ".planning" \| wc -l`         | `0`                                       | ✓ PASS  |
+| New import path present (≥10 matches) | `grep -r '"github.com/tbcrawford/drift/drift"' --include="*.go" . \| grep -v ".planning" \| wc -l`   | `10`                                      | ✓ PASS  |
 | `go build ./...` clean                | `go build ./...`                                                                                          | exit 0, no output                          | ✓ PASS  |
 | `go test ./...` all pass              | `go test ./...`                                                                                           | 219 passed in 16 packages                  | ✓ PASS  |
 | `go vet ./...` clean                  | `go vet ./...`                                                                                            | no issues                                 | ✓ PASS  |

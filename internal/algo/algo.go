@@ -1,6 +1,6 @@
 package algo
 
-import "github.com/tylercrawford/drift/internal/edittype"
+import "github.com/tbcrawford/drift/internal/edittype"
 
 // Differ is the interface all diff algorithm implementations must satisfy.
 type Differ interface {

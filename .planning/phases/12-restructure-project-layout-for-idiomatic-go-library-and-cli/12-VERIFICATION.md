@@ -6,7 +6,7 @@ score: 7/7 must-haves verified
 re_verification: false
 gaps: []
 human_verification:
-  - test: "Visually inspect go doc github.com/tylercrawford/drift rendered output in a color TTY"
+  - test: "Visually inspect go doc github.com/tbcrawford/drift rendered output in a color TTY"
     expected: "Sectioned overview with # Functional API, # Builder API, # Diff Options, # Render Options, # Git Integration headers rendering correctly in terminal"
     why_human: "go doc rendering quality (section header formatting, spacing) requires visual confirmation in a real TTY"
 ---
@@ -27,10 +27,10 @@ human_verification:
 | #  | Truth                                                                                               | Status     | Evidence                                                                                      |
 |----|-----------------------------------------------------------------------------------------------------|------------|-----------------------------------------------------------------------------------------------|
 | 1  | `testdata/apply.go` is gone; `Apply()` lives in `internal/testhelpers/apply.go`                    | ✓ VERIFIED | `testdata/` contains only `rapid/`; `internal/testhelpers/apply.go` exists with 66 lines      |
-| 2  | All `_test.go` files that previously imported `testdata.Apply` now import `internal/testhelpers`   | ✓ VERIFIED | Both test files import `"github.com/tylercrawford/drift/internal/testhelpers"`; 0 refs to `testdata.Apply` remain |
+| 2  | All `_test.go` files that previously imported `testdata.Apply` now import `internal/testhelpers`   | ✓ VERIFIED | Both test files import `"github.com/tbcrawford/drift/internal/testhelpers"`; 0 refs to `testdata.Apply` remain |
 | 3  | `config` struct is clearly split: `diffConfig` (algorithm, contextLines) vs `renderConfig` (all render options) | ✓ VERIFIED | `options.go` declares `diffConfig`, `renderConfig`, and `config{diff diffConfig, render renderConfig}` |
 | 4  | `go test ./...` passes with no failures                                                              | ✓ VERIFIED | 219 tests passed across 16 packages                                                           |
-| 5  | `go doc github.com/tylercrawford/drift` renders a clean, complete package overview                  | ✓ VERIFIED | 108-line output; no errors; covers all With* options                                           |
+| 5  | `go doc github.com/tbcrawford/drift` renders a clean, complete package overview                  | ✓ VERIFIED | 108-line output; no errors; covers all With* options                                           |
 | 6  | `README.md` accurately reflects current API including `WithLineNumbers`, `WithWordDiff`, `WithLineDiffStyle` | ✓ VERIFIED | 6 matches found across 3 distinct lines; all three options documented with descriptions        |
 | 7  | Package doc in `doc.go` mentions functional API, builder API, and rendering in a single cohesive overview | ✓ VERIFIED | `doc.go` has 5 sections: Functional API, Builder API, Diff Options, Render Options, Git Integration |
 
@@ -53,8 +53,8 @@ human_verification:
 
 | From                                    | To                          | Via                              | Status     | Details                                                                                           |
 |-----------------------------------------|-----------------------------|----------------------------------|------------|---------------------------------------------------------------------------------------------------|
-| `drift_property_test.go`                | `internal/testhelpers`      | import path + call site          | ✓ WIRED    | Imports `"github.com/tylercrawford/drift/internal/testhelpers"`; 3 `testhelpers.Apply(...)` calls |
-| `drift_algorithm_integration_test.go`   | `internal/testhelpers`      | import path + call site          | ✓ WIRED    | Imports `"github.com/tylercrawford/drift/internal/testhelpers"`; 4 `testhelpers.Apply(...)` calls |
+| `drift_property_test.go`                | `internal/testhelpers`      | import path + call site          | ✓ WIRED    | Imports `"github.com/tbcrawford/drift/internal/testhelpers"`; 3 `testhelpers.Apply(...)` calls |
+| `drift_algorithm_integration_test.go`   | `internal/testhelpers`      | import path + call site          | ✓ WIRED    | Imports `"github.com/tbcrawford/drift/internal/testhelpers"`; 4 `testhelpers.Apply(...)` calls |
 | `doc.go`                                | `drift.Diff, Render, New`   | `[Diff]`, `[Render]`, `[New]` refs | ✓ WIRED  | Go doc links present; `go doc` renders 108 lines with all symbols linked                         |
 | `drift.go`                              | `diffConfig` fields          | `cfg.diff.algorithm`, `cfg.diff.contextLines` | ✓ WIRED | Both fields used at correct call sites (lines 38, 48)                               |
 | `render.go`                             | `renderConfig` fields        | `cfg.render.*` (10+ fields)      | ✓ WIRED    | All 8 render fields accessed via `cfg.render.*`; 22 access sites verified                        |
@@ -77,7 +77,7 @@ Not applicable for this phase — no components rendering dynamic runtime data. 
 | Build clean after refactor           | `go build ./...`                                     | No errors                       | ✓ PASS  |
 | All 219 tests pass                   | `go test ./...`                                      | 219 passed, 16 packages         | ✓ PASS  |
 | `go vet` clean                       | `go vet ./...`                                       | No issues                       | ✓ PASS  |
-| `go doc` renders package overview    | `go doc github.com/tylercrawford/drift`              | 108-line output, no errors      | ✓ PASS  |
+| `go doc` renders package overview    | `go doc github.com/tbcrawford/drift`              | 108-line output, no errors      | ✓ PASS  |
 | README has new option mentions       | `grep -c "WithWordDiff\|WithLineDiffStyle\|WithoutLineNumbers" README.md` | 6 matches  | ✓ PASS  |
 | No stale `testdata.Apply` references | `grep -rn "testdata\.Apply" . --include="*.go"`      | 0 matches                       | ✓ PASS  |
 | `testdata/apply.go` deleted          | `ls testdata/`                                       | Only `rapid/` dir present       | ✓ PASS  |
@@ -112,7 +112,7 @@ No stubs, placeholder comments, TODO/FIXME markers, empty implementations, or ha
 
 #### 1. `go doc` Rendered Section Headers in TTY
 
-**Test:** Run `go doc github.com/tylercrawford/drift` in a color-capable terminal
+**Test:** Run `go doc github.com/tbcrawford/drift` in a color-capable terminal
 **Expected:** Section headers (`# Functional API`, `# Builder API`, etc.) render as bold/formatted headings, not raw `#` characters; code blocks indent correctly; `[Diff]`, `[Render]`, `[New]` hyperlink references display as expected
 **Why human:** Terminal rendering quality of Go 1.19+ doc comment section headers requires visual confirmation in an actual TTY — grep can't verify visual output quality
 

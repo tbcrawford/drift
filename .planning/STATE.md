@@ -18,7 +18,7 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-03-25)
 
-**Core value:** A Go developer can `import "github.com/tylercrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
+**Core value:** A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
 **Current focus:** Phase 17 — address-medium-priority-council-review-issues
 
 ## Current Position
@@ -116,7 +116,7 @@ Recent decisions affecting current work:
 - [Phase Phase 15]: newRootCmd(streams IOStreams) constructor produces fresh cobra.Command per invocation — eliminates need for flag-reset hacks between test runs
 - [Phase 16]: goreleaser v2 config: formats plural array, snapshot.version_template, CGO_ENABLED=0 static binaries, linux/arm64+windows/arm64 excluded pending CI runners
 - [Phase 16]: validate() called at Diff() time (not WithContext() time) — standard Go functional-options pattern: validate on use, not on set
-- [Phase 17-01]: go.work replace directive used for local CLI module dev: replace github.com/tylercrawford/drift => ../.. in cmd/drift/go.mod enables go mod tidy without published module
+- [Phase 17-01]: go.work replace directive used for local CLI module dev: replace github.com/tbcrawford/drift => ../.. in cmd/drift/go.mod enables go mod tidy without published module
 - [Phase 17-01]: git mv used for all 13 library files to preserve file history when moving from drift/ to module root
 - [Phase 17]: Bottom-aligned pairHunkLines: for D>I top (D-I) deletes get blank right; for I>D top (I-D) inserts get blank left — matches git split-view convention (REVIEW-08)
 - [Phase 17]: Span struct retained in internal/edittype as internal-only for future word-diff; Line.Spans []Span field removed from public API at v1.0 (zero-value stub is API smell)

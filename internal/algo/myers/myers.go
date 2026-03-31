@@ -9,8 +9,8 @@
 package myers
 
 import (
-	"github.com/tylercrawford/drift/internal/algo"
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/algo"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 // Ensure Myers satisfies the algo.Differ interface at compile time.

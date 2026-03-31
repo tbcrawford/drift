@@ -5,9 +5,9 @@
 package patience
 
 import (
-	"github.com/tylercrawford/drift/internal/algo"
-	"github.com/tylercrawford/drift/internal/algo/myers"
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/algo"
+	"github.com/tbcrawford/drift/internal/algo/myers"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 // Ensure Patience satisfies the algo.Differ interface at compile time.

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/tylercrawford/drift/internal/terminal"
+	"github.com/tbcrawford/drift/internal/terminal"
 )
 
 func TestQueryANSIPalette_notSupported(t *testing.T) {

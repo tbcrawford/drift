@@ -7,8 +7,8 @@ import (
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/charmbracelet/colorprofile"
-	"github.com/tylercrawford/drift/internal/edittype"
-	"github.com/tylercrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/highlight"
 )
 
 // RenderConfig holds the resolved rendering configuration for a single

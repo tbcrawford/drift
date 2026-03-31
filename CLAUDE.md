@@ -5,15 +5,15 @@
 
 `drift` is a production-ready Go library and CLI for comprehensive text diffing between two multi-line strings or files. It is inspired by Git's diff engine and GitHub's unified diff rendering, providing structured unified and side-by-side (split) diff output with rich syntax highlighting via Chroma. The library is designed for open-source distribution and idiomatic use in other Go projects.
 
-**Core Value:** A Go developer can `import "github.com/tylercrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
+**Core Value:** A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
 
 ### Constraints
 
 - **Tech Stack**: Go stdlib + Chroma + Lip Gloss — no unnecessary dependencies
 - **API Stability**: Public API should be stable enough to version at v1.0.0
 - **Compatibility**: Go 1.21+ (generics available, modern stdlib)
-- **Distribution**: `go install github.com/tylercrawford/drift/cmd/drift@latest` must work
-- **Importability**: Library usable with `go get github.com/tylercrawford/drift` by third-party projects
+- **Distribution**: `go install github.com/tbcrawford/drift/cmd/drift@latest` must work
+- **Importability**: Library usable with `go get github.com/tbcrawford/drift` by third-party projects
 <!-- GSD:project-end -->
 
 <!-- GSD:stack-start source:research/STACK.md -->

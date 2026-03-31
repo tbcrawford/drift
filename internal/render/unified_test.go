@@ -9,8 +9,8 @@ import (
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/charmbracelet/colorprofile"
-	"github.com/tylercrawford/drift/internal/edittype"
-	"github.com/tylercrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/highlight"
 )
 
 // noopConfig returns a RenderConfig with NoOp formatter for deterministic,

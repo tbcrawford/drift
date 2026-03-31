@@ -7,7 +7,7 @@ tags: [go, go-module, justfile, golangci-lint, license, mit]
 # Dependency graph
 requires: []
 provides:
-  - go.mod with module path github.com/tylercrawford/drift and go 1.21
+  - go.mod with module path github.com/tbcrawford/drift and go 1.21
   - MIT LICENSE with Tyler Crawford copyright
   - justfile developer task runner (test, build, lint, bench, vet, tidy, fuzz)
   - .golangci.yml linter configuration (govet, staticcheck, errcheck, unused, gosimple, ineffassign)
@@ -45,7 +45,7 @@ completed: 2026-03-25
 
 # Phase 01 Plan 01: Go Module Bootstrap Summary
 
-**Go module initialized at `github.com/tylercrawford/drift` with MIT license, justfile task runner, and golangci-lint config — all subsequent plans depend on this foundation**
+**Go module initialized at `github.com/tbcrawford/drift` with MIT license, justfile task runner, and golangci-lint config — all subsequent plans depend on this foundation**
 
 ## Performance
 
@@ -56,7 +56,7 @@ completed: 2026-03-25
 - **Files modified:** 5
 
 ## Accomplishments
-- `go.mod` initialized with correct module path `github.com/tylercrawford/drift` and minimum Go version `1.21`
+- `go.mod` initialized with correct module path `github.com/tbcrawford/drift` and minimum Go version `1.21`
 - MIT License created with Tyler Crawford copyright 2026
 - `justfile` with 9 developer recipes: test, test-race, bench, build, lint, vet, tidy, test-property, fuzz
 - `.golangci.yml` enabling govet, staticcheck, errcheck, unused, gosimple, ineffassign linters
@@ -72,7 +72,7 @@ Each task was committed atomically:
 **Plan metadata:** _(docs commit — see state updates)_
 
 ## Files Created/Modified
-- `go.mod` - Module declaration: `github.com/tylercrawford/drift`, `go 1.21`
+- `go.mod` - Module declaration: `github.com/tbcrawford/drift`, `go 1.21`
 - `LICENSE` - MIT License with Tyler Crawford copyright 2026
 - `justfile` - Developer task runner with 9 recipes (test, build, lint, bench, fuzz, etc.)
 - `.golangci.yml` - golangci-lint config enabling 6 linters; excludes errcheck from test files
@@ -91,7 +91,7 @@ Each task was committed atomically:
 - **Issue:** `go test ./...` exits with code 1 when no packages exist — plan states `just test` must succeed even with no test files
 - **Fix:** Created `drift.go` with `package drift` declaration and godoc comment stub describing the library API surface
 - **Files modified:** `drift.go`
-- **Verification:** `just test` outputs `? github.com/tylercrawford/drift [no test files]` and exits 0
+- **Verification:** `just test` outputs `? github.com/tbcrawford/drift [no test files]` and exits 0
 - **Committed in:** `772c2c8` (Task 2 commit)
 
 ---
@@ -107,7 +107,7 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 - Module bootstrap complete; all subsequent plans in Phase 1 depend on this foundation
-- `go get github.com/tylercrawford/drift` resolves once code exists in the module
+- `go get github.com/tbcrawford/drift` resolves once code exists in the module
 - `just test`, `just vet`, `just tidy` all work from this point forward
 - `just build` will work once `cmd/drift/main.go` is created in Plan 01-02 or similar
 - No blockers for proceeding to Plan 01-02

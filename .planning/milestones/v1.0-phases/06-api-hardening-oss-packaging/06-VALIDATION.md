@@ -39,7 +39,7 @@ created: 2026-03-25
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
 | 06-01-01 | 01 | 1 | CORE-05 | unit | `go test ./... -run TestBuilder` | ⬜ W1 | ⬜ pending |
-| 06-02-01 | 02 | 1 | OSS-02 | manual/script | `go doc -all github.com/tylercrawford/drift` | ⬜ W1 | ⬜ pending |
+| 06-02-01 | 02 | 1 | OSS-02 | manual/script | `go doc -all github.com/tbcrawford/drift` | ⬜ W1 | ⬜ pending |
 | 06-03-01 | 03 | 2 | OSS-03 | integration | `go run ./examples/basic/` | ⬜ W2 | ⬜ pending |
 | 06-03-02 | 03 | 2 | OSS-03 | integration | `go run ./examples/builder/` | ⬜ W2 | ⬜ pending |
 | 06-04-01 | 04 | 2 | OSS-07 | bench | `go test -bench=BenchmarkDrift -count=1 ./...` | ⬜ W2 | ⬜ pending |

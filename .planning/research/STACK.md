@@ -61,7 +61,7 @@ Rationale: `drift` *is* the diff library. Importing another diff library as a ru
 
 ```bash
 # Initialize module (single module, library at root)
-go mod init github.com/tylercrawford/drift
+go mod init github.com/tbcrawford/drift
 
 # Core rendering dependencies
 go get github.com/alecthomas/chroma/v2
@@ -191,8 +191,8 @@ output := lipgloss.JoinHorizontal(lipgloss.Top, left, " │ ", right)
 **go.mod structure for single-module library + CLI:**
 
 ```
-drift/                          # module: github.com/tylercrawford/drift
-├── go.mod                      # module github.com/tylercrawford/drift; go 1.21
+drift/                          # module: github.com/tbcrawford/drift
+├── go.mod                      # module github.com/tbcrawford/drift; go 1.21
 ├── go.sum
 ├── diff.go                     # package drift — public API
 ├── options.go                  # package drift — functional options
@@ -211,8 +211,8 @@ drift/                          # module: github.com/tylercrawford/drift
         └── main.go
 ```
 
-Import the library: `go get github.com/tylercrawford/drift`
-Install the CLI: `go install github.com/tylercrawford/drift/cmd/drift@latest`
+Import the library: `go get github.com/tbcrawford/drift`
+Install the CLI: `go install github.com/tbcrawford/drift/cmd/drift@latest`
 
 **Cobra CLI root command pattern:**
 
@@ -223,7 +223,7 @@ package main
 import (
     "os"
     "github.com/spf13/cobra"
-    "github.com/tylercrawford/drift"
+    "github.com/tbcrawford/drift"
 )
 
 func main() {

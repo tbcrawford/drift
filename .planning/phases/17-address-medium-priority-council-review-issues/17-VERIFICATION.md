@@ -11,7 +11,7 @@ re_verification:
     - "drift/ subdirectory removed (Plan 01)"
     - "cmd/drift/go.mod exists as separate module (Plan 01)"
     - "go.work links . and ./cmd/drift (Plan 01)"
-    - "Zero files import github.com/tylercrawford/drift/drift (Plan 01)"
+    - "Zero files import github.com/tbcrawford/drift/drift (Plan 01)"
     - "All library tests pass (Plan 01)"
     - "CLI tests pass (Plan 01)"
     - "Line struct has no Spans field (Plan 02)"
@@ -53,9 +53,9 @@ fix pairHunkLines bottom-alignment, consolidate term package deps.
 |---|-------|--------|----------|
 | 1 | All 13 library files exist at repo root (moved from drift/ via git mv) | ✓ VERIFIED | `ls *.go` → 14 files (13 library + golden_test.go added by Plan 03) |
 | 2 | drift/ subdirectory is removed | ✓ VERIFIED | `ls drift/` → "No such file or directory" |
-| 3 | cmd/drift/go.mod: module github.com/tylercrawford/drift/cmd/drift | ✓ VERIFIED | `cat cmd/drift/go.mod` → confirmed module declaration |
+| 3 | cmd/drift/go.mod: module github.com/tbcrawford/drift/cmd/drift | ✓ VERIFIED | `cat cmd/drift/go.mod` → confirmed module declaration |
 | 4 | go.work uses . and ./cmd/drift | ✓ VERIFIED | `cat go.work` → `use (. ./cmd/drift)` |
-| 5 | Zero files import "github.com/tylercrawford/drift/drift" | ✓ VERIFIED | grep → 0 matches across all .go files |
+| 5 | Zero files import "github.com/tbcrawford/drift/drift" | ✓ VERIFIED | grep → 0 matches across all .go files |
 | 6 | All library tests pass | ✓ VERIFIED | `go test ./...` → 210 tests passed in 15 packages |
 | 7 | CLI tests pass | ✓ VERIFIED | `cd cmd/drift && go test ./...` → 20 tests passed |
 
@@ -124,7 +124,7 @@ fix pairHunkLines bottom-alignment, consolidate term package deps.
 |----------|----------|--------|---------|
 | `types.go` | Library types at module root | ✓ VERIFIED | Exists, substantive, no Span alias |
 | `drift.go` | Library entry point at module root | ✓ VERIFIED | Exists, substantive |
-| `cmd/drift/go.mod` | Separate CLI module | ✓ VERIFIED | `module github.com/tylercrawford/drift/cmd/drift` |
+| `cmd/drift/go.mod` | Separate CLI module | ✓ VERIFIED | `module github.com/tbcrawford/drift/cmd/drift` |
 | `go.work` | Workspace linking library + CLI | ✓ VERIFIED | `use (. ./cmd/drift)` confirmed |
 | `internal/edittype/edittype.go` | Line without Spans; Span internal | ✓ VERIFIED | Line has 4 fields; Span struct present at line 34 |
 | `golden_test.go` | 3 goldie snapshot tests | ✓ VERIFIED | 3 TestGolden_ functions, all pass |
@@ -139,8 +139,8 @@ fix pairHunkLines bottom-alignment, consolidate term package deps.
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `cmd/drift/main.go` | module root (library) | `import "github.com/tylercrawford/drift"` | ✓ WIRED | Confirmed: import on line 10 of main.go |
-| `golden_test.go` | library | `import "github.com/tylercrawford/drift"` | ✓ WIRED | Uses drift.Diff(), drift.Render(), drift.WithNoColor() etc. |
+| `cmd/drift/main.go` | module root (library) | `import "github.com/tbcrawford/drift"` | ✓ WIRED | Confirmed: import on line 10 of main.go |
+| `golden_test.go` | library | `import "github.com/tbcrawford/drift"` | ✓ WIRED | Uses drift.Diff(), drift.Render(), drift.WithNoColor() etc. |
 | `internal/render/termwidth.go` | charmbracelet/x/term | direct import | ✓ WIRED | Confirmed in grep output |
 | `internal/terminal/palette_unix.go` | charmbracelet/x/term | direct import | ✓ WIRED | Migrated from golang.org/x/term; confirmed in grep output |
 
@@ -173,7 +173,7 @@ The five requirement IDs (REVIEW-05 through REVIEW-09) reference issues in `.rev
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|-------------|-------------|--------|----------|
-| REVIEW-05 | 17-01 | Import path ergonomics — migrate library to module root | ✓ SATISFIED | Library at root; `import "github.com/tylercrawford/drift"` works; no `drift/drift` double-path |
+| REVIEW-05 | 17-01 | Import path ergonomics — migrate library to module root | ✓ SATISFIED | Library at root; `import "github.com/tbcrawford/drift"` works; no `drift/drift` double-path |
 | REVIEW-06 | 17-02 | Remove `Line.Spans` stub from public API | ✓ SATISFIED | Spans field removed; Span internal-only; types.go exports no Span alias |
 | REVIEW-07 | 17-03 | Add golden file tests for rendering pipeline | ✓ SATISFIED | 3 goldie tests + 3 fixture files; all pass; no ANSI codes in fixtures |
 | REVIEW-08 | 17-04 | Fix pairHunkLines positional pairing → bottom-aligned | ✓ SATISFIED | Bottom-aligned algorithm implemented and verified by 3 subtests |
@@ -215,7 +215,7 @@ None. All required behaviors are programmatically verifiable and fully verified.
 
 All five medium-priority council review issues are fully resolved:
 
-1. **REVIEW-05 (Import path)** — 14 library .go files now live at the module root. The canonical import is `import "github.com/tylercrawford/drift"`. The CLI has its own `cmd/drift/go.mod` with a `replace` directive, and `go.work` connects both modules for local development. Zero files retain the old `drift/drift` import path.
+1. **REVIEW-05 (Import path)** — 14 library .go files now live at the module root. The canonical import is `import "github.com/tbcrawford/drift"`. The CLI has its own `cmd/drift/go.mod` with a `replace` directive, and `go.work` connects both modules for local development. Zero files retain the old `drift/drift` import path.
 
 2. **REVIEW-06 (Line.Spans stub)** — The `Spans []Span` field is removed from the public `Line` struct. `Span` is retained as an internal type in `internal/edittype` for future word-diff work. `types.go` no longer exports a `Span` alias, cleaning the public API surface.
 

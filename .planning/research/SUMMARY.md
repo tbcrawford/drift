@@ -35,7 +35,7 @@ Based on research, the build order is driven by two constraints: (1) the diff en
 ### Suggested Phase Structure
 
 1. **Foundation: Module + Data Model + Myers Algorithm**
-   - Set up `go.mod` with correct module path (`github.com/tylercrawford/drift`)
+   - Set up `go.mod` with correct module path (`github.com/tbcrawford/drift`)
    - Define exported types: `Op`, `Edit`, `Hunk`, `Line`, `DiffResult`
    - Define `Option`/`config` pattern (functional options)
    - Implement Myers algorithm in `internal/algo/myers/`
@@ -75,7 +75,7 @@ Based on research, the build order is driven by two constraints: (1) the diff en
    - Implement `cmd/drift/main.go` with Cobra (thin wrapper, <50 lines)
    - Handle: two file args, stdin piping, `--no-color`, `--lang`, `--theme`, `--split`, `--algorithm`
    - Add binary file detection ("Binary files differ" message)
-   - Verify `go install github.com/tylercrawford/drift/cmd/drift@latest` works
+   - Verify `go install github.com/tbcrawford/drift/cmd/drift@latest` works
    - Addresses: CLI tool, stdin, file input, binary files, all flags
    - Avoids pitfalls: color in non-TTY, terminal width on pipes, `go install` wrong path
 

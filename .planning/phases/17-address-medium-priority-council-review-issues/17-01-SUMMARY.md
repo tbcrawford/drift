@@ -39,7 +39,7 @@ key_files:
     - examples/builder/main.go (import path updated)
     - .gitignore (removed /drift and !/drift/, added go.work.sum and /cmd/drift/drift)
 decisions:
-  - "go.work replace directive used for local development: cmd/drift/go.mod uses replace github.com/tylercrawford/drift => ../.. so go mod tidy resolves correctly without requiring published module"
+  - "go.work replace directive used for local development: cmd/drift/go.mod uses replace github.com/tbcrawford/drift => ../.. so go mod tidy resolves correctly without requiring published module"
   - "go.work committed (not gitignored); go.work.sum gitignored (machine-generated)"
   - "git mv used for all 13 library files to preserve file history in git log"
   - "cmd/drift/drift compiled binary added to .gitignore (produced by go build ./... in CLI module)"
@@ -53,11 +53,11 @@ requirements_satisfied: [REVIEW-05]
 
 # Phase 17 Plan 01: Move Library to Module Root (Canonical Import Path) Summary
 
-**One-liner:** Moved all 13 library files from `drift/` to module root via `git mv`, created `go.work` workspace + separate `cmd/drift/go.mod`, updated 12 import sites — canonical import path is now `github.com/tylercrawford/drift`.
+**One-liner:** Moved all 13 library files from `drift/` to module root via `git mv`, created `go.work` workspace + separate `cmd/drift/go.mod`, updated 12 import sites — canonical import path is now `github.com/tbcrawford/drift`.
 
 ## What Was Built
 
-Resolved REVIEW-05 (import path friction: `drift/drift` double-path) by moving the library package from the `drift/` subdirectory to the module root. This makes the canonical import path `import "github.com/tylercrawford/drift"` — exactly what PROJECT.md's Core Value statement requires.
+Resolved REVIEW-05 (import path friction: `drift/drift` double-path) by moving the library package from the `drift/` subdirectory to the module root. This makes the canonical import path `import "github.com/tbcrawford/drift"` — exactly what PROJECT.md's Core Value statement requires.
 
 The CLI (`cmd/drift`) was extracted into its own Go module with a `go.work` workspace for seamless local development. All 223 tests continue to pass (203 library + 20 CLI).
 
@@ -71,7 +71,7 @@ The CLI (`cmd/drift`) was extracted into its own Go module with a `go.work` work
 
 ## Decisions Made
 
-1. **`replace` directive in cmd/drift/go.mod** — `go mod tidy` inside a workspace sub-module cannot resolve workspace-provided modules via network (the repo doesn't yet exist on GitHub). The `replace github.com/tylercrawford/drift => ../..` directive enables `go mod tidy` to work correctly for local development. When the repo is published, this can be removed and `cmd/drift` can reference the published version directly.
+1. **`replace` directive in cmd/drift/go.mod** — `go mod tidy` inside a workspace sub-module cannot resolve workspace-provided modules via network (the repo doesn't yet exist on GitHub). The `replace github.com/tbcrawford/drift => ../..` directive enables `go mod tidy` to work correctly for local development. When the repo is published, this can be removed and `cmd/drift` can reference the published version directly.
 
 2. **`go.work` committed, `go.work.sum` gitignored** — Convention for multi-module repos. The workspace file is a dev contract, the sum file is machine-generated.
 
@@ -100,8 +100,8 @@ The CLI (`cmd/drift`) was extracted into its own Go module with a `go.work` work
 
 | Module | Tests | Status |
 |--------|-------|--------|
-| `github.com/tylercrawford/drift` (library) | 203 | ✅ All pass |
-| `github.com/tylercrawford/drift/cmd/drift` (CLI) | 20 | ✅ All pass |
+| `github.com/tbcrawford/drift` (library) | 203 | ✅ All pass |
+| `github.com/tbcrawford/drift/cmd/drift` (CLI) | 20 | ✅ All pass |
 | **Total** | **223** | **✅ Matches baseline** |
 
 ## Known Stubs
@@ -112,7 +112,7 @@ None — all functionality is fully wired.
 
 **Files verified:**
 - ✅ `go.work` exists at repo root
-- ✅ `cmd/drift/go.mod` exists (`module github.com/tylercrawford/drift/cmd/drift`)
+- ✅ `cmd/drift/go.mod` exists (`module github.com/tbcrawford/drift/cmd/drift`)
 - ✅ `types.go`, `drift.go` and 11 other library files at repo root
 - ✅ `drift/` directory removed
 

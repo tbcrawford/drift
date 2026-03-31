@@ -71,7 +71,7 @@ Added `.goreleaser.yaml` at the repository root to enable multi-platform binary 
 **1. [Rule 1 - Bug] git remote required for goreleaser check**
 - **Found during:** Task 2
 - **Issue:** `goreleaser check` failed with "no remote configured to list refs from" — the repo had no git remote set up
-- **Fix:** Added `git remote add origin https://github.com/tylercrawford/drift.git` (matches module path `github.com/tylercrawford/drift`)
+- **Fix:** Added `git remote add origin https://github.com/tbcrawford/drift.git` (matches module path `github.com/tbcrawford/drift`)
 - **Files modified:** (git config only, no committed files)
 
 ## Self-Check

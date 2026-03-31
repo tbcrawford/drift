@@ -1,7 +1,7 @@
 # Requirements: drift
 
 **Defined:** 2026-03-25
-**Core Value:** A Go developer can `import "github.com/tylercrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
+**Core Value:** A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
 
 ## v1 Requirements
 
@@ -46,10 +46,10 @@
 
 ### OSS Packaging
 
-- [x] **OSS-01**: Project has a valid `go.mod` with module path `github.com/tylercrawford/drift`
+- [x] **OSS-01**: Project has a valid `go.mod` with module path `github.com/tbcrawford/drift`
 - [ ] **OSS-02**: All exported types, functions, and options have godoc comments
 - [ ] **OSS-03**: `examples/` directory contains runnable `basic/` and `builder/` examples
-- [x] **OSS-04**: `go install github.com/tylercrawford/drift/cmd/drift@latest` installs the CLI correctly
+- [x] **OSS-04**: `go install github.com/tbcrawford/drift/cmd/drift@latest` installs the CLI correctly
 - [x] **OSS-05**: Project includes an MIT `LICENSE` file
 - [ ] **OSS-06**: `README.md` covers installation, CLI usage, library API, and rendering examples
 - [ ] **OSS-07**: Benchmarks exist for diffing a 10,000-line file (unified and split views)

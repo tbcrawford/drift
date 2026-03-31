@@ -3,8 +3,8 @@ package histogram_test
 import (
 	"testing"
 
-	"github.com/tylercrawford/drift/internal/algo/histogram"
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/algo/histogram"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 // countOps counts edits of each Op type.

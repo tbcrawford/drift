@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
-	"github.com/tylercrawford/drift"
+	"github.com/tbcrawford/drift"
 )
 
 // goOldSrc and goNewSrc are fixed Go source snippets used as stable golden

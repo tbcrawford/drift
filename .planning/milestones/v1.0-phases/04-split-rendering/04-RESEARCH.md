@@ -420,7 +420,7 @@ Both `charm.land/lipgloss/v2` and `github.com/charmbracelet/x/term` are already 
 ### Current `go.mod` (verified)
 
 ```
-module github.com/tylercrawford/drift
+module github.com/tbcrawford/drift
 
 go 1.25.0
 
@@ -540,7 +540,7 @@ package main
 import (
     "fmt"
     "os"
-    "github.com/tylercrawford/drift"
+    "github.com/tbcrawford/drift"
 )
 
 func main() {

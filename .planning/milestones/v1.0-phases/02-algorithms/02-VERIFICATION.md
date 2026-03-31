@@ -41,16 +41,16 @@ verified: 2026-03-25
 
 ```
 $ go test ./... -race -count=1
-ok  	github.com/tylercrawford/drift	2.021s
-?   	github.com/tylercrawford/drift/internal/algo	[no test files]
-ok  	github.com/tylercrawford/drift/internal/algo/histogram	2.057s
-ok  	github.com/tylercrawford/drift/internal/algo/myers	1.426s
-ok  	github.com/tylercrawford/drift/internal/algo/patience	1.572s
-?   	github.com/tylercrawford/drift/internal/edittype	[no test files]
-ok  	github.com/tylercrawford/drift/internal/hunk	2.312s
+ok  	github.com/tbcrawford/drift	2.021s
+?   	github.com/tbcrawford/drift/internal/algo	[no test files]
+ok  	github.com/tbcrawford/drift/internal/algo/histogram	2.057s
+ok  	github.com/tbcrawford/drift/internal/algo/myers	1.426s
+ok  	github.com/tbcrawford/drift/internal/algo/patience	1.572s
+?   	github.com/tbcrawford/drift/internal/edittype	[no test files]
+ok  	github.com/tbcrawford/drift/internal/hunk	2.312s
 
 $ go test -run TestProperty ./... -race -count=1
-ok  	github.com/tylercrawford/drift	1.665s
+ok  	github.com/tbcrawford/drift	1.665s
 [no tests to run in sub-packages]
 
 $ go test -run TestAllAlgorithmsCorrect ./... -v
@@ -72,7 +72,7 @@ $ go test -run TestAllAlgorithmsCorrect ./... -v
     --- PASS: TestAllAlgorithmsCorrect/empty_to_nonempty/Patience (0.00s)
     --- PASS: TestAllAlgorithmsCorrect/empty_to_nonempty/Histogram (0.00s)
 PASS
-ok  	github.com/tylercrawford/drift	(cached)
+ok  	github.com/tbcrawford/drift	(cached)
 ```
 
 ## Key Files

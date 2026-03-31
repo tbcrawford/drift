@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tylercrawford/drift/internal/algo/myers"
-	"github.com/tylercrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/algo/myers"
+	"github.com/tbcrawford/drift/internal/edittype"
 )
 
 // FuzzMyers verifies that the Myers diff algorithm never panics for any input

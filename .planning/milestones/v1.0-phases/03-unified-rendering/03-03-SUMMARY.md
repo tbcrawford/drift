@@ -49,9 +49,9 @@ All tests pass: `go test . -run "TestWithLang|TestWithTheme|TestWithNoColor_Sets
 ## Test Results
 
 ```
-ok  github.com/tylercrawford/drift                     (options_test + drift_test)
-ok  github.com/tylercrawford/drift/internal/highlight  (15 tests — all passing)
-ok  github.com/tylercrawford/drift/...                 (all packages)
+ok  github.com/tbcrawford/drift                     (options_test + drift_test)
+ok  github.com/tbcrawford/drift/internal/highlight  (15 tests — all passing)
+ok  github.com/tbcrawford/drift/...                 (all packages)
 ```
 
 ## Decisions

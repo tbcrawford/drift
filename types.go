@@ -1,6 +1,6 @@
 package drift
 
-import "github.com/tylercrawford/drift/internal/edittype"
+import "github.com/tbcrawford/drift/internal/edittype"
 
 // Op represents the operation type for a diff edit or line.
 // It is an alias for edittype.Op to break the import cycle between the

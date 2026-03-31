@@ -8,7 +8,7 @@
 
 Phase 5 delivers `cmd/drift` using **Cobra v1.9.x** (`github.com/spf13/cobra`), wiring the existing public API: `drift.Diff(old, new, opts...)` and `drift.RenderWithNames(result, os.Stdout, oldName, newName, opts...)` (or `drift.Render` when names are defaulted). The library already exposes functional options `WithAlgorithm`, `WithContext`, `WithNoColor`, `WithLang`, `WithTheme`, and `WithSplit` in `options.go`, and `render.go` applies them consistently.
 
-**Module path:** `github.com/tylercrawford/drift` — install target is `go install github.com/tylercrawford/drift/cmd/drift@latest` (directory `cmd/drift/` must contain `package main`).
+**Module path:** `github.com/tbcrawford/drift` — install target is `go install github.com/tbcrawford/drift/cmd/drift@latest` (directory `cmd/drift/` must contain `package main`).
 
 ## Input modes
 

@@ -7,8 +7,8 @@ import (
 
 	"pgregory.net/rapid"
 
-	"github.com/tylercrawford/drift"
-	"github.com/tylercrawford/drift/internal/testhelpers"
+	"github.com/tbcrawford/drift"
+	"github.com/tbcrawford/drift/internal/testhelpers"
 )
 
 // TestProperty_RoundTrip verifies the fundamental diff invariant:

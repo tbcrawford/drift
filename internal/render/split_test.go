@@ -9,8 +9,8 @@ import (
 	"github.com/alecthomas/chroma/v2/formatters"
 	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/charmbracelet/colorprofile"
-	"github.com/tylercrawford/drift/internal/edittype"
-	"github.com/tylercrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/edittype"
+	"github.com/tbcrawford/drift/internal/highlight"
 )
 
 // splitNoopConfig returns a RenderConfig suitable for deterministic split tests.
