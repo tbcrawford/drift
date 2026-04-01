@@ -14,9 +14,9 @@ test-race:
 bench:
     go test -bench=. -benchmem ./...
 
-# Build CLI binary
+# Build CLI binary (outputs ./drift at repo root)
 build:
-    go build ./cmd/drift/...
+    go build -o drift ./cmd/drift
 
 # Install CLI to $GOBIN or `go env GOPATH`/bin; add that directory to PATH to run `drift`
 install:
