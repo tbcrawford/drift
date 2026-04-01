@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
-status: Milestone complete
-stopped_at: Completed 18-01-PLAN.md (Auto algorithm mode)
-last_updated: "2026-04-01T21:36:57.507Z"
+status: Ready to execute
+stopped_at: Completed 19-01-PLAN.md (Pager primitives)
+last_updated: "2026-04-01T23:24:47.160Z"
 progress:
-  total_phases: 18
+  total_phases: 19
   completed_phases: 7
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 19
+  completed_plans: 18
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 18 — auto-algorithm-mode
+**Current focus:** Phase 19 — add-pager-support-for-large-diffs
 
 ## Current Position
 
-Phase: 18
-Plan: Not started
+Phase: 19 (add-pager-support-for-large-diffs) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Plan: Not started
 | Phase 17-address-medium-priority-council-review-issues P03 | 8 | 2 tasks | 8 files |
 | Phase 17-address-medium-priority-council-review-issues P05 | 5 | 2 tasks | 3 files |
 | Phase 18-auto-algorithm-mode P18-01 | 253 | 7 tasks | 6 files |
+| Phase 19-add-pager-support-for-large-diffs-that-automatically-gets-invoked-in-tty-terminal-instances P19-01 | 61 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,7 @@ Recent decisions affecting current work:
 - [Phase 17-03]: Golden fixtures use WithNoColor() — plain text, no ANSI, CI-portable; goldie.WithFixtureDir(testdata/golden) for explicit fixture location
 - [Phase 17-05]: Migrated palette_unix.go from golang.org/x/term to charmbracelet/x/term; charmbracelet/x/term takes uintptr fd (tty.Fd() returns uintptr directly — no int() cast needed)
 - [Phase 18-auto-algorithm-mode]: Auto iota=3 appended after Histogram=2; selectAuto() uses 2000-line and 32-frequency thresholds from AUTO-ALGORITHM.md research; Auto replaces Myers as default
+- [Phase 19-01]: io.Pipe used for pager stdin rather than os.Pipe — avoids fd leaks and integrates cleanly with exec.Command.Stdin
 
 ### Roadmap Evolution
 
@@ -166,6 +168,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T21:34:05.011Z
-Stopped at: Completed 18-01-PLAN.md (Auto algorithm mode)
+Last session: 2026-04-01T23:24:47.155Z
+Stopped at: Completed 19-01-PLAN.md (Pager primitives)
 Resume file: None
