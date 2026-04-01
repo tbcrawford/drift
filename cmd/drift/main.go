@@ -14,6 +14,8 @@ import (
 // Preserved here because flags.go calls it during resolveRootOptions.
 func parseAlgorithm(s string) (drift.Algorithm, error) {
 	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "auto":
+		return drift.Auto, nil
 	case "myers":
 		return drift.Myers, nil
 	case "patience":
@@ -21,7 +23,7 @@ func parseAlgorithm(s string) (drift.Algorithm, error) {
 	case "histogram":
 		return drift.Histogram, nil
 	default:
-		return 0, newExitCode(2, fmt.Sprintf("invalid algorithm: %q (use myers, patience, histogram)", s))
+		return 0, newExitCode(2, fmt.Sprintf("invalid algorithm: %q (use auto, myers, patience, histogram)", s))
 	}
 }
 
@@ -49,7 +51,7 @@ With one path inside a git repository, diffs the working tree against HEAD.`,
 
 	cmd.Flags().BoolVar(&flags.split, "split", false, "side-by-side split view")
 	cmd.Flags().BoolVar(&flags.noLineNumbers, "no-line-numbers", false, "hide old/new line-number gutters")
-	cmd.Flags().StringVar(&flags.algorithm, "algorithm", "myers", "diff algorithm: myers, patience, histogram")
+	cmd.Flags().StringVar(&flags.algorithm, "algorithm", "auto", "diff algorithm: auto, myers, patience, histogram")
 	cmd.Flags().StringVar(&flags.lang, "lang", "", "Chroma language override (e.g. go, python)")
 	cmd.Flags().StringVar(&flags.theme, "theme", "", "Chroma style/theme override")
 	cmd.Flags().BoolVar(&flags.noColor, "no-color", false, "disable ANSI colors")
