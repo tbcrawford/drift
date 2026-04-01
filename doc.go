@@ -1,9 +1,9 @@
 // Package drift provides a production-quality text diff library and CLI for Go.
 //
 // Drift computes line-level diffs between two multi-line strings using the Myers,
-// Patience, or Histogram algorithms and renders terminal output with Chroma syntax
-// highlighting in unified or side-by-side split layouts — the same quality you see in
-// GitHub's PR review UI, delivered to your terminal or any [io.Writer].
+// Patience, Histogram, or Auto algorithms and renders terminal output with Chroma
+// syntax highlighting in unified or side-by-side split layouts — the same quality
+// you see in GitHub's PR review UI, delivered to your terminal or any [io.Writer].
 //
 // # Functional API
 //
@@ -39,9 +39,14 @@
 //
 // Options accepted by [Diff]:
 //
-//   - [WithAlgorithm]: choose Myers (default, O(ND), fastest), Patience (unique-line
-//     anchors, better for refactors), or Histogram (Git's default, frequency-aware
-//     anchor selection).
+//   - [WithAlgorithm]: choose the diff algorithm:
+//   - Auto (default): selects Myers or Histogram at diff-time using an O(N)
+//     heuristic — Histogram for files ≤ 2000 total lines where no old-side line
+//     appears more than 32 times, Myers otherwise. Provides better diff quality
+//     on typical code files without requiring manual algorithm selection.
+//   - Myers: O(ND), fastest for small edit distances.
+//   - Patience: unique-line anchors, better for refactored code.
+//   - Histogram: Git's preferred algorithm, frequency-aware anchor selection.
 //   - [WithContext]: number of unchanged context lines surrounding each hunk (default 3,
 //     matching git diff -U3).
 //
