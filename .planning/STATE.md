@@ -144,6 +144,7 @@ Recent decisions affecting current work:
 
 - Phase 18 added: Auto algorithm mode — O(N) heuristic selects Myers or Histogram; Auto becomes the new default
 - Phase 19 added: add pager support for large diffs that automatically gets invoked in tty terminal instances
+- Phase 20 added: add directory diff support with automatic pager and file name headers
 
 ### Quick Tasks Completed
 

@@ -318,3 +318,13 @@ Plans:
 Plans:
 - [x] 19-01-PLAN.md — Pager primitives: resolvePager, shouldPage, startPager in cmd/drift/pager.go with unit tests
 - [x] 19-02-PLAN.md — Wire pager into runRoot: render-to-buffer, line count, --no-pager flag, integration tests
+
+### Phase 20: add directory diff support with automatic pager and file name headers
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 19
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 20 to break down)
