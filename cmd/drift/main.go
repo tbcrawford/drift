@@ -60,6 +60,7 @@ With one path inside a git repository, diffs the working tree against HEAD.`,
 	cmd.Flags().StringVar(&flags.to, "to", "", "new text as a raw string (use with --from)")
 	cmd.Flags().BoolVar(&flags.showTheme, "show-theme", false, "print resolved Chroma theme to stderr after selection")
 	_ = cmd.Flags().MarkHidden("show-theme")
+	cmd.Flags().BoolVar(&flags.noPager, "no-pager", false, "disable automatic pager for large output")
 
 	return cmd
 }

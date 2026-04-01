@@ -20,6 +20,7 @@ type rootFlags struct {
 	from          string
 	to            string
 	showTheme     bool
+	noPager       bool
 }
 
 // rootOptions holds fully resolved values ready for execution.
@@ -32,6 +33,7 @@ type rootOptions struct {
 	to        string
 	args      []string
 	showTheme bool // retained for show-theme stderr callback wiring
+	noPager   bool
 }
 
 // resolveRootOptions converts raw cobra flags into a fully populated rootOptions.
@@ -79,5 +81,6 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		to:        flags.to,
 		args:      args,
 		showTheme: flags.showTheme,
+		noPager:   flags.noPager,
 	}, nil
 }
