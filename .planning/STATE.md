@@ -145,6 +145,7 @@ Recent decisions affecting current work:
 | 2026-03-26 | Fix full-line background highlighting: prefix char now carries line bg; trailing whitespace extended with bg-colored spaces (terrasort parity); monokai invisible-bg bug fixed; default dark theme → github-dark |
 | 2026-03-31 | Revamp README.md: centered hero image, badges, full TOC, CLI flags table, render options table, algorithms table, builder API, mobile-friendly HTML centering |
 | 2026-03-31 | Add GitHub Actions CI, release, and security workflows; fix goreleaser owner typo; track dist/config.yaml in git |
+| 2026-04-01 | [260401-k11] Collapse two-module workspace layout into single go.mod; delete go.work + cmd/drift/go.mod; add cobra+go-internal as direct deps; remove duplicate CI test step |
 
 ### Pending Todos
 
@@ -160,6 +161,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T17:14:11.765Z
-Stopped at: Completed 17-05-PLAN.md
+Last session: 2026-04-01T18:41:48Z
+Stopped at: Completed quick task 260401-k11 (switch-to-single-module-build)
 Resume file: None
