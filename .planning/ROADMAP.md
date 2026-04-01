@@ -310,10 +310,11 @@ Plans:
 
 ### Phase 19: add pager support for large diffs that automatically gets invoked in tty terminal instances
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** When stdout is a TTY and the diff output is taller than the terminal height, automatically invoke a pager (`$PAGER`, `less -R`, or `more`) so users can scroll large diffs. Add `--no-pager` flag to bypass. Piped output is never paged.
+**Requirements**: PAGER-01, PAGER-02, PAGER-03
 **Depends on:** Phase 18
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 19 to break down)
+- [ ] 19-01-PLAN.md — Pager primitives: resolvePager, shouldPage, startPager in cmd/drift/pager.go with unit tests
+- [ ] 19-02-PLAN.md — Wire pager into runRoot: render-to-buffer, line count, --no-pager flag, integration tests
