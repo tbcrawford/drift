@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/tbcrawford/drift"
 )
@@ -82,8 +84,33 @@ func runRoot(opts *rootOptions) error {
 		return nil
 	}
 
-	if err := drift.RenderWithNames(result, opts.streams.Out, oldName, newName, opts.driftOpts...); err != nil {
+	// Render to a buffer so we can count lines and decide whether to page.
+	var buf bytes.Buffer
+	if err := drift.RenderWithNames(result, &buf, oldName, newName, opts.driftOpts...); err != nil {
 		return newExitCode(2, err.Error())
+	}
+
+	// Determine terminal height (0 for non-TTY outputs).
+	var termHeight int
+	if f, ok := opts.streams.Out.(*os.File); ok {
+		if _, h, err := term.GetSize(f.Fd()); err == nil {
+			termHeight = h
+		}
+	}
+
+	lineCount := strings.Count(buf.String(), "\n")
+
+	if shouldPage(opts.streams.Out, lineCount, termHeight, opts.noPager) {
+		pagerWriter, cleanup, err := startPager(resolvePager(), opts.streams)
+		if err != nil {
+			// Pager failed to start — fall back to direct write.
+			_, _ = buf.WriteTo(opts.streams.Out)
+		} else {
+			_, _ = buf.WriteTo(pagerWriter)
+			cleanup()
+		}
+	} else {
+		_, _ = buf.WriteTo(opts.streams.Out)
 	}
 
 	// Differences rendered successfully; exit 1 without stderr noise.
