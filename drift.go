@@ -47,7 +47,9 @@ func Diff(old, new string, opts ...Option) (DiffResult, error) {
 		differ = patience.New()
 	case Histogram:
 		differ = histogram.New()
-	default: // Myers
+	case Auto:
+		differ = selectAuto(oldLines, newLines)
+	default: // Myers (and invalid values)
 		differ = myers.New()
 	}
 
@@ -76,4 +78,28 @@ func splitLines(text string) []string {
 // package must not import internal/algo.
 type algoInterface interface {
 	Diff(oldLines, newLines []string) []Edit
+}
+
+// selectAuto chooses between Myers and Histogram based on file characteristics.
+// It uses Histogram for small files (≤ 2000 total lines) where no old-side line
+// appears more than 32 times, and Myers otherwise. The O(N) frequency scan is
+// skipped entirely for files that exceed the size threshold.
+func selectAuto(old, new []string) algoInterface {
+	const (
+		smallFileThreshold = 2000 // total lines (old + new)
+		maxFreqThreshold   = 32   // max occurrences of any single old-side line
+	)
+	if len(old)+len(new) > smallFileThreshold {
+		return myers.New()
+	}
+	freq := make(map[string]int, len(old))
+	for _, l := range old {
+		freq[l]++
+	}
+	for _, count := range freq {
+		if count > maxFreqThreshold {
+			return myers.New()
+		}
+	}
+	return histogram.New()
 }
