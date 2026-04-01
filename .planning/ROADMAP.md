@@ -29,6 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 15: Architecture-driven refactor** - IOStreams, Flags→Options→run() lifecycle (completed 2026-03-27)
 - [x] **Phase 16: Fix v1.0.0 blockers** - Hirschberg Myers, WithContext validation, goreleaser (completed 2026-03-31)
 - [x] **Phase 17: Address medium-priority council review issues** - Import path docs, Line.Spans removal, golden tests, bottom-aligned split pairing, term dep cleanup (completed 2026-03-31)
+- [x] **Phase 18: Auto algorithm mode** - Add Auto as 4th Algorithm constant; O(N) heuristic selects Myers or Histogram based on file size and line frequency; make Auto the new default (completed 2026-04-01)
 
 ## Phase Details
 
@@ -164,6 +165,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 15. Architecture-driven refactor | 2/2 | Complete | 2026-03-27 |
 | 16. Fix v1.0.0 blockers | 3/3 | Complete | 2026-03-31 |
 | 17. Address medium-priority council review issues | 5/5 | Complete    | 2026-03-31 |
+| 18. Auto algorithm mode | 1/1 | Complete   | 2026-04-01 |
 
 ### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
 
@@ -283,6 +285,16 @@ Plans:
 - [x] 17-03-PLAN.md — Golden file tests: add goldie v2 snapshot tests for unified, split, and no-color rendering at testdata/golden/
 - [x] 17-04-PLAN.md — pairHunkLines bottom-aligned pairing: surplus deletes/inserts align to bottom of asymmetric block
 - [x] 17-05-PLAN.md — Dual term dep cleanup: audit import sites, consolidate to one direct term dependency
+
+### Phase 18: Auto algorithm mode
+
+**Goal:** Add `Auto` as a fourth `Algorithm` constant that intelligently selects between Myers and Histogram at diff-time using an O(N) heuristic: use Histogram for files ≤ 2000 total lines where no old-side line appears > 32 times; use Myers otherwise. Make `Auto` the new default in `defaultConfig()`. Patience is excluded from Auto selection.
+**Research:** `.planning/research/AUTO-ALGORITHM.md`
+**Depends on:** Phase 17
+**Plans:** 1/1 plans complete
+
+Plans:
+- [x] 18-01-PLAN.md — Auto constant, selectAuto() heuristic, default change, CLI + tests
 
 ### Phase 16: Fix v1.0.0 blockers: Hirschberg Myers, WithContext validation, goreleaser
 

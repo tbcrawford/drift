@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
-status: Milestone complete
-stopped_at: Completed 17-05-PLAN.md
-last_updated: "2026-03-31T17:19:55.483Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 18-01-PLAN.md (Auto algorithm mode)
+last_updated: "2026-04-01T21:34:05.017Z"
 progress:
-  total_phases: 17
-  completed_phases: 6
-  total_plans: 16
-  completed_plans: 16
+  total_phases: 18
+  completed_phases: 7
+  total_plans: 17
+  completed_plans: 17
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 17 — address-medium-priority-council-review-issues
+**Current focus:** Phase 18 — auto-algorithm-mode
 
 ## Current Position
 
-Phase: 17
-Plan: Not started
+Phase: 18 (auto-algorithm-mode) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Plan: Not started
 | Phase 17-address-medium-priority-council-review-issues P02 | 4 | 2 tasks | 2 files |
 | Phase 17-address-medium-priority-council-review-issues P03 | 8 | 2 tasks | 8 files |
 | Phase 17-address-medium-priority-council-review-issues P05 | 5 | 2 tasks | 3 files |
+| Phase 18-auto-algorithm-mode P18-01 | 253 | 7 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,7 @@ Recent decisions affecting current work:
 - [Phase 17-03]: WithTermWidth(w int) added to public API to allow deterministic split-view width in tests; wired through buildRenderPipeline
 - [Phase 17-03]: Golden fixtures use WithNoColor() — plain text, no ANSI, CI-portable; goldie.WithFixtureDir(testdata/golden) for explicit fixture location
 - [Phase 17-05]: Migrated palette_unix.go from golang.org/x/term to charmbracelet/x/term; charmbracelet/x/term takes uintptr fd (tty.Fd() returns uintptr directly — no int() cast needed)
+- [Phase 18-auto-algorithm-mode]: Auto iota=3 appended after Histogram=2; selectAuto() uses 2000-line and 32-frequency thresholds from AUTO-ALGORITHM.md research; Auto replaces Myers as default
 
 ### Roadmap Evolution
 
@@ -134,6 +136,8 @@ Recent decisions affecting current work:
 - Phase 13 added: Refactor project layout: no Go files in root directory
 - Phase 14 added: Deep cruft removal: clean code, comments, and commit uncommitted changes
 - Phase 15 added: Architecture-driven refactor: apply ARCHITECTURE.md principles to library and CLI
+
+	- Phase 18 added: Auto algorithm mode — O(N) heuristic selects Myers or Histogram; Auto becomes the new default
 
 ### Quick Tasks Completed
 
@@ -161,6 +165,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T18:41:48Z
-Stopped at: Completed quick task 260401-k11 (switch-to-single-module-build)
+Last session: 2026-04-01T21:34:05.011Z
+Stopped at: Completed 18-01-PLAN.md (Auto algorithm mode)
 Resume file: None
