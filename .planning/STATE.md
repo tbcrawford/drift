@@ -137,7 +137,8 @@ Recent decisions affecting current work:
 - Phase 14 added: Deep cruft removal: clean code, comments, and commit uncommitted changes
 - Phase 15 added: Architecture-driven refactor: apply ARCHITECTURE.md principles to library and CLI
 
-	- Phase 18 added: Auto algorithm mode — O(N) heuristic selects Myers or Histogram; Auto becomes the new default
+- Phase 18 added: Auto algorithm mode — O(N) heuristic selects Myers or Histogram; Auto becomes the new default
+- Phase 19 added: add pager support for large diffs that automatically gets invoked in tty terminal instances
 
 ### Quick Tasks Completed
 

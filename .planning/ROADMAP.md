@@ -307,3 +307,13 @@ Plans:
 - [x] 16-01-PLAN.md — Hirschberg linear-space Myers: replace trace-snapshot O((N+M)²) with divide-and-conquer O(N+M) space
 - [x] 16-02-PLAN.md — WithContext validation: drift.Diff() returns error for negative contextLines
 - [x] 16-03-PLAN.md — goreleaser config: .goreleaser.yaml for multi-platform CLI binary releases
+
+### Phase 19: add pager support for large diffs that automatically gets invoked in tty terminal instances
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 18
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 19 to break down)
