@@ -158,18 +158,6 @@ func segBoundaryBefore(pos, limit int, segs []worddiff.Segment) int {
 	return next
 }
 
-// highlightPiece highlights a single string with a uniform background.
-// Used for non-word-diff lines (context lines, solo delete/insert with no pair).
-func highlightPiece(content string, lexer chroma.Lexer, style *chroma.Style, formatter chroma.Formatter, bg chroma.Colour) string {
-	if bg.IsSet() {
-		h, err := highlight.HighlightLineWithLineBackground(content, lexer, style, bg)
-		if err == nil {
-			return h
-		}
-	}
-	return highlightPanel(content, lexer, style, formatter)
-}
-
 // wordSpanBg returns the word-diff background colour for the given side: brighter
 // semantic red (delete) or green (insert) than the full-line plane.
 // Matches what the gutter uses via highlight.WordSpanBackgroundColour.

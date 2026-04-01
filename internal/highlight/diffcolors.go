@@ -161,15 +161,6 @@ func clampFloat(v float64) float64 {
 	return math.Max(0, math.Min(255, v))
 }
 
-// terminalBaseRGB is the RGB used when muting diff colours toward the terminal
-// background (same anchors as [blendChromaTowardTerminalBase]).
-func terminalBaseRGB(isDark bool) (r, g, b uint8) {
-	if isDark {
-		return 18, 18, 22
-	}
-	return 255, 255, 255
-}
-
 // blendColourTowardRGB linearly blends c toward (tr,tg,tb); alpha is the weight on the target.
 func blendColourTowardRGB(c chroma.Colour, tr, tg, tb uint8, alpha float64) chroma.Colour {
 	r := float64(c.Red())*(1-alpha) + float64(tr)*alpha
