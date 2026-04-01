@@ -165,7 +165,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 15. Architecture-driven refactor | 2/2 | Complete | 2026-03-27 |
 | 16. Fix v1.0.0 blockers | 3/3 | Complete | 2026-03-31 |
 | 17. Address medium-priority council review issues | 5/5 | Complete    | 2026-03-31 |
-| 18. Auto algorithm mode | 1/1 | Complete   | 2026-04-01 |
+| 18. Auto algorithm mode | 1/1 | Complete    | 2026-04-01 |
 
 ### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
 
