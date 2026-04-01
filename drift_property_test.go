@@ -215,6 +215,40 @@ func TestProperty_RoundTrip_Histogram(t *testing.T) {
 	})
 }
 
+// TestProperty_RoundTrip_Auto verifies the round-trip invariant using the Auto algorithm:
+// Apply(Diff(old, new, WithAlgorithm(Auto)), canonicalLines(old)) == canonicalLines(new).
+func TestProperty_RoundTrip_Auto(t *testing.T) {
+	rapid.Check(t, func(t *rapid.T) {
+		oldRaw := rapid.SliceOfN(
+			rapid.StringMatching(`[^\r\n]*`), -1, 50,
+		).Draw(t, "oldLines")
+
+		newRaw := rapid.SliceOfN(
+			rapid.StringMatching(`[^\r\n]*`), -1, 50,
+		).Draw(t, "newLines")
+
+		oldText := strings.Join(oldRaw, "\n")
+		newText := strings.Join(newRaw, "\n")
+		oldLines := canonicalLines(oldText)
+
+		result, err := drift.Diff(oldText, newText, drift.WithAlgorithm(drift.Auto))
+		if err != nil {
+			t.Fatalf("Diff returned unexpected error: %v", err)
+		}
+
+		got := testhelpers.Apply(result, oldLines)
+
+		gotText := strings.Join(got, "\n")
+		wantText := strings.Join(canonicalLines(newText), "\n")
+		if gotText != wantText {
+			t.Fatalf(
+				"round-trip invariant failed (Auto):\n  oldText:  %q\n  newText:  %q\n  wantText: %q\n  gotText:  %q\n  hunks:    %s",
+				oldText, newText, wantText, gotText, formatHunks(result),
+			)
+		}
+	})
+}
+
 // formatHunks returns a human-readable summary of the hunks for failure messages.
 func formatHunks(result drift.DiffResult) string {
 	if len(result.Hunks) == 0 {
