@@ -1,6 +1,8 @@
 # Compiled binaries
 /drift
 /drift.exe
+/cmd/drift/drift
+/cmd/drift/drift.exe
 
 # OS metadata
 .DS_Store

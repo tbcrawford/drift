@@ -19,7 +19,7 @@
 
 - [ ] **ALGO-01**: Library implements Patience diff algorithm in `internal/algo/patience/`
 - [ ] **ALGO-02**: Library implements Histogram diff algorithm in `internal/algo/histogram/`
-- [ ] **ALGO-03**: Caller selects algorithm via `drift.WithAlgorithm(drift.Myers|drift.Patience|drift.Histogram)` option
+- [x] **ALGO-03**: Caller selects algorithm via `drift.WithAlgorithm(drift.Myers|drift.Patience|drift.Histogram)` option
 - [ ] **ALGO-04**: Both Patience and Histogram implementations fall back to Myers for edge cases (high-repetition inputs, inter-anchor gaps)
 
 ### Rendering
@@ -111,7 +111,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OSS-09 | Phase 1 — Foundation | Complete |
 | ALGO-01 | Phase 2 — Algorithms | Pending |
 | ALGO-02 | Phase 2 — Algorithms | Pending |
-| ALGO-03 | Phase 2 — Algorithms | Pending |
+| ALGO-03 | Phase 2 — Algorithms | Complete |
 | ALGO-04 | Phase 2 — Algorithms | Pending |
 | REND-01 | Phase 3 — Unified Rendering | Pending |
 | REND-03 | Phase 3 — Unified Rendering | Pending |
