@@ -1,6 +1,6 @@
 # Compiled binaries
-drift.exe
-/cmd/drift/drift
+/drift
+/drift.exe
 
 # OS metadata
 .DS_Store
@@ -10,11 +10,6 @@ drift.exe
 .vscode/
 *.iml
 
-# Test cache / fuzz corpus (testdata/rapid/ is already in place; don't ignore testdata/ entirely)
-
 # goreleaser build output (exclude config source file)
 /dist/*
 !/dist/config.yaml
-
-# Go workspace checksum file (generated, not committed; go.work itself is committed)
-go.work.sum
