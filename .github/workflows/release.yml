@@ -30,6 +30,6 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean --config dist/config.yaml
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

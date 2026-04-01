@@ -10,6 +10,5 @@
 .vscode/
 *.iml
 
-# goreleaser build output (exclude config source file)
-/dist/*
-!/dist/config.yaml
+# goreleaser build output
+/dist/
