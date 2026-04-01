@@ -6,12 +6,14 @@ import "fmt"
 type Algorithm int
 
 const (
-	// Myers is the default O(ND) algorithm; fastest for small edit distances.
+	// Myers is an O(ND) algorithm; fastest for small edit distances.
 	Myers Algorithm = iota
 	// Patience selects unique-line anchors; better for refactored code.
 	Patience
 	// Histogram is Git's preferred algorithm; frequency-aware anchor selection.
 	Histogram
+	// Auto selects Myers or Histogram based on file size and line-frequency analysis.
+	Auto
 )
 
 // Option is a functional option that configures a diff operation.
@@ -47,7 +49,7 @@ type config struct {
 func defaultConfig() *config {
 	return &config{
 		diff: diffConfig{
-			algorithm:    Myers,
+			algorithm:    Auto,
 			contextLines: 3,
 		},
 		render: renderConfig{
@@ -58,7 +60,7 @@ func defaultConfig() *config {
 	}
 }
 
-// WithAlgorithm sets the diff algorithm (Myers, Patience, or Histogram).
+// WithAlgorithm sets the diff algorithm (Myers, Patience, Histogram, or Auto).
 func WithAlgorithm(a Algorithm) Option {
 	return func(c *config) { c.diff.algorithm = a }
 }
