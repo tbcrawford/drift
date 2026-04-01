@@ -99,10 +99,36 @@ func TestHelpListsAllFlags(t *testing.T) {
 		"--context",
 		"--from",
 		"--to",
+		"--no-pager",
 		"git",
 	} {
 		if !strings.Contains(out, flag) {
 			t.Errorf("help output missing flag %q\noutput:\n%s", flag, out)
 		}
+	}
+}
+
+func TestRunCLI_noPagerFlag(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--from", "a\n", "--to", "b\n", "--no-pager"})
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d stderr=%q", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), "@@") {
+		t.Fatalf("expected diff hunk header in output: %q", out.String())
+	}
+}
+
+func TestRunCLI_pagerSkippedOnNonTTY(t *testing.T) {
+	// Non-TTY out: shouldPage must return false → output written directly to buffer
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--from", "a\n", "--to", "b\n"})
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d stderr=%q", code, errOut.String())
+	}
+	if out.Len() == 0 {
+		t.Fatal("expected diff output in buffer (pager should not have consumed it)")
 	}
 }
