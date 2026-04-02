@@ -375,3 +375,14 @@ Plans:
 Plans:
 - [ ] 24-01-PLAN.md — Replace wt.Status() with changedFilesViaIndex (index+mtime, 200x faster) + wall-clock benchmark
 - [ ] 24-02-PLAN.md — Eliminate redundant repo opens + streaming render to pager
+
+### Phase 25: git pager mode: use drift as a drop-in replacement for delta
+
+**Goal:** Enable drift to act as a drop-in replacement for delta as git's `core.pager` and `interactive.diffFilter`. When git pipes its unified diff to drift's stdin (no positional args, stdin is a pipe), drift detects this and re-renders the diff using its full syntax-highlighted, gutter-numbered pipeline. A `--color-only` flag satisfies `interactive.diffFilter` for `git add -p`. A `drift install-pager` subcommand emits a ready-to-paste gitconfig snippet.
+**Requirements**: PAGER-GIT-01, PAGER-GIT-02, PAGER-GIT-03
+**Depends on:** Phase 24
+**Plans:** 2 plans
+
+Plans:
+- [ ] 25-01-PLAN.md — Unified diff parser: parseUnifiedDiff + parsedFileDiff type in unifieddiff.go
+- [ ] 25-02-PLAN.md — Wire pager mode into runRoot: stdin-pipe detection, runPagerMode, --color-only, drift install-pager
