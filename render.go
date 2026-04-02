@@ -122,7 +122,7 @@ func buildRenderPipeline(w io.Writer, cfg *config, filename string) renderPipeli
 	}
 
 	lexer := highlight.DetectLexer(cfg.render.lang, filename, "")
-	style := resolveChromaStyle(cfg, profile, w, isDark)
+	style := resolveChromaStyle(cfg, profile, isDark)
 	formatter := highlight.FormatterForProfile(profile)
 
 	// Wrap the writer for automatic ANSI downsampling.
@@ -164,7 +164,7 @@ func autoThemeName(isDark bool) string {
 	return "github"
 }
 
-func resolveChromaStyle(cfg *config, profile colorprofile.Profile, w io.Writer, isDark bool) *chroma.Style {
+func resolveChromaStyle(cfg *config, profile colorprofile.Profile, isDark bool) *chroma.Style {
 	var style *chroma.Style
 	var name string
 
@@ -174,7 +174,10 @@ func resolveChromaStyle(cfg *config, profile colorprofile.Profile, w io.Writer, 
 	} else if cfg.render.noColor || profile == colorprofile.NoTTY || profile == colorprofile.Ascii {
 		style = highlight.SelectTheme("", isDark)
 		name = autoThemeName(isDark)
-	} else if _, ok := w.(*os.File); ok {
+	} else {
+		// OSC 4 palette query uses /dev/tty directly, so it works regardless of
+		// whether w is an *os.File or a bytes.Buffer (e.g. when buffering for a
+		// pager). We only skip it when the profile indicates a non-color terminal.
 		if palette, err := terminal.QueryANSIPalette(); err == nil && palette != nil && len(palette) > 0 {
 			name = highlight.BestMatchTheme(palette)
 			style = highlight.SelectTheme(name, isDark)
@@ -182,9 +185,6 @@ func resolveChromaStyle(cfg *config, profile colorprofile.Profile, w io.Writer, 
 			style = highlight.SelectTheme("", isDark)
 			name = autoThemeName(isDark)
 		}
-	} else {
-		style = highlight.SelectTheme("", isDark)
-		name = autoThemeName(isDark)
 	}
 
 	if cfg.render.themeResolved != nil {

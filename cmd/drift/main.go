@@ -151,10 +151,10 @@ func writeFileHeader(buf *bytes.Buffer, name string, noColor bool, termWidth int
 }
 
 // runDirectoryDiff iterates over file pairs produced by diffDirectories, renders
-// each changed/added/removed file's diff into buf preceded by a styled file header.
+// each changed/added/removed file's diff into w preceded by a styled file header.
 // Diffs are computed in parallel (one goroutine per file) and merged in sorted order.
 // Returns hasDiff=true if any file pair produced output.
-func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (hasDiff bool, err error) {
+func runDirectoryDiff(pairs []filePair, opts *rootOptions, w io.Writer) (hasDiff bool, err error) {
 	if len(pairs) == 0 {
 		return false, nil
 	}
@@ -189,16 +189,16 @@ func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (h
 	for i := range results {
 		if results[i].Len() > 0 {
 			hasDiff = true
-			_, _ = results[i].WriteTo(buf)
+			_, _ = results[i].WriteTo(w)
 		}
 	}
 	return hasDiff, nil
 }
 
 // runGitDirectoryDiff renders git HEAD-vs-working-tree diffs for all changed
-// files under a single directory into buf, with styled file headers.
+// files under a single directory into w, with styled file headers.
 // Diffs are computed in parallel (one goroutine per file) and merged in sorted order.
-func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, buf *bytes.Buffer) (hasDiff bool, err error) {
+func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, w io.Writer) (hasDiff bool, err error) {
 	if len(pairs) == 0 {
 		return false, nil
 	}
@@ -229,10 +229,46 @@ func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, buf *bytes.Buff
 	for i := range results {
 		if results[i].Len() > 0 {
 			hasDiff = true
-			_, _ = results[i].WriteTo(buf)
+			_, _ = results[i].WriteTo(w)
 		}
 	}
 	return hasDiff, nil
+}
+
+// streamThroughPager starts the pager immediately (if stdout is a TTY and paging is
+// enabled), then calls renderFn which writes rendered diff content directly to the
+// pager/stdout writer. This eliminates the full-buffer-then-page pattern, allowing
+// the first file's diff to appear in the terminal as soon as it's computed.
+//
+// If the pager cannot be started, falls back to writing directly to opts.streams.Out.
+// renderFn returns (hasDiff, error): hasDiff=false means no output, so exit 0.
+func streamThroughPager(opts *rootOptions, renderFn func(w io.Writer) (hasDiff bool, err error)) error {
+	if f, ok := opts.streams.Out.(*os.File); ok && !opts.noPager {
+		// TTY path: start pager before any rendering so output streams immediately.
+		pagerWriter, cleanup, pErr := startPager(resolvePager(), opts.streams)
+		if pErr == nil {
+			hasDiff, renderErr := renderFn(pagerWriter)
+			cleanup()
+			if renderErr != nil && !isPipeClosedErr(renderErr) {
+				return newExitCode(2, renderErr.Error())
+			}
+			if !hasDiff {
+				return nil
+			}
+			return newExitCode(1, "")
+		}
+		// Pager failed to start — fall through to direct write.
+		_ = f
+	}
+	// Non-TTY or pager fallback: write directly to stdout.
+	hasDiff, err := renderFn(opts.streams.Out)
+	if err != nil {
+		return newExitCode(2, err.Error())
+	}
+	if !hasDiff {
+		return nil
+	}
+	return newExitCode(1, "")
 }
 
 // writeThroughPager writes buf to a pager (or directly to opts.streams.Out if paging
@@ -297,7 +333,7 @@ func runRoot(opts *rootOptions) error {
 		if err != nil {
 			return newExitCode(2, fmt.Sprintf("fatal: could not determine working directory: %v", err))
 		}
-		repo, repoRoot, err := openRepoAt(cwd)
+		pairs, err := gitDirectoryVsHEAD(cwd)
 		if err != nil {
 			// Distinguish "not a git repo" from other errors.
 			if errors.Is(err, git.ErrRepositoryNotExists) {
@@ -306,23 +342,9 @@ func runRoot(opts *rootOptions) error {
 			}
 			return newExitCode(2, err.Error())
 		}
-		// If there's no HEAD yet (fresh init with no commits), there's nothing to diff.
-		if _, hErr := headCommitTree(repo); hErr != nil {
-			return nil // exit 0 silently
-		}
-		pairs, err := gitDirectoryVsHEAD(repoRoot)
-		if err != nil {
-			return newExitCode(2, err.Error())
-		}
-		var buf bytes.Buffer
-		hasDiff, err := runGitDirectoryDiff(pairs, opts, &buf)
-		if err != nil {
-			return err
-		}
-		if !hasDiff {
-			return nil
-		}
-		return writeThroughPager(&buf, opts)
+		return streamThroughPager(opts, func(w io.Writer) (bool, error) {
+			return runGitDirectoryDiff(pairs, opts, w)
+		})
 	}
 
 	// Single-directory git diff: one arg that is a directory → diff vs HEAD.
@@ -335,15 +357,9 @@ func runRoot(opts *rootOptions) error {
 		if err != nil {
 			return newExitCode(2, err.Error())
 		}
-		var buf bytes.Buffer
-		hasDiff, err := runGitDirectoryDiff(pairs, opts, &buf)
-		if err != nil {
-			return err
-		}
-		if !hasDiff {
-			return nil
-		}
-		return writeThroughPager(&buf, opts)
+		return streamThroughPager(opts, func(w io.Writer) (bool, error) {
+			return runGitDirectoryDiff(pairs, opts, w)
+		})
 	}
 
 	// Two-directory diff: both positional args are directories.
@@ -352,15 +368,9 @@ func runRoot(opts *rootOptions) error {
 		if err != nil {
 			return newExitCode(2, err.Error())
 		}
-		var buf bytes.Buffer
-		hasDiff, err := runDirectoryDiff(pairs, opts, &buf)
-		if err != nil {
-			return err
-		}
-		if !hasDiff {
-			return nil // identical dirs → exit 0, no output
-		}
-		return writeThroughPager(&buf, opts)
+		return streamThroughPager(opts, func(w io.Writer) (bool, error) {
+			return runDirectoryDiff(pairs, opts, w)
+		})
 	}
 
 	old, newText, oldName, newName, err := resolveInputs(opts.args, opts.from, opts.to, opts.streams.In)

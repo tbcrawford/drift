@@ -168,6 +168,7 @@ Recent decisions affecting current work:
 - Phase 21 added: respect gitignore rules where necessary
 - Phase 22 added: replace all git actions by the library or cli in this repository with go-git (github.com/go-git/go-git)
 - Phase 23 added: performance analysis and optimization — deep profiling of `drift --split` on real repos; identify bottlenecks vs delta; explore streaming render to pager and other improvements
+- Phase 24 added: performance optimization phase 2 — target sub-500ms response time for `drift --split` on real repos, benchmark against delta, explore delta source for strategies
 
 ### Quick Tasks Completed
 

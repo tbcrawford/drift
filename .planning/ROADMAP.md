@@ -364,3 +364,14 @@ Plans:
 Plans:
 - [ ] 23-01-PLAN.md — Baseline benchmarks (color path) + GutterStyleCache to eliminate per-line lipgloss.NewStyle()
 - [ ] 23-02-PLAN.md — Replace per-token lipgloss.Style in HighlightLineWithLineBackground with direct ANSI SGR builder
+
+### Phase 24: performance optimization phase 2: target sub-500ms response time for drift --split on real repos, benchmark against delta
+
+**Goal:** Replace `wt.Status()` (go-git's full filesystem scan — 4,500ms) with a fast index+mtime based change detection (23ms), then eliminate redundant repo opens and stream diff output to the pager incrementally. Target: < 500ms wall-clock on auth0-tenant-config (down from 4.5s baseline).
+**Requirements**: PERF-01
+**Depends on:** Phase 23
+**Plans:** 2 plans
+
+Plans:
+- [ ] 24-01-PLAN.md — Replace wt.Status() with changedFilesViaIndex (index+mtime, 200x faster) + wall-clock benchmark
+- [ ] 24-02-PLAN.md — Eliminate redundant repo opens + streaming render to pager

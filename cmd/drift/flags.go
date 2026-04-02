@@ -8,6 +8,8 @@ import (
 	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/term"
 	"github.com/tbcrawford/drift"
+	"github.com/tbcrawford/drift/internal/highlight"
+	"github.com/tbcrawford/drift/internal/terminal"
 )
 
 // rootFlags holds the raw values parsed by cobra from the command line.
@@ -106,7 +108,23 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		// to os.Stdout (via backgroundColor(os.Stdout, os.Stdout)) which races and
 		// leaks raw escape-sequence responses into the diff output.
 		if !flags.noColor && term.IsTerminal(f.Fd()) {
-			opts = append(opts, drift.WithIsDark(lipgloss.HasDarkBackground(os.Stdin, f)))
+			isDark := lipgloss.HasDarkBackground(os.Stdin, f)
+			opts = append(opts, drift.WithIsDark(isDark))
+
+			// Resolve the Chroma theme once via OSC 4 palette query, before any
+			// goroutines start. When rendering a directory diff, each file is
+			// rendered in a parallel goroutine; if resolveChromaStyle calls
+			// QueryANSIPalette inside each goroutine, N concurrent calls race on
+			// /dev/tty (shared kernel tty buffer), causing OSC 4 responses to
+			// interleave and leak as raw escape sequences into the diff output.
+			//
+			// Only do this when the caller hasn't explicitly set --theme (which
+			// already short-circuits the OSC 4 branch in resolveChromaStyle).
+			if flags.theme == "" && profile != colorprofile.NoTTY && profile != colorprofile.Ascii {
+				if palette, err := terminal.QueryANSIPalette(); err == nil && len(palette) > 0 {
+					opts = append(opts, drift.WithTheme(highlight.BestMatchTheme(palette)))
+				}
+			}
 		}
 	}
 
