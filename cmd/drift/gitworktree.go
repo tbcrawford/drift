@@ -4,14 +4,138 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
+
+	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-// resolveGitWorkingTreeVsHEAD loads OLD from git show HEAD:<relpath> (or "" if the path
-// has no blob at HEAD) and NEW from the working tree file at abs path.
+// openRepoAt opens the git repository containing startPath (searching parent dirs).
+// Returns the repo and the worktree root path.
+func openRepoAt(startPath string) (*git.Repository, string, error) {
+	repo, err := git.PlainOpenWithOptions(startPath, &git.PlainOpenOptions{DetectDotGit: true})
+	if err != nil {
+		return nil, "", err
+	}
+	wt, err := repo.Worktree()
+	if err != nil {
+		return nil, "", err
+	}
+	return repo, wt.Filesystem.Root(), nil
+}
+
+// headCommitTree returns the tree object for the HEAD commit.
+func headCommitTree(repo *git.Repository) (*object.Tree, error) {
+	ref, err := repo.Head()
+	if err != nil {
+		return nil, err
+	}
+	commit, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		return nil, err
+	}
+	return commit.Tree()
+}
+
+// gitRevParseIsInsideWorkTree reports whether dir is inside a git worktree.
+// Returns "true" if inside, "false" if not a git repo, error for unexpected failures.
+func gitRevParseIsInsideWorkTree(dir string) (string, error) {
+	_, _, err := openRepoAt(dir)
+	if errors.Is(err, git.ErrRepositoryNotExists) {
+		return "false", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("git open failed: %w", err)
+	}
+	return "true", nil
+}
+
+// gitRevParseShowToplevel returns the repository root for the repo containing dir.
+func gitRevParseShowToplevel(dir string) (string, error) {
+	_, root, err := openRepoAt(dir)
+	if errors.Is(err, git.ErrRepositoryNotExists) {
+		return "", fmt.Errorf("not a git repository: %s", dir)
+	}
+	if err != nil {
+		return "", fmt.Errorf("git open failed: %w", err)
+	}
+	return root, nil
+}
+
+// gitShowHEADBlob reads the content of relPathSlash from the HEAD commit.
+// Returns "" if the file does not exist at HEAD (new/untracked file — treat old as empty).
+func gitShowHEADBlob(repoRoot, relpathSlash string) (string, error) {
+	repo, _, err := openRepoAt(repoRoot)
+	if err != nil {
+		return "", fmt.Errorf("opening repo at %s: %w", repoRoot, err)
+	}
+
+	tree, err := headCommitTree(repo)
+	if err != nil {
+		// No HEAD commit (empty repo) — file definitely doesn't exist at HEAD.
+		if errors.Is(err, plumbing.ErrReferenceNotFound) {
+			return "", nil
+		}
+		return "", fmt.Errorf("reading HEAD tree: %w", err)
+	}
+
+	f, err := tree.File(relpathSlash)
+	if err != nil {
+		if errors.Is(err, object.ErrFileNotFound) {
+			return "", nil
+		}
+		return "", fmt.Errorf("finding file %s in HEAD: %w", relpathSlash, err)
+	}
+
+	content, err := f.Contents()
+	if err != nil {
+		return "", fmt.Errorf("reading file %s from HEAD: %w", relpathSlash, err)
+	}
+	return content, nil
+}
+
+// filterGitIgnored returns relPaths with any gitignored entries removed.
+// Fail-open: if the repo cannot be opened or gitignore cannot be read, the
+// original relPaths slice is returned unchanged.
+func filterGitIgnored(repoRoot string, relPaths []string) ([]string, error) {
+	if len(relPaths) == 0 {
+		return nil, nil
+	}
+
+	repo, _, err := openRepoAt(repoRoot)
+	if err != nil {
+		// Fail-open: if not a git repo or any error, return all paths unchanged.
+		return relPaths, nil
+	}
+
+	wt, err := repo.Worktree()
+	if err != nil {
+		return relPaths, nil
+	}
+
+	patterns, err := gitignore.ReadPatterns(wt.Filesystem, nil)
+	if err != nil {
+		return relPaths, nil
+	}
+	matcher := gitignore.NewMatcher(patterns)
+
+	kept := make([]string, 0, len(relPaths))
+	for _, p := range relPaths {
+		parts := strings.Split(p, "/")
+		// Match as a file (not a directory).
+		if !matcher.Match(parts, false) {
+			kept = append(kept, p)
+		}
+	}
+	return kept, nil
+}
+
+// resolveGitWorkingTreeVsHEAD loads OLD from the HEAD commit blob (or "" if the
+// path has no blob at HEAD) and NEW from the working tree file at abs path.
 func resolveGitWorkingTreeVsHEAD(path string) (old, newText string, oldName, newName string, err error) {
 	absFile, err := filepath.Abs(filepath.Clean(path))
 	if err != nil {
@@ -63,61 +187,9 @@ func resolveGitWorkingTreeVsHEAD(path string) (old, newText string, oldName, new
 	return old, newText, oldName, newName, nil
 }
 
-func gitEnv() []string {
-	return append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
-}
-
-func gitRevParseIsInsideWorkTree(gitDir string) (string, error) {
-	out, stderr, err := runGit(gitDir, "rev-parse", "--is-inside-work-tree")
-	if err != nil {
-		if errors.Is(err, exec.ErrNotFound) {
-			return "", fmt.Errorf("git not found in PATH; use two paths to diff files without git: %w", err)
-		}
-		return "", fmt.Errorf("git rev-parse failed: %w\n%s", err, strings.TrimSpace(stderr))
-	}
-	return strings.TrimSpace(out), nil
-}
-
-func gitRevParseShowToplevel(gitDir string) (string, error) {
-	out, stderr, err := runGit(gitDir, "rev-parse", "--show-toplevel")
-	if err != nil {
-		if errors.Is(err, exec.ErrNotFound) {
-			return "", fmt.Errorf("git not found in PATH; use two paths to diff files without git: %w", err)
-		}
-		return "", fmt.Errorf("git rev-parse failed: %w\n%s", err, strings.TrimSpace(stderr))
-	}
-	return out, nil
-}
-
-func gitShowHEADBlob(repoRoot, relpathSlash string) (string, error) {
-	// Use git cat-file -e to check existence before show — this is locale-independent
-	// (exit code 0 = object exists, non-zero = absent), unlike parsing English stderr.
-	_, _, checkErr := runGit(repoRoot, "cat-file", "-e", "HEAD:"+relpathSlash)
-	if checkErr != nil {
-		if errors.Is(checkErr, exec.ErrNotFound) {
-			return "", fmt.Errorf("git not found in PATH; use two paths to diff files without git: %w", checkErr)
-		}
-		// Object not present at HEAD — file is new/untracked; treat old content as empty.
-		return "", nil
-	}
-
-	out, stderr, err := runGit(repoRoot, "show", "HEAD:"+relpathSlash)
-	if err == nil {
-		return out, nil
-	}
-	if errors.Is(err, exec.ErrNotFound) {
-		return "", fmt.Errorf("git not found in PATH; use two paths to diff files without git: %w", err)
-	}
-	return "", fmt.Errorf("git show HEAD:%s failed: use two paths to diff without a working git repo: %w\n%s", relpathSlash, err, strings.TrimSpace(stderr))
-}
-
 // gitDirectoryVsHEAD walks absDir, compares each file against its HEAD blob,
-// and returns a sorted slice of filePair values for files that differ from HEAD
+// and returns a sorted slice of gitFilePair values for files that differ from HEAD
 // (or are new/deleted relative to HEAD). absDir must be inside a git worktree.
-// OldPath is always empty — HEAD content is returned inline via gitShowHEADBlob
-// so callers read it from the pair's HeadContent field (see gitFilePair).
-//
-// To keep the filePair type unchanged, we return a gitFilePair slice instead.
 func gitDirectoryVsHEAD(absDir string) ([]gitFilePair, error) {
 	absDir = filepath.Clean(absDir)
 
@@ -130,11 +202,10 @@ func gitDirectoryVsHEAD(absDir string) ([]gitFilePair, error) {
 		return nil, fmt.Errorf("not a git worktree: %q", absDir)
 	}
 
-	repoRoot, err := gitRevParseShowToplevel(absDir)
+	repo, repoRoot, err := openRepoAt(absDir)
 	if err != nil {
 		return nil, err
 	}
-	repoRoot = strings.TrimSpace(repoRoot)
 
 	// Compute the path of absDir relative to the repo root.
 	dirRel, err := filepath.Rel(repoRoot, absDir)
@@ -190,7 +261,6 @@ func gitDirectoryVsHEAD(absDir string) ([]gitFilePair, error) {
 	workFiles = filteredWorkFiles
 
 	// Build a set of working-tree relative paths for deleted-file detection.
-	// Built after gitignore filtering so ignored files don't mask deleted entries.
 	workSet := make(map[string]string, len(workFiles))
 	for _, wf := range workFiles {
 		workSet[wf.rel] = wf.abs
@@ -232,28 +302,28 @@ func gitDirectoryVsHEAD(absDir string) ([]gitFilePair, error) {
 	}
 
 	// Detect files that exist at HEAD but are deleted in the working tree.
-	// Use git ls-tree to list files under the directory at HEAD.
-	prefix := dirRelSlash + "/"
-	if dirRelSlash == "." {
-		prefix = ""
-	}
-	lsOut, _, lsErr := runGit(repoRoot, "ls-tree", "-r", "--name-only", "HEAD", "--", dirRelSlash)
-	if lsErr == nil {
-		for _, line := range strings.Split(strings.TrimSpace(lsOut), "\n") {
-			if line == "" {
-				continue
+	// Use go-git tree.Files() iterator to enumerate HEAD blobs.
+	tree, tErr := headCommitTree(repo)
+	if tErr == nil {
+		prefix := dirRelSlash + "/"
+		if dirRelSlash == "." {
+			prefix = ""
+		}
+		fIter := tree.Files()
+		_ = fIter.ForEach(func(f *object.File) error {
+			name := f.Name
+			// Only consider files under the target directory.
+			if prefix != "" && !strings.HasPrefix(name, prefix) {
+				return nil
 			}
-			relToDir := strings.TrimPrefix(line, prefix)
-			if relToDir == line && prefix != "" {
-				continue // not under our directory
-			}
+			relToDir := strings.TrimPrefix(name, prefix)
 			if _, inWork := workSet[relToDir]; inWork {
-				continue // present in working tree — already handled
+				return nil // present in working tree — already handled
 			}
 			// File exists at HEAD but not on disk — deleted.
-			headContent, hErr := gitShowHEADBlob(repoRoot, line)
+			headContent, hErr := f.Contents()
 			if hErr != nil {
-				return nil, hErr
+				return nil // skip on error
 			}
 			oldName := filepath.Base(absDir) + "/" + relToDir + " (HEAD)"
 			newName := filepath.Base(absDir) + "/" + relToDir + " (working tree)"
@@ -264,8 +334,10 @@ func gitDirectoryVsHEAD(absDir string) ([]gitFilePair, error) {
 				OldName:     oldName,
 				NewName:     newName,
 			})
-		}
+			return nil
+		})
 	}
+	// If HEAD doesn't exist (empty repo), there are no deleted files to detect — skip.
 
 	// Sort by Name for deterministic output.
 	slices.SortFunc(pairs, func(a, b gitFilePair) int {
@@ -288,74 +360,4 @@ type gitFilePair struct {
 	WorkContent string // content in working tree (empty if file is deleted)
 	OldName     string // display name for old side
 	NewName     string // display name for new side
-}
-
-func runGit(gitDir string, args ...string) (stdout, stderr string, err error) {
-	gitPath, err := exec.LookPath("git")
-	if err != nil {
-		return "", "", err
-	}
-	cmd := exec.Command(gitPath, append([]string{"-C", gitDir}, args...)...)
-	cmd.Env = gitEnv()
-	var outb, errb strings.Builder
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-	err = cmd.Run()
-	return outb.String(), errb.String(), err
-}
-
-// runGitStdin is like runGit but feeds stdin to the git process.
-func runGitStdin(gitDir, stdin string, args ...string) (stdout, stderr string, err error) {
-	gitPath, err := exec.LookPath("git")
-	if err != nil {
-		return "", "", err
-	}
-	cmd := exec.Command(gitPath, append([]string{"-C", gitDir}, args...)...)
-	cmd.Env = gitEnv()
-	cmd.Stdin = strings.NewReader(stdin)
-	var outb, errb strings.Builder
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-	err = cmd.Run()
-	return outb.String(), errb.String(), err
-}
-
-// filterGitIgnored runs `git check-ignore -z --stdin` in repoRoot and returns
-// relPaths with any gitignored entries removed. Fail-open: if git is not
-// found, the input exits 1 with no output (nothing ignored), or any other
-// unexpected error occurs, the original relPaths slice is returned unchanged.
-func filterGitIgnored(repoRoot string, relPaths []string) ([]string, error) {
-	if len(relPaths) == 0 {
-		return nil, nil
-	}
-	// NUL-separated stdin.
-	stdin := strings.Join(relPaths, "\x00") + "\x00"
-	out, _, err := runGitStdin(repoRoot, stdin, "check-ignore", "-z", "--stdin")
-	if err != nil {
-		var exitErr *exec.ExitError
-		if !errors.As(err, &exitErr) {
-			// git not found or other non-exit error — fail open.
-			return relPaths, nil
-		}
-		if exitErr.ExitCode() != 1 {
-			// Unexpected exit code — fail open.
-			return relPaths, nil
-		}
-		// Exit code 1 means "no paths are ignored" — not an error.
-	}
-	// Parse NUL-separated ignored paths into a set.
-	ignoredSet := make(map[string]struct{})
-	for _, p := range strings.Split(out, "\x00") {
-		if p != "" {
-			ignoredSet[p] = struct{}{}
-		}
-	}
-	// Return paths not in the ignored set.
-	kept := make([]string, 0, len(relPaths))
-	for _, p := range relPaths {
-		if _, ignored := ignoredSet[p]; !ignored {
-			kept = append(kept, p)
-		}
-	}
-	return kept, nil
 }
