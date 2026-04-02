@@ -34,6 +34,8 @@ type renderConfig struct {
 	noColor       bool
 	colorProfile  colorprofile.Profile
 	hasProfile    bool // true when colorProfile was explicitly set via WithColorProfile
+	isDark        bool
+	hasIsDark     bool // true when isDark was explicitly set via WithIsDark
 	lang          string
 	theme         string
 	split         bool
@@ -96,6 +98,21 @@ func WithColorProfile(p colorprofile.Profile) Option {
 	return func(c *config) {
 		c.render.colorProfile = p
 		c.render.hasProfile = true
+	}
+}
+
+// WithIsDark sets whether the terminal has a dark background, bypassing the
+// runtime OSC 11 terminal query. Use this when the background has already been
+// detected (e.g. from the real TTY before rendering to a buffer) so that
+// concurrent or buffered render calls do not issue additional terminal queries.
+//
+//	if f, ok := streams.Out.(*os.File); ok {
+//	    opts = append(opts, drift.WithIsDark(lipgloss.HasDarkBackground(os.Stdin, f)))
+//	}
+func WithIsDark(dark bool) Option {
+	return func(c *config) {
+		c.render.isDark = dark
+		c.render.hasIsDark = true
 	}
 }
 

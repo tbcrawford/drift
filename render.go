@@ -110,7 +110,16 @@ type renderPipeline struct {
 // to eliminate duplicated setup code.
 func buildRenderPipeline(w io.Writer, cfg *config, filename string) renderPipeline {
 	profile := resolveProfile(w, cfg)
-	isDark := theme.DetectDarkBackground(profile)
+
+	// Use the pre-detected dark background value when the caller already probed
+	// the real terminal (e.g. via WithIsDark). This prevents repeated — and
+	// concurrent — OSC 11 terminal queries when rendering many files in parallel.
+	var isDark bool
+	if cfg.render.hasIsDark {
+		isDark = cfg.render.isDark
+	} else {
+		isDark = theme.DetectDarkBackground(profile)
+	}
 
 	lexer := highlight.DetectLexer(cfg.render.lang, filename, "")
 	style := resolveChromaStyle(cfg, profile, w, isDark)

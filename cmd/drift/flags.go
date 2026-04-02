@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/term"
 	"github.com/tbcrawford/drift"
@@ -79,19 +80,34 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		opts = append(opts, drift.WithoutLineNumbers())
 	}
 
-	// Measure terminal width and detect color profile from the real output stream
-	// now, before any bytes.Buffer is involved. This ensures:
+	// Measure terminal width, detect color profile, and probe the terminal
+	// background color — all from the real output stream now, before any
+	// bytes.Buffer is involved. This ensures:
 	//   - split-view panels fill the actual terminal width (not the 80-column default)
 	//   - ANSI colors are preserved when output is buffered for paging
-	// Both WithTermWidth and WithColorProfile short-circuit the per-call probes
-	// in buildRenderPipeline, so no internal API changes are needed.
+	//   - The OSC 11 background-color query fires exactly once (not once per file
+	//     in a directory diff), preventing concurrent terminal queries that can
+	//     cause raw escape sequences to appear in stdout
+	// WithTermWidth, WithColorProfile, and WithIsDark short-circuit the per-call
+	// probes in buildRenderPipeline, so no internal API changes are needed.
 	var resolvedTermWidth int
 	if f, ok := streams.Out.(*os.File); ok {
 		if w, _, err := term.GetSize(f.Fd()); err == nil && w > 0 {
 			resolvedTermWidth = w
 			opts = append(opts, drift.WithTermWidth(w))
 		}
-		opts = append(opts, drift.WithColorProfile(colorprofile.Detect(f, os.Environ())))
+		profile := colorprofile.Detect(f, os.Environ())
+		opts = append(opts, drift.WithColorProfile(profile))
+
+		// Probe the terminal background color once, before any goroutines start.
+		// Only query the terminal when colors are enabled and the output is a TTY —
+		// HasDarkBackground sends OSC 11 + DA2 to the terminal and reads the
+		// response. Doing this inside parallel goroutines causes concurrent writes
+		// to os.Stdout (via backgroundColor(os.Stdout, os.Stdout)) which races and
+		// leaks raw escape-sequence responses into the diff output.
+		if !flags.noColor && term.IsTerminal(f.Fd()) {
+			opts = append(opts, drift.WithIsDark(lipgloss.HasDarkBackground(os.Stdin, f)))
+		}
 	}
 
 	return &rootOptions{
