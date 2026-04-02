@@ -9,28 +9,15 @@ import (
 
 func TestResolveInputs_singleArg_gitMode(t *testing.T) {
 	t.Helper()
-	bin := t.TempDir()
-	repo := t.TempDir()
-	file := filepath.Join(repo, "f.go")
+	// Create a real git repo with f.go committed as "old\n", then modify to "new\n".
+	repoDir := makeTestRepo(t, map[string]string{
+		"f.go": "old\n",
+	})
+	file := filepath.Join(repoDir, "f.go")
+	// Overwrite f.go in working tree (not staged/committed).
 	if err := os.WriteFile(file, []byte("new\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	repoAbs, err := filepath.Abs(repo)
-	if err != nil {
-		t.Fatal(err)
-	}
-	script := "#!/bin/sh\n" +
-		"joined=\"$*\"\n" +
-		"case \"$joined\" in\n" +
-		"  *rev-parse*--is-inside-work-tree*) echo true; exit 0 ;;\n" +
-		"  *rev-parse*--show-toplevel*) echo \"" + repoAbs + "\"; exit 0 ;;\n" +
-		"  *cat-file*-e*HEAD:f.go*) exit 0 ;;\n" +
-		"  *show*HEAD:f.go*) printf '%s' 'old\n'; exit 0 ;;\n" +
-		"esac\n" +
-		"echo \"fake git: $joined\" >&2\n" +
-		"exit 99\n"
-	writeFakeGit(t, bin, script)
-	prependPath(t, bin)
 
 	old, new_, on, nn, err := resolveInputs([]string{file}, "", "", strings.NewReader(""))
 	if err != nil {
@@ -46,20 +33,12 @@ func TestResolveInputs_singleArg_gitMode(t *testing.T) {
 
 func TestResolveInputs_singleArg_notGitWorktree(t *testing.T) {
 	t.Helper()
-	bin := t.TempDir()
-	repo := t.TempDir()
-	file := filepath.Join(repo, "f.go")
+	// Plain temp dir — not a git repo.
+	plainDir := t.TempDir()
+	file := filepath.Join(plainDir, "f.go")
 	if err := os.WriteFile(file, []byte("x"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	script := "#!/bin/sh\n" +
-		"joined=\"$*\"\n" +
-		"case \"$joined\" in\n" +
-		"  *rev-parse*--is-inside-work-tree*) echo false; exit 0 ;;\n" +
-		"esac\n" +
-		"exit 99\n"
-	writeFakeGit(t, bin, script)
-	prependPath(t, bin)
 
 	_, _, _, _, err := resolveInputs([]string{file}, "", "", strings.NewReader(""))
 	if err == nil {

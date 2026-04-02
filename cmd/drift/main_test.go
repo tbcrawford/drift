@@ -33,27 +33,14 @@ func TestRunCLI_differs(t *testing.T) {
 
 func TestRunCLI_gitSingleArg_differs(t *testing.T) {
 	t.Helper()
-	bin := t.TempDir()
-	repo := t.TempDir()
-	file := filepath.Join(repo, "x.txt")
+	// Create a real git repo with x.txt = "head\n", then modify to "working\n" on disk.
+	repoDir := makeTestRepo(t, map[string]string{
+		"x.txt": "head\n",
+	})
+	file := filepath.Join(repoDir, "x.txt")
 	if err := os.WriteFile(file, []byte("working\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	repoAbs, err := filepath.Abs(repo)
-	if err != nil {
-		t.Fatal(err)
-	}
-	script := "#!/bin/sh\n" +
-		"joined=\"$*\"\n" +
-		"case \"$joined\" in\n" +
-		"  *rev-parse*--is-inside-work-tree*) echo true; exit 0 ;;\n" +
-		"  *rev-parse*--show-toplevel*) echo \"" + repoAbs + "\"; exit 0 ;;\n" +
-		"  *show*HEAD:x.txt*) printf '%s' 'head\n'; exit 0 ;;\n" +
-		"esac\n" +
-		"echo \"fake git: $joined\" >&2\n" +
-		"exit 99\n"
-	writeFakeGit(t, bin, script)
-	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	var out, errOut bytes.Buffer
 	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
