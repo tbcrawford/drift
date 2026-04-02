@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -220,6 +221,10 @@ func gitDirectoryVsHEAD(absDir string) ([]gitFilePair, error) {
 	if err := filepath.WalkDir(absDir, func(path string, d os.DirEntry, wErr error) error {
 		if wErr != nil {
 			return wErr
+		}
+		// Skip the .git directory entirely — its internals are not part of the working tree.
+		if d.Name() == ".git" && d.IsDir() {
+			return fs.SkipDir
 		}
 		if !d.Type().IsRegular() {
 			return nil

@@ -10,6 +10,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/term"
+	git "github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
 	"github.com/tbcrawford/drift"
 	"golang.org/x/sync/errgroup"
@@ -261,6 +262,40 @@ func writeThroughPager(buf *bytes.Buffer, opts *rootOptions) error {
 // runRoot is a thin orchestrator: it calls resolveInputs, drift.Diff, and drift.RenderWithNames
 // in sequence. No flag parsing or I/O decisions live here.
 func runRoot(opts *rootOptions) error {
+	// Zero-argument mode: no args, no --from/--to → diff the entire repo working tree vs HEAD.
+	if len(opts.args) == 0 && opts.from == "" && opts.to == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return newExitCode(2, fmt.Sprintf("fatal: could not determine working directory: %v", err))
+		}
+		repo, repoRoot, err := openRepoAt(cwd)
+		if err != nil {
+			// Distinguish "not a git repo" from other errors.
+			if errors.Is(err, git.ErrRepositoryNotExists) {
+				fmt.Fprintln(opts.streams.Err, "fatal: not a git repository (or any parent up to root)")
+				return newExitCode(2, "")
+			}
+			return newExitCode(2, err.Error())
+		}
+		// If there's no HEAD yet (fresh init with no commits), there's nothing to diff.
+		if _, hErr := headCommitTree(repo); hErr != nil {
+			return nil // exit 0 silently
+		}
+		pairs, err := gitDirectoryVsHEAD(repoRoot)
+		if err != nil {
+			return newExitCode(2, err.Error())
+		}
+		var buf bytes.Buffer
+		hasDiff, err := runGitDirectoryDiff(pairs, opts, &buf)
+		if err != nil {
+			return err
+		}
+		if !hasDiff {
+			return nil
+		}
+		return writeThroughPager(&buf, opts)
+	}
+
 	// Single-directory git diff: one arg that is a directory → diff vs HEAD.
 	if len(opts.args) == 1 && isDir(opts.args[0]) {
 		absDir, err := filepath.Abs(opts.args[0])
