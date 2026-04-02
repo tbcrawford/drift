@@ -166,6 +166,13 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 16. Fix v1.0.0 blockers | 3/3 | Complete | 2026-03-31 |
 | 17. Address medium-priority council review issues | 5/5 | Complete    | 2026-03-31 |
 | 18. Auto algorithm mode | 1/1 | Complete    | 2026-04-01 |
+| 19. Pager support | 2/2 | Complete | 2026-04-01 |
+| 20. Directory diff support | 2/2 | Complete | 2026-04-01 |
+| 21. Respect gitignore rules | 1/1 | Complete | 2026-04-01 |
+| 22. Replace git subprocess with go-git | 2/2 | Complete | 2026-04-02 |
+| 23. Performance analysis and optimization | 2/2 | Complete | 2026-04-02 |
+| 24. Performance optimization phase 2 | 2/2 | Complete | 2026-04-02 |
+| 25. Git pager mode (drop-in for delta) | 2/2 | Complete | 2026-04-02 |
 
 ### Phase 7: support diffs from git that is, if a single file is provided and the file is in a git repo drift will show the current changes
 
@@ -362,8 +369,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 23-01-PLAN.md — Baseline benchmarks (color path) + GutterStyleCache to eliminate per-line lipgloss.NewStyle()
-- [ ] 23-02-PLAN.md — Replace per-token lipgloss.Style in HighlightLineWithLineBackground with direct ANSI SGR builder
+- [x] 23-01-PLAN.md — Baseline benchmarks (color path) + GutterStyleCache to eliminate per-line lipgloss.NewStyle() (completed 2026-04-02)
+- [x] 23-02-PLAN.md — Replace per-token lipgloss.Style in HighlightLineWithLineBackground with direct ANSI SGR builder (completed 2026-04-02)
 
 ### Phase 24: performance optimization phase 2: target sub-500ms response time for drift --split on real repos, benchmark against delta
 
@@ -373,8 +380,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 24-01-PLAN.md — Replace wt.Status() with changedFilesViaIndex (index+mtime, 200x faster) + wall-clock benchmark
-- [ ] 24-02-PLAN.md — Eliminate redundant repo opens + streaming render to pager
+- [x] 24-01-PLAN.md — Replace wt.Status() with changedFilesViaIndex (index+mtime, 200x faster) + wall-clock benchmark (completed 2026-04-02)
+- [x] 24-02-PLAN.md — Eliminate redundant repo opens + streaming render to pager (completed 2026-04-02)
 
 ### Phase 25: git pager mode: use drift as a drop-in replacement for delta
 
@@ -384,5 +391,5 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 25-01-PLAN.md — Unified diff parser: parseUnifiedDiff + parsedFileDiff type in unifieddiff.go
-- [ ] 25-02-PLAN.md — Wire pager mode into runRoot: stdin-pipe detection, runPagerMode, --color-only, drift install-pager
+- [x] 25-01-PLAN.md — Unified diff parser: parseUnifiedDiff + parsedFileDiff type in unifieddiff.go (completed 2026-04-02)
+- [x] 25-02-PLAN.md — Wire pager mode into runRoot: stdin-pipe detection, runPagerMode, --color-only, drift install-pager (completed 2026-04-02)

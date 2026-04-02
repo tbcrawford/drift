@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0.0
-milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
-status: Milestone complete
-stopped_at: Completed 23-02-PLAN.md (direct ANSI SGR builder for token highlighting)
-last_updated: "2026-04-02T20:10:00.000Z"
+milestone_name: "git pager mode: drift as drop-in replacement for delta"
+status: Phase 25 complete
+stopped_at: Completed 25-02-PLAN.md (wire git pager mode into drift CLI)
+last_updated: "2026-04-02T21:00:00.000Z"
 progress:
-  total_phases: 22
-  completed_phases: 11
-  total_plans: 24
-  completed_plans: 24
+  total_phases: 25
+  completed_phases: 25
+  total_plans: 35
+  completed_plans: 35
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 20 — add-directory-diff-support-with-automatic-pager-and-file-name-headers
+**Current focus:** Phase 25 complete — git pager mode (drift as drop-in for delta)
 
 ## Current Position
 
-Phase: 20
-Plan: Not started
+Phase: 25
+Plan: Complete (2/2 plans done)
 
 ## Performance Metrics
 
@@ -169,6 +169,7 @@ Recent decisions affecting current work:
 - Phase 22 added: replace all git actions by the library or cli in this repository with go-git (github.com/go-git/go-git)
 - Phase 23 added: performance analysis and optimization — deep profiling of `drift --split` on real repos; identify bottlenecks vs delta; explore streaming render to pager and other improvements
 - Phase 24 added: performance optimization phase 2 — target sub-500ms response time for `drift --split` on real repos, benchmark against delta, explore delta source for strategies
+- Phase 25 added: git pager mode — use `drift` as a drop-in replacement for `delta` as a git pager (GIT_PAGER / core.pager / interactive.diffFilter)
 
 ### Quick Tasks Completed
 
