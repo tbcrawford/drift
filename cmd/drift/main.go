@@ -67,9 +67,86 @@ With one path inside a git repository, diffs the working tree against HEAD.`,
 	return cmd
 }
 
+// runDirectoryDiff iterates over file pairs produced by diffDirectories, renders
+// each changed/added/removed file's diff into buf preceded by a "=== name ===" header.
+// Returns hasDiff=true if any file pair produced output.
+func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (hasDiff bool, err error) {
+	for _, pair := range pairs {
+		var oldContent, newContent string
+		oldName := "a/" + pair.Name
+		newName := "b/" + pair.Name
+
+		if pair.OldPath != "" {
+			b, rErr := os.ReadFile(pair.OldPath)
+			if rErr != nil {
+				return false, newExitCode(2, fmt.Sprintf("reading %s: %v", pair.OldPath, rErr))
+			}
+			oldContent = string(b)
+		}
+		if pair.NewPath != "" {
+			b, rErr := os.ReadFile(pair.NewPath)
+			if rErr != nil {
+				return false, newExitCode(2, fmt.Sprintf("reading %s: %v", pair.NewPath, rErr))
+			}
+			newContent = string(b)
+		}
+
+		result, dErr := drift.Diff(oldContent, newContent, opts.driftOpts...)
+		if dErr != nil {
+			return false, newExitCode(2, dErr.Error())
+		}
+		if result.IsEqual {
+			continue // skip identical files
+		}
+
+		hasDiff = true
+		fmt.Fprintf(buf, "=== %s ===\n", pair.Name)
+		if rErr := drift.RenderWithNames(result, buf, oldName, newName, opts.driftOpts...); rErr != nil {
+			return false, newExitCode(2, rErr.Error())
+		}
+	}
+	return hasDiff, nil
+}
+
 // runRoot is a thin orchestrator: it calls resolveInputs, drift.Diff, and drift.RenderWithNames
 // in sequence. No flag parsing or I/O decisions live here.
 func runRoot(opts *rootOptions) error {
+	// Directory diff: both positional args are directories.
+	if len(opts.args) == 2 && isDir(opts.args[0]) && isDir(opts.args[1]) {
+		pairs, err := diffDirectories(opts.args[0], opts.args[1])
+		if err != nil {
+			return newExitCode(2, err.Error())
+		}
+		var buf bytes.Buffer
+		hasDiff, err := runDirectoryDiff(pairs, opts, &buf)
+		if err != nil {
+			return err
+		}
+		if !hasDiff {
+			return nil // identical dirs → exit 0, no output
+		}
+		// Route through existing pager logic (same pattern as single-file path).
+		var termHeight int
+		if f, ok := opts.streams.Out.(*os.File); ok {
+			if _, h, tErr := term.GetSize(f.Fd()); tErr == nil {
+				termHeight = h
+			}
+		}
+		lineCount := strings.Count(buf.String(), "\n")
+		if shouldPage(opts.streams.Out, lineCount, termHeight, opts.noPager) {
+			pagerWriter, cleanup, pErr := startPager(resolvePager(), opts.streams)
+			if pErr != nil {
+				_, _ = buf.WriteTo(opts.streams.Out)
+			} else {
+				_, _ = buf.WriteTo(pagerWriter)
+				cleanup()
+			}
+		} else {
+			_, _ = buf.WriteTo(opts.streams.Out)
+		}
+		return newExitCode(1, "")
+	}
+
 	old, newText, oldName, newName, err := resolveInputs(opts.args, opts.from, opts.to, opts.streams.In)
 	if err != nil {
 		return err
