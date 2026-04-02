@@ -163,7 +163,34 @@ func gitDirectoryVsHEAD(absDir string) ([]gitFilePair, error) {
 		return nil, fmt.Errorf("walking directory: %w", err)
 	}
 
+	// Filter out gitignored files from the working-tree list.
+	repoRelPaths := make([]string, 0, len(workFiles))
+	for _, wf := range workFiles {
+		repoRel := dirRelSlash + "/" + wf.rel
+		if dirRelSlash == "." {
+			repoRel = wf.rel
+		}
+		repoRelPaths = append(repoRelPaths, repoRel)
+	}
+	keptRepoPaths, _ := filterGitIgnored(repoRoot, repoRelPaths)
+	keptSet := make(map[string]struct{}, len(keptRepoPaths))
+	for _, p := range keptRepoPaths {
+		keptSet[p] = struct{}{}
+	}
+	filteredWorkFiles := workFiles[:0]
+	for _, wf := range workFiles {
+		repoRel := dirRelSlash + "/" + wf.rel
+		if dirRelSlash == "." {
+			repoRel = wf.rel
+		}
+		if _, ok := keptSet[repoRel]; ok {
+			filteredWorkFiles = append(filteredWorkFiles, wf)
+		}
+	}
+	workFiles = filteredWorkFiles
+
 	// Build a set of working-tree relative paths for deleted-file detection.
+	// Built after gitignore filtering so ignored files don't mask deleted entries.
 	workSet := make(map[string]string, len(workFiles))
 	for _, wf := range workFiles {
 		workSet[wf.rel] = wf.abs
@@ -275,4 +302,60 @@ func runGit(gitDir string, args ...string) (stdout, stderr string, err error) {
 	cmd.Stderr = &errb
 	err = cmd.Run()
 	return outb.String(), errb.String(), err
+}
+
+// runGitStdin is like runGit but feeds stdin to the git process.
+func runGitStdin(gitDir, stdin string, args ...string) (stdout, stderr string, err error) {
+	gitPath, err := exec.LookPath("git")
+	if err != nil {
+		return "", "", err
+	}
+	cmd := exec.Command(gitPath, append([]string{"-C", gitDir}, args...)...)
+	cmd.Env = gitEnv()
+	cmd.Stdin = strings.NewReader(stdin)
+	var outb, errb strings.Builder
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+	err = cmd.Run()
+	return outb.String(), errb.String(), err
+}
+
+// filterGitIgnored runs `git check-ignore -z --stdin` in repoRoot and returns
+// relPaths with any gitignored entries removed. Fail-open: if git is not
+// found, the input exits 1 with no output (nothing ignored), or any other
+// unexpected error occurs, the original relPaths slice is returned unchanged.
+func filterGitIgnored(repoRoot string, relPaths []string) ([]string, error) {
+	if len(relPaths) == 0 {
+		return nil, nil
+	}
+	// NUL-separated stdin.
+	stdin := strings.Join(relPaths, "\x00") + "\x00"
+	out, _, err := runGitStdin(repoRoot, stdin, "check-ignore", "-z", "--stdin")
+	if err != nil {
+		var exitErr *exec.ExitError
+		if !errors.As(err, &exitErr) {
+			// git not found or other non-exit error — fail open.
+			return relPaths, nil
+		}
+		if exitErr.ExitCode() != 1 {
+			// Unexpected exit code — fail open.
+			return relPaths, nil
+		}
+		// Exit code 1 means "no paths are ignored" — not an error.
+	}
+	// Parse NUL-separated ignored paths into a set.
+	ignoredSet := make(map[string]struct{})
+	for _, p := range strings.Split(out, "\x00") {
+		if p != "" {
+			ignoredSet[p] = struct{}{}
+		}
+	}
+	// Return paths not in the ignored set.
+	kept := make([]string, 0, len(relPaths))
+	for _, p := range relPaths {
+		if _, ignored := ignoredSet[p]; !ignored {
+			kept = append(kept, p)
+		}
+	}
+	return kept, nil
 }
