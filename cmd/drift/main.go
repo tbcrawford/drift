@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/tbcrawford/drift"
+	"golang.org/x/sync/errgroup"
 )
 
 // parseAlgorithm maps a flag string to a drift.Algorithm value.
@@ -148,40 +149,44 @@ func writeFileHeader(buf *bytes.Buffer, name string, noColor bool, termWidth int
 
 // runDirectoryDiff iterates over file pairs produced by diffDirectories, renders
 // each changed/added/removed file's diff into buf preceded by a styled file header.
+// Diffs are computed in parallel (one goroutine per file) and merged in sorted order.
 // Returns hasDiff=true if any file pair produced output.
 func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (hasDiff bool, err error) {
-	for _, pair := range pairs {
-		var oldContent, newContent string
-		oldName := "a/" + pair.Name
-		newName := "b/" + pair.Name
+	if len(pairs) == 0 {
+		return false, nil
+	}
 
-		if pair.OldPath != "" {
-			b, rErr := os.ReadFile(pair.OldPath)
-			if rErr != nil {
-				return false, newExitCode(2, fmt.Sprintf("reading %s: %v", pair.OldPath, rErr))
+	// Render each file's diff into its own buffer in parallel, preserving pair order.
+	results := make([]bytes.Buffer, len(pairs))
+	g := new(errgroup.Group)
+
+	for i, pair := range pairs {
+		i, pair := i, pair // capture loop vars
+		g.Go(func() error {
+			oldName := "a/" + pair.Name
+			newName := "b/" + pair.Name
+
+			result, dErr := drift.Diff(pair.OldContent, pair.NewContent, opts.driftOpts...)
+			if dErr != nil {
+				return newExitCode(2, dErr.Error())
 			}
-			oldContent = string(b)
-		}
-		if pair.NewPath != "" {
-			b, rErr := os.ReadFile(pair.NewPath)
-			if rErr != nil {
-				return false, newExitCode(2, fmt.Sprintf("reading %s: %v", pair.NewPath, rErr))
+			if result.IsEqual {
+				return nil // skip (e.g. CRLF-only difference normalised away)
 			}
-			newContent = string(b)
-		}
 
-		result, dErr := drift.Diff(oldContent, newContent, opts.driftOpts...)
-		if dErr != nil {
-			return false, newExitCode(2, dErr.Error())
-		}
-		if result.IsEqual {
-			continue // skip identical files
-		}
+			writeFileHeader(&results[i], pair.Name, opts.noColor, opts.termWidth)
+			return drift.RenderWithNames(result, &results[i], oldName, newName, opts.driftOpts...)
+		})
+	}
 
-		hasDiff = true
-		writeFileHeader(buf, pair.Name, opts.noColor, opts.termWidth)
-		if rErr := drift.RenderWithNames(result, buf, oldName, newName, opts.driftOpts...); rErr != nil {
-			return false, newExitCode(2, rErr.Error())
+	if err := g.Wait(); err != nil {
+		return false, err
+	}
+
+	for i := range results {
+		if results[i].Len() > 0 {
+			hasDiff = true
+			_, _ = results[i].WriteTo(buf)
 		}
 	}
 	return hasDiff, nil
@@ -189,19 +194,39 @@ func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (h
 
 // runGitDirectoryDiff renders git HEAD-vs-working-tree diffs for all changed
 // files under a single directory into buf, with styled file headers.
+// Diffs are computed in parallel (one goroutine per file) and merged in sorted order.
 func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, buf *bytes.Buffer) (hasDiff bool, err error) {
-	for _, pair := range pairs {
-		result, dErr := drift.Diff(pair.HeadContent, pair.WorkContent, opts.driftOpts...)
-		if dErr != nil {
-			return false, newExitCode(2, dErr.Error())
-		}
-		if result.IsEqual {
-			continue
-		}
-		hasDiff = true
-		writeFileHeader(buf, pair.Name, opts.noColor, opts.termWidth)
-		if rErr := drift.RenderWithNames(result, buf, pair.OldName, pair.NewName, opts.driftOpts...); rErr != nil {
-			return false, newExitCode(2, rErr.Error())
+	if len(pairs) == 0 {
+		return false, nil
+	}
+
+	// Render each file's diff into its own buffer in parallel, preserving pair order.
+	results := make([]bytes.Buffer, len(pairs))
+	g := new(errgroup.Group)
+
+	for i, pair := range pairs {
+		i, pair := i, pair // capture loop vars
+		g.Go(func() error {
+			result, dErr := drift.Diff(pair.HeadContent, pair.WorkContent, opts.driftOpts...)
+			if dErr != nil {
+				return newExitCode(2, dErr.Error())
+			}
+			if result.IsEqual {
+				return nil
+			}
+			writeFileHeader(&results[i], pair.Name, opts.noColor, opts.termWidth)
+			return drift.RenderWithNames(result, &results[i], pair.OldName, pair.NewName, opts.driftOpts...)
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return false, err
+	}
+
+	for i := range results {
+		if results[i].Len() > 0 {
+			hasDiff = true
+			_, _ = results[i].WriteTo(buf)
 		}
 	}
 	return hasDiff, nil

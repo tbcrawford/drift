@@ -10,9 +10,11 @@ import (
 
 // filePair represents a single file entry in a directory diff.
 type filePair struct {
-	Name    string // relative path with forward slashes (display name)
-	OldPath string // absolute path on old side; empty if file is added
-	NewPath string // absolute path on new side; empty if file is removed
+	Name       string // relative path with forward slashes (display name)
+	OldPath    string // absolute path on old side; empty if file is added
+	NewPath    string // absolute path on new side; empty if file is removed
+	OldContent string // file content on old side; empty if file is added
+	NewContent string // file content on new side; empty if file is removed
 }
 
 // IsAdded reports whether the file exists only on the new side.
@@ -72,27 +74,36 @@ func diffDirectories(oldDir, newDir string) ([]filePair, error) {
 		if oldPath, inOld := oldFiles[relSlash]; inOld {
 			// File exists on both sides — compare contents.
 			delete(oldFiles, relSlash)
-			oldContent, err := os.ReadFile(oldPath)
+			oldBytes, err := os.ReadFile(oldPath)
 			if err != nil {
 				return fmt.Errorf("reading old %s: %w", relSlash, err)
 			}
-			newContent, err := os.ReadFile(path)
+			newBytes, err := os.ReadFile(path)
 			if err != nil {
 				return fmt.Errorf("reading new %s: %w", relSlash, err)
 			}
-			if !bytes.Equal(oldContent, newContent) {
+			if !bytes.Equal(oldBytes, newBytes) {
+				// Carry content so runDirectoryDiff can use it without re-reading.
 				pairs = append(pairs, filePair{
-					Name:    relSlash,
-					OldPath: oldPath,
-					NewPath: path,
+					Name:       relSlash,
+					OldPath:    oldPath,
+					NewPath:    path,
+					OldContent: string(oldBytes),
+					NewContent: string(newBytes),
 				})
 			}
 		} else {
-			// File only in new — added.
+			// File only in new — added. Read content now for consistency.
+			newBytes, err := os.ReadFile(path)
+			if err != nil {
+				return fmt.Errorf("reading new %s: %w", relSlash, err)
+			}
 			pairs = append(pairs, filePair{
-				Name:    relSlash,
-				OldPath: "",
-				NewPath: path,
+				Name:       relSlash,
+				OldPath:    "",
+				NewPath:    path,
+				OldContent: "",
+				NewContent: string(newBytes),
 			})
 		}
 		return nil
@@ -100,12 +111,18 @@ func diffDirectories(oldDir, newDir string) ([]filePair, error) {
 		return nil, fmt.Errorf("walking new dir: %w", err)
 	}
 
-	// Remaining entries in oldFiles exist only on old side — removed.
+	// Remaining entries in oldFiles exist only on old side — removed. Read content now.
 	for relSlash, oldPath := range oldFiles {
+		oldBytes, err := os.ReadFile(oldPath)
+		if err != nil {
+			return nil, fmt.Errorf("reading old %s: %w", relSlash, err)
+		}
 		pairs = append(pairs, filePair{
-			Name:    relSlash,
-			OldPath: oldPath,
-			NewPath: "",
+			Name:       relSlash,
+			OldPath:    oldPath,
+			NewPath:    "",
+			OldContent: string(oldBytes),
+			NewContent: "",
 		})
 	}
 
