@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,6 +10,161 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 )
+
+// ttyReader wraps an io.Reader and signals to isStdinPipe that it is a TTY
+// (not a pipe). Tests that want to simulate TTY stdin (e.g. zero-arg git mode)
+// wrap their readers with ttyReader so pager mode is not triggered.
+type ttyReader struct{ r io.Reader }
+
+func (t *ttyReader) Read(p []byte) (int, error) { return t.r.Read(p) }
+func (t *ttyReader) IsTTY() bool                { return true }
+
+// ttyStream returns an IOStreams with a TTY-flagged stdin (empty content).
+// Use this for zero-arg git mode tests to prevent pager mode detection.
+func ttyStream(out, errOut *bytes.Buffer) IOStreams {
+	return IOStreams{In: &ttyReader{strings.NewReader("")}, Out: out, Err: errOut}
+}
+
+// --- Pager mode tests (Plan 25-02) ---
+
+// singleFileUnifiedDiff is a minimal but realistic git unified diff for one file.
+const singleFileUnifiedDiff = `diff --git a/foo.go b/foo.go
+index abc..def 100644
+--- a/foo.go
++++ b/foo.go
+@@ -1,3 +1,3 @@
+ package main
+-func old() {}
++func new() {}
+ // end
+`
+
+// multiFileUnifiedDiff has two files changed.
+const multiFileUnifiedDiff = `diff --git a/a.go b/a.go
+--- a/a.go
++++ b/a.go
+@@ -1 +1 @@
+-old a
++new a
+diff --git a/b.go b/b.go
+--- a/b.go
++++ b/b.go
+@@ -1 +1 @@
+-old b
++new b
+`
+
+// binaryUnifiedDiff contains only a binary file change (no text to render).
+const binaryUnifiedDiff = `diff --git a/img.png b/img.png
+index abc..def 100644
+Binary files a/img.png and b/img.png differ
+`
+
+// TestRunCLI_pagerMode_singleFile verifies that when stdin is a pipe containing
+// a unified diff for one file with no positional args, drift re-renders it.
+func TestRunCLI_pagerMode_singleFile(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(singleFileUnifiedDiff),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color"})
+	// Inputs differ → exit 1
+	if code != 1 {
+		t.Fatalf("expected exit 1 for differing file, got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+	stdout := out.String()
+	// Should contain the file header
+	if !strings.Contains(stdout, "▸") || !strings.Contains(stdout, "foo.go") {
+		t.Errorf("expected file header with '▸' and 'foo.go', got: %q", stdout)
+	}
+	// Should contain diff hunk marker
+	if !strings.Contains(stdout, "@@") {
+		t.Errorf("expected '@@' hunk marker in output, got: %q", stdout)
+	}
+	// Should NOT contain raw git diff header
+	if strings.Contains(stdout, "diff --git") {
+		t.Errorf("output should not contain raw 'diff --git' header, got: %q", stdout)
+	}
+}
+
+// TestRunCLI_pagerMode_multiFile verifies that each file in a multi-file unified diff
+// gets its own file header in the output.
+func TestRunCLI_pagerMode_multiFile(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(multiFileUnifiedDiff),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color"})
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+	stdout := out.String()
+	if !strings.Contains(stdout, "a.go") {
+		t.Errorf("expected 'a.go' in output, got: %q", stdout)
+	}
+	if !strings.Contains(stdout, "b.go") {
+		t.Errorf("expected 'b.go' in output, got: %q", stdout)
+	}
+}
+
+// TestRunCLI_pagerMode_withArgs verifies that pager mode is NOT triggered when
+// positional args are present (existing file-diff path is used instead).
+func TestRunCLI_pagerMode_withArgs(t *testing.T) {
+	// Provide a unified diff on stdin but also pass --from/--to flags.
+	// This must NOT invoke pager mode — it uses the --from/--to path.
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(singleFileUnifiedDiff),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--from", "x", "--to", "y", "--no-color"})
+	// --from/--to path executes; pager mode not invoked
+	if code != 1 {
+		t.Fatalf("expected exit 1 for --from/--to diff, got %d; stderr=%q", code, errOut.String())
+	}
+	stdout := out.String()
+	// Should NOT have file headers from the piped unified diff
+	if strings.Contains(stdout, "foo.go") {
+		t.Errorf("pager mode should NOT be triggered when --from/--to flags present, got: %q", stdout)
+	}
+}
+
+// TestRunCLI_pagerMode_empty verifies that an empty unified diff on stdin → exit 0, no output.
+func TestRunCLI_pagerMode_empty(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(""),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{})
+	// Empty stdin + no args → either pager mode (empty diff → exit 0) or zero-arg git mode.
+	// In test environment, In is a bytes.Buffer (non-TTY) → pager mode triggers → exit 0.
+	if code != 0 && code != 2 {
+		t.Fatalf("expected exit 0 or 2, got %d; stderr=%q", code, errOut.String())
+	}
+}
+
+// TestRunCLI_pagerMode_binaryOnly verifies that a binary-only unified diff on stdin
+// exits 0 (no renderable diff) without panic.
+func TestRunCLI_pagerMode_binaryOnly(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(binaryUnifiedDiff),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color"})
+	// Binary files skipped → no output → exit 0
+	if code != 0 {
+		t.Fatalf("expected exit 0 for binary-only diff, got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+}
 
 func TestRunCLI_identicalFromTo(t *testing.T) {
 	t.Helper()
@@ -286,7 +442,7 @@ func TestRunCLI_zeroArg_notInRepo(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	var out, errOut bytes.Buffer
-	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	streams := ttyStream(&out, &errOut)
 	code := runCLI(streams, []string{})
 	if code != 2 {
 		t.Fatalf("expected exit 2 outside a git repo, got %d; stderr=%q", code, errOut.String())
@@ -314,7 +470,7 @@ func TestRunCLI_zeroArg_noDiff(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	var out, errOut bytes.Buffer
-	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	streams := ttyStream(&out, &errOut)
 	code := runCLI(streams, []string{})
 	if code != 0 {
 		t.Fatalf("expected exit 0 with no working-tree changes, got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
@@ -345,7 +501,7 @@ func TestRunCLI_zeroArg_hasDiff(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	var out, errOut bytes.Buffer
-	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	streams := ttyStream(&out, &errOut)
 	code := runCLI(streams, []string{"--no-color"})
 	if code != 1 {
 		t.Fatalf("expected exit 1 with working-tree changes, got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
@@ -378,7 +534,7 @@ func TestRunCLI_zeroArg_freshRepo(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	var out, errOut bytes.Buffer
-	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	streams := ttyStream(&out, &errOut)
 	code := runCLI(streams, []string{})
 	if code != 0 {
 		t.Fatalf("expected exit 0 for fresh repo with no HEAD, got %d; stderr=%q", code, errOut.String())
@@ -409,5 +565,82 @@ func TestRunCLI_directoryDiff_fromToIncompatible(t *testing.T) {
 	// Actually: --from is set, --to is not set → "both must be set" error
 	if code != 2 {
 		t.Fatalf("expected exit 2 for --from without --to, got %d stderr=%q", code, errOut.String())
+	}
+}
+
+// --- Color-only mode tests (Plan 25-02, Task 2) ---
+
+// TestRunCLI_colorOnly verifies that --color-only colorizes +/- lines with ANSI codes.
+func TestRunCLI_colorOnly(t *testing.T) {
+	input := "+added line\n-removed line\ncontext line\n"
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(input),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--color-only"})
+	if code != 0 {
+		t.Fatalf("expected exit 0 for --color-only, got %d; stderr=%q", code, errOut.String())
+	}
+	stdout := out.String()
+	// Added line should have green ANSI
+	if !strings.Contains(stdout, "\x1b[32m+added line\x1b[0m") {
+		t.Errorf("expected green ANSI for '+' line, got: %q", stdout)
+	}
+	// Removed line should have red ANSI
+	if !strings.Contains(stdout, "\x1b[31m-removed line\x1b[0m") {
+		t.Errorf("expected red ANSI for '-' line, got: %q", stdout)
+	}
+	// Context line should pass through unchanged (no ANSI prefix/suffix wrapping the line)
+	if !strings.Contains(stdout, "context line") {
+		t.Errorf("expected context line to pass through, got: %q", stdout)
+	}
+}
+
+// TestRunCLI_colorOnly_noColor verifies that --color-only --no-color passes stdin through unchanged.
+func TestRunCLI_colorOnly_noColor(t *testing.T) {
+	input := "+added line\n-removed line\ncontext line\n"
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(input),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--color-only", "--no-color"})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d; stderr=%q", code, errOut.String())
+	}
+	// No ANSI escape sequences in output
+	if strings.Contains(out.String(), "\x1b[") {
+		t.Errorf("expected no ANSI codes with --no-color, got: %q", out.String())
+	}
+	// Content should still be present
+	if !strings.Contains(out.String(), "+added line") {
+		t.Errorf("expected '+added line' in output, got: %q", out.String())
+	}
+}
+
+// TestRunCLI_installPager verifies that drift install-pager prints the gitconfig snippet.
+func TestRunCLI_installPager(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(""),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"install-pager"})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d; stderr=%q", code, errOut.String())
+	}
+	stdout := out.String()
+	if !strings.Contains(stdout, "core") || !strings.Contains(stdout, "pager") {
+		t.Errorf("expected 'core' and 'pager' in output, got: %q", stdout)
+	}
+	if !strings.Contains(stdout, "interactive") || !strings.Contains(stdout, "diffFilter") {
+		t.Errorf("expected 'interactive' and 'diffFilter' in output, got: %q", stdout)
+	}
+	if !strings.Contains(stdout, "drift --color-only") {
+		t.Errorf("expected 'drift --color-only' in output, got: %q", stdout)
 	}
 }

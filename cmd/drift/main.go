@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -33,6 +34,94 @@ func parseAlgorithm(s string) (drift.Algorithm, error) {
 	default:
 		return 0, newExitCode(2, fmt.Sprintf("invalid algorithm: %q (use auto, myers, patience, histogram)", s))
 	}
+}
+
+// isStdinPipe reports whether streams.In is a real pipe (not a TTY).
+// Used to detect when git is piping its diff output into drift.
+// For non-file readers (bytes.Buffer in tests), always returns true —
+// tests inject piped input without needing a real OS pipe.
+// Readers that implement isTTYReader (returning true from IsTTY()) are treated
+// as TTY inputs — this allows tests to simulate a TTY stdin for zero-arg git mode.
+func isStdinPipe(in io.Reader) bool {
+	// Allow test helpers to mark a reader as TTY (not a pipe).
+	type isTTYReader interface {
+		IsTTY() bool
+	}
+	if t, ok := in.(isTTYReader); ok {
+		return !t.IsTTY()
+	}
+	f, ok := in.(*os.File)
+	if !ok {
+		return true // non-file readers (bytes.Buffer in tests) are always "piped"
+	}
+	return !term.IsTerminal(f.Fd())
+}
+
+// colorizeUnifiedLine applies simple ANSI green/red to +/- diff lines.
+// Context lines (space prefix) and headers (@@, diff, index) pass through unchanged.
+func colorizeUnifiedLine(line string, noColor bool) string {
+	if noColor || len(line) == 0 {
+		return line
+	}
+	switch line[0] {
+	case '+':
+		return "\x1b[32m" + line + "\x1b[0m" // green
+	case '-':
+		return "\x1b[31m" + line + "\x1b[0m" // red
+	default:
+		return line
+	}
+}
+
+// runColorOnlyMode reads unified diff lines from r and writes them to w with
+// ANSI color applied to +/- lines. Line structure is preserved exactly so that
+// git add -p can process the output (interactive.diffFilter requirement).
+func runColorOnlyMode(r io.Reader, w io.Writer, opts *rootOptions) error {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Fprintln(w, colorizeUnifiedLine(line, opts.noColor))
+	}
+	if err := scanner.Err(); err != nil {
+		return newExitCode(2, err.Error())
+	}
+	return nil
+}
+
+// runPagerMode reads a multi-file unified diff from r, re-renders each file
+// using drift's full pipeline, and writes the result to the pager (or stdout).
+// This is invoked when drift is used as git's core.pager.
+func runPagerMode(r io.Reader, opts *rootOptions) error {
+	files, err := parseUnifiedDiff(r)
+	if err != nil {
+		return newExitCode(2, fmt.Sprintf("drift: failed to parse diff input: %v", err))
+	}
+	if len(files) == 0 {
+		return nil // no diff → exit 0
+	}
+	return streamThroughPager(opts, func(w io.Writer) (bool, error) {
+		hasDiff := false
+		for _, f := range files {
+			if f.IsBinary {
+				continue // skip binary files
+			}
+			result, dErr := drift.Diff(f.OldContent, f.NewContent, opts.driftOpts...)
+			if dErr != nil {
+				return false, newExitCode(2, dErr.Error())
+			}
+			if result.IsEqual {
+				continue
+			}
+			var buf bytes.Buffer
+			writeFileHeader(&buf, f.Name, opts.noColor, opts.termWidth)
+			if rErr := drift.RenderWithNames(result, &buf, f.OldName, f.NewName, opts.driftOpts...); rErr != nil {
+				return false, newExitCode(2, rErr.Error())
+			}
+			_, _ = buf.WriteTo(w)
+			hasDiff = true
+		}
+		return hasDiff, nil
+	})
 }
 
 // newRootCmd constructs the root cobra command for a single CLI invocation.
@@ -69,6 +158,24 @@ With one path inside a git repository, diffs the working tree against HEAD.`,
 	cmd.Flags().BoolVar(&flags.showTheme, "show-theme", false, "print resolved Chroma theme to stderr after selection")
 	_ = cmd.Flags().MarkHidden("show-theme")
 	cmd.Flags().BoolVar(&flags.noPager, "no-pager", false, "disable automatic pager for large output")
+	cmd.Flags().BoolVar(&flags.colorOnly, "color-only", false, "re-color stdin diff without restructuring (for interactive.diffFilter)")
+
+	installPagerCmd := &cobra.Command{
+		Use:   "install-pager",
+		Short: "Print a ~/.gitconfig snippet to use drift as git's pager",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			snippet := `# Add this to ~/.gitconfig to use drift as a drop-in for delta:
+[core]
+    pager = drift
+
+[interactive]
+    diffFilter = drift --color-only
+`
+			fmt.Fprint(streams.Out, snippet)
+			return nil
+		},
+	}
+	cmd.AddCommand(installPagerCmd)
 
 	return cmd
 }
@@ -327,6 +434,21 @@ func isPipeClosedErr(err error) bool {
 // runRoot is a thin orchestrator: it calls resolveInputs, drift.Diff, and drift.RenderWithNames
 // in sequence. No flag parsing or I/O decisions live here.
 func runRoot(opts *rootOptions) error {
+	// interactive.diffFilter mode: git add -p pipes a colorized diff to drift.
+	// --color-only means: highlight each +/- line with ANSI color but preserve
+	// the exact unified diff line structure (git add -p requires 1:1 line correspondence).
+	if opts.colorOnly && isStdinPipe(opts.streams.In) {
+		return runColorOnlyMode(opts.streams.In, opts.streams.Out, opts)
+	}
+
+	// Git pager mode: when stdin is a pipe and no positional args + no --from/--to,
+	// treat stdin as a unified diff from git and re-render it with drift styling.
+	// This enables: core.pager = drift in ~/.gitconfig.
+	// This MUST come before the zero-arg git worktree block, which only fires when stdin is a TTY.
+	if len(opts.args) == 0 && opts.from == "" && opts.to == "" && isStdinPipe(opts.streams.In) {
+		return runPagerMode(opts.streams.In, opts)
+	}
+
 	// Zero-argument mode: no args, no --from/--to → diff the entire repo working tree vs HEAD.
 	if len(opts.args) == 0 && opts.from == "" && opts.to == "" {
 		cwd, err := os.Getwd()

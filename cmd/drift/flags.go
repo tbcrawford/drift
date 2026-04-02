@@ -27,6 +27,7 @@ type rootFlags struct {
 	to            string
 	showTheme     bool
 	noPager       bool
+	colorOnly     bool
 }
 
 // rootOptions holds fully resolved values ready for execution.
@@ -42,6 +43,7 @@ type rootOptions struct {
 	noPager   bool
 	noColor   bool // mirrors --no-color; used for plain-text header rendering
 	termWidth int  // terminal width for header rule; 0 means use default (80)
+	colorOnly bool // mirrors --color-only; pager mode pass-through with ANSI coloring
 }
 
 // resolveRootOptions converts raw cobra flags into a fully populated rootOptions.
@@ -138,5 +140,6 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		noPager:   flags.noPager,
 		noColor:   flags.noColor,
 		termWidth: resolvedTermWidth,
+		colorOnly: flags.colorOnly,
 	}, nil
 }
