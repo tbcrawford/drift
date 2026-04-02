@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/x/term"
@@ -108,10 +109,77 @@ func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (h
 	return hasDiff, nil
 }
 
+// runGitDirectoryDiff renders git HEAD-vs-working-tree diffs for all changed
+// files under a single directory into buf, with "=== name ===" headers.
+func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, buf *bytes.Buffer) (hasDiff bool, err error) {
+	for _, pair := range pairs {
+		result, dErr := drift.Diff(pair.HeadContent, pair.WorkContent, opts.driftOpts...)
+		if dErr != nil {
+			return false, newExitCode(2, dErr.Error())
+		}
+		if result.IsEqual {
+			continue
+		}
+		hasDiff = true
+		fmt.Fprintf(buf, "=== %s ===\n", pair.Name)
+		if rErr := drift.RenderWithNames(result, buf, pair.OldName, pair.NewName, opts.driftOpts...); rErr != nil {
+			return false, newExitCode(2, rErr.Error())
+		}
+	}
+	return hasDiff, nil
+}
+
+// writeThroughPager writes buf to a pager (or directly to opts.streams.Out if paging
+// is not needed). It always returns newExitCode(1, "") so callers can do:
+//
+//	return writeThroughPager(&buf, opts)
+func writeThroughPager(buf *bytes.Buffer, opts *rootOptions) error {
+	var termHeight int
+	if f, ok := opts.streams.Out.(*os.File); ok {
+		if _, h, tErr := term.GetSize(f.Fd()); tErr == nil {
+			termHeight = h
+		}
+	}
+	lineCount := strings.Count(buf.String(), "\n")
+	if shouldPage(opts.streams.Out, lineCount, termHeight, opts.noPager) {
+		pagerWriter, cleanup, pErr := startPager(resolvePager(), opts.streams)
+		if pErr != nil {
+			_, _ = buf.WriteTo(opts.streams.Out)
+		} else {
+			_, _ = buf.WriteTo(pagerWriter)
+			cleanup()
+		}
+	} else {
+		_, _ = buf.WriteTo(opts.streams.Out)
+	}
+	return newExitCode(1, "")
+}
+
 // runRoot is a thin orchestrator: it calls resolveInputs, drift.Diff, and drift.RenderWithNames
 // in sequence. No flag parsing or I/O decisions live here.
 func runRoot(opts *rootOptions) error {
-	// Directory diff: both positional args are directories.
+	// Single-directory git diff: one arg that is a directory → diff vs HEAD.
+	if len(opts.args) == 1 && isDir(opts.args[0]) {
+		absDir, err := filepath.Abs(opts.args[0])
+		if err != nil {
+			return newExitCode(2, fmt.Sprintf("invalid path %q: %v", opts.args[0], err))
+		}
+		pairs, err := gitDirectoryVsHEAD(absDir)
+		if err != nil {
+			return newExitCode(2, err.Error())
+		}
+		var buf bytes.Buffer
+		hasDiff, err := runGitDirectoryDiff(pairs, opts, &buf)
+		if err != nil {
+			return err
+		}
+		if !hasDiff {
+			return nil
+		}
+		return writeThroughPager(&buf, opts)
+	}
+
+	// Two-directory diff: both positional args are directories.
 	if len(opts.args) == 2 && isDir(opts.args[0]) && isDir(opts.args[1]) {
 		pairs, err := diffDirectories(opts.args[0], opts.args[1])
 		if err != nil {
@@ -125,26 +193,7 @@ func runRoot(opts *rootOptions) error {
 		if !hasDiff {
 			return nil // identical dirs → exit 0, no output
 		}
-		// Route through existing pager logic (same pattern as single-file path).
-		var termHeight int
-		if f, ok := opts.streams.Out.(*os.File); ok {
-			if _, h, tErr := term.GetSize(f.Fd()); tErr == nil {
-				termHeight = h
-			}
-		}
-		lineCount := strings.Count(buf.String(), "\n")
-		if shouldPage(opts.streams.Out, lineCount, termHeight, opts.noPager) {
-			pagerWriter, cleanup, pErr := startPager(resolvePager(), opts.streams)
-			if pErr != nil {
-				_, _ = buf.WriteTo(opts.streams.Out)
-			} else {
-				_, _ = buf.WriteTo(pagerWriter)
-				cleanup()
-			}
-		} else {
-			_, _ = buf.WriteTo(opts.streams.Out)
-		}
-		return newExitCode(1, "")
+		return writeThroughPager(&buf, opts)
 	}
 
 	old, newText, oldName, newName, err := resolveInputs(opts.args, opts.from, opts.to, opts.streams.In)
@@ -167,31 +216,7 @@ func runRoot(opts *rootOptions) error {
 		return newExitCode(2, err.Error())
 	}
 
-	// Determine terminal height (0 for non-TTY outputs).
-	var termHeight int
-	if f, ok := opts.streams.Out.(*os.File); ok {
-		if _, h, err := term.GetSize(f.Fd()); err == nil {
-			termHeight = h
-		}
-	}
-
-	lineCount := strings.Count(buf.String(), "\n")
-
-	if shouldPage(opts.streams.Out, lineCount, termHeight, opts.noPager) {
-		pagerWriter, cleanup, err := startPager(resolvePager(), opts.streams)
-		if err != nil {
-			// Pager failed to start — fall back to direct write.
-			_, _ = buf.WriteTo(opts.streams.Out)
-		} else {
-			_, _ = buf.WriteTo(pagerWriter)
-			cleanup()
-		}
-	} else {
-		_, _ = buf.WriteTo(opts.streams.Out)
-	}
-
-	// Differences rendered successfully; exit 1 without stderr noise.
-	return newExitCode(1, "")
+	return writeThroughPager(&buf, opts)
 }
 
 // runCLI creates a fresh cobra command tree for each invocation, executes it,

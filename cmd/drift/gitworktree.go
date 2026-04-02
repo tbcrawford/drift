@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -108,6 +109,158 @@ func gitShowHEADBlob(repoRoot, relpathSlash string) (string, error) {
 		return "", fmt.Errorf("git not found in PATH; use two paths to diff files without git: %w", err)
 	}
 	return "", fmt.Errorf("git show HEAD:%s failed: use two paths to diff without a working git repo: %w\n%s", relpathSlash, err, strings.TrimSpace(stderr))
+}
+
+// gitDirectoryVsHEAD walks absDir, compares each file against its HEAD blob,
+// and returns a sorted slice of filePair values for files that differ from HEAD
+// (or are new/deleted relative to HEAD). absDir must be inside a git worktree.
+// OldPath is always empty — HEAD content is returned inline via gitShowHEADBlob
+// so callers read it from the pair's HeadContent field (see gitFilePair).
+//
+// To keep the filePair type unchanged, we return a gitFilePair slice instead.
+func gitDirectoryVsHEAD(absDir string) ([]gitFilePair, error) {
+	absDir = filepath.Clean(absDir)
+
+	// Confirm inside a git worktree.
+	inside, err := gitRevParseIsInsideWorkTree(absDir)
+	if err != nil {
+		return nil, err
+	}
+	if inside != "true" {
+		return nil, fmt.Errorf("not a git worktree: %q", absDir)
+	}
+
+	repoRoot, err := gitRevParseShowToplevel(absDir)
+	if err != nil {
+		return nil, err
+	}
+	repoRoot = strings.TrimSpace(repoRoot)
+
+	// Compute the path of absDir relative to the repo root.
+	dirRel, err := filepath.Rel(repoRoot, absDir)
+	if err != nil || strings.HasPrefix(dirRel, "..") {
+		return nil, fmt.Errorf("directory %q is outside repository root", absDir)
+	}
+	dirRelSlash := filepath.ToSlash(dirRel)
+
+	// Walk the working-tree directory to collect all current files.
+	type workFile struct{ rel, abs string }
+	var workFiles []workFile
+	if err := filepath.WalkDir(absDir, func(path string, d os.DirEntry, wErr error) error {
+		if wErr != nil {
+			return wErr
+		}
+		if !d.Type().IsRegular() {
+			return nil
+		}
+		rel, rErr := filepath.Rel(absDir, path)
+		if rErr != nil {
+			return rErr
+		}
+		workFiles = append(workFiles, workFile{rel: filepath.ToSlash(rel), abs: path})
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("walking directory: %w", err)
+	}
+
+	// Build a set of working-tree relative paths for deleted-file detection.
+	workSet := make(map[string]string, len(workFiles))
+	for _, wf := range workFiles {
+		workSet[wf.rel] = wf.abs
+	}
+
+	var pairs []gitFilePair
+
+	// For each file in the working tree, compare against HEAD.
+	for _, wf := range workFiles {
+		repoRel := dirRelSlash + "/" + wf.rel
+		if dirRelSlash == "." {
+			repoRel = wf.rel
+		}
+
+		headContent, hErr := gitShowHEADBlob(repoRoot, repoRel)
+		if hErr != nil {
+			return nil, hErr
+		}
+
+		workBytes, rErr := os.ReadFile(wf.abs)
+		if rErr != nil {
+			return nil, fmt.Errorf("reading %s: %w", wf.abs, rErr)
+		}
+		workContent := string(workBytes)
+
+		if headContent == workContent {
+			continue // identical — skip
+		}
+
+		oldName := filepath.Base(absDir) + "/" + wf.rel + " (HEAD)"
+		newName := filepath.Base(absDir) + "/" + wf.rel + " (working tree)"
+		pairs = append(pairs, gitFilePair{
+			Name:        wf.rel,
+			HeadContent: headContent,
+			WorkContent: workContent,
+			OldName:     oldName,
+			NewName:     newName,
+		})
+	}
+
+	// Detect files that exist at HEAD but are deleted in the working tree.
+	// Use git ls-tree to list files under the directory at HEAD.
+	prefix := dirRelSlash + "/"
+	if dirRelSlash == "." {
+		prefix = ""
+	}
+	lsOut, _, lsErr := runGit(repoRoot, "ls-tree", "-r", "--name-only", "HEAD", "--", dirRelSlash)
+	if lsErr == nil {
+		for _, line := range strings.Split(strings.TrimSpace(lsOut), "\n") {
+			if line == "" {
+				continue
+			}
+			relToDir := strings.TrimPrefix(line, prefix)
+			if relToDir == line && prefix != "" {
+				continue // not under our directory
+			}
+			if _, inWork := workSet[relToDir]; inWork {
+				continue // present in working tree — already handled
+			}
+			// File exists at HEAD but not on disk — deleted.
+			headContent, hErr := gitShowHEADBlob(repoRoot, line)
+			if hErr != nil {
+				return nil, hErr
+			}
+			oldName := filepath.Base(absDir) + "/" + relToDir + " (HEAD)"
+			newName := filepath.Base(absDir) + "/" + relToDir + " (working tree)"
+			pairs = append(pairs, gitFilePair{
+				Name:        relToDir,
+				HeadContent: headContent,
+				WorkContent: "",
+				OldName:     oldName,
+				NewName:     newName,
+			})
+		}
+	}
+
+	// Sort by Name for deterministic output.
+	slices.SortFunc(pairs, func(a, b gitFilePair) int {
+		if a.Name < b.Name {
+			return -1
+		}
+		if a.Name > b.Name {
+			return 1
+		}
+		return 0
+	})
+
+	return pairs, nil
+}
+
+// gitFilePair holds a file's HEAD and working-tree content for a git directory diff.
+type gitFilePair struct {
+	Name        string // relative path (display)
+	HeadContent string // content at HEAD (empty if file is new)
+	WorkContent string // content in working tree (empty if file is deleted)
+	OldName     string // display name for old side
+	NewName     string // display name for new side
 }
 
 func runGit(gitDir string, args ...string) (stdout, stderr string, err error) {
