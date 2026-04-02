@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
-status: Phase complete — ready for verification
+status: Milestone complete
 stopped_at: Completed 20-02-PLAN.md (Directory diff CLI wiring)
-last_updated: "2026-04-02T00:23:51.094Z"
+last_updated: "2026-04-02T00:26:32.806Z"
 progress:
   total_phases: 20
   completed_phases: 9
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 
 ## Current Position
 
-Phase: 20 (add-directory-diff-support-with-automatic-pager-and-file-name-headers) — EXECUTING
-Plan: 2 of 2
+Phase: 20
+Plan: Not started
 
 ## Performance Metrics
 
