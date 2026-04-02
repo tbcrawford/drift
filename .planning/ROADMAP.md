@@ -329,3 +329,13 @@ Plans:
 Plans:
 - [x] 20-01-PLAN.md — Directory diff primitives: filePair type + diffDirectories walker in cmd/drift/dirwalk.go with unit tests
 - [x] 20-02-PLAN.md — Wire directory diff into runRoot: dir detection, file name headers, runDirectoryDiff orchestrator, integration tests
+
+### Phase 21: respect gitignore rules where necessary
+
+**Goal:** When walking directories (both `diffDirectories` and `gitDirectoryVsHEAD`), skip files that git marks as ignored so that build artifacts, vendor directories, and other gitignored files never appear in diff output. Uses `git check-ignore -z --stdin` for per-directory filtering with fail-open behavior when git is unavailable.
+**Requirements**: GITIGNORE-01, GITIGNORE-02
+**Depends on:** Phase 20
+**Plans:** 1 plan
+
+Plans:
+- [ ] 21-01-PLAN.md — filterGitIgnored helper + gitDirectoryVsHEAD + diffDirectories gitignore filtering
