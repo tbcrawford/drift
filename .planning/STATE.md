@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Milestone complete
-stopped_at: Completed 22-02-PLAN.md (go-git test infrastructure)
-last_updated: "2026-04-02T17:02:12.949Z"
+stopped_at: Completed 23-02-PLAN.md (direct ANSI SGR builder for token highlighting)
+last_updated: "2026-04-02T20:10:00.000Z"
 progress:
   total_phases: 22
   completed_phases: 11
@@ -75,6 +75,8 @@ Plan: Not started
 | Phase 21 P01 | 213 | 3 tasks | 4 files |
 | Phase 22 P01 | 6 | 2 tasks | 3 files |
 | Phase 22 P02 | 6 | 2 tasks | 4 files |
+| Phase 23-performance-analysis-and-optimization P01 | 8min | 2 tasks | 4 files |
+| Phase 23-performance-analysis-and-optimization P02 | 12min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -144,6 +146,10 @@ Recent decisions affecting current work:
 - [Phase 22]: go-git PlainOpenWithOptions(DetectDotGit=true) replaces all git subprocess calls — no git binary required at runtime
 - [Phase 22]: tree.Files() iterator replaces git ls-tree subprocess for deleted-file detection in gitDirectoryVsHEAD
 - [Phase 22]: gitignore.ReadPatterns + NewMatcher replaces git check-ignore -z --stdin subprocess in filterGitIgnored
+- [Phase 23]: GutterStyleCache pre-populates all 6 style variants (2 sides × 3 ops) once per RenderConfig — O(1) lookup replaces per-line lipgloss.NewStyle()
+- [Phase 23]: GutterCache field added to RenderConfig (not passed as separate arg) — avoids threading another parameter through all renderer call sites
+- [Phase 23]: highlightLineWithLineBackgroundFast uses direct ANSI SGR builder; lipgloss removed from linebackground.go hot path entirely
+- [Phase 23]: bgSeq (background ANSI sub-sequence "48;2;R;G;B") pre-computed once per HighlightLineWithLineBackground call — was per-token before
 
 ### Roadmap Evolution
 
@@ -161,6 +167,7 @@ Recent decisions affecting current work:
 - Phase 20 added: add directory diff support with automatic pager and file name headers
 - Phase 21 added: respect gitignore rules where necessary
 - Phase 22 added: replace all git actions by the library or cli in this repository with go-git (github.com/go-git/go-git)
+- Phase 23 added: performance analysis and optimization — deep profiling of `drift --split` on real repos; identify bottlenecks vs delta; explore streaming render to pager and other improvements
 
 ### Quick Tasks Completed
 
@@ -188,6 +195,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T17:02:12.945Z
-Stopped at: Completed 22-02-PLAN.md (go-git test infrastructure)
+Last session: 2026-04-02T20:10:00.000Z
+Stopped at: Completed 23-02-PLAN.md (direct ANSI SGR builder for token highlighting)
 Resume file: None
