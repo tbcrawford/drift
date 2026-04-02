@@ -116,8 +116,21 @@ func buildRenderPipeline(w io.Writer, cfg *config, filename string) renderPipeli
 	style := resolveChromaStyle(cfg, profile, w, isDark)
 	formatter := highlight.FormatterForProfile(profile)
 
-	// Wrap the writer for automatic ANSI downsampling when it is an *os.File.
-	wrapped := colorprofile.NewWriter(w, os.Environ())
+	// Wrap the writer for automatic ANSI downsampling.
+	//
+	// When an explicit color profile has been injected (e.g. the CLI detected
+	// TrueColor from the real TTY and set WithColorProfile before buffering),
+	// we must honour that profile in the wrapper too — otherwise NewWriter
+	// re-detects from the bytes.Buffer, sees no TTY, and strips ANSI codes.
+	var wrapped io.Writer
+	if cfg.render.hasProfile {
+		wrapped = &colorprofile.Writer{
+			Forward: w,
+			Profile: cfg.render.colorProfile,
+		}
+	} else {
+		wrapped = colorprofile.NewWriter(w, os.Environ())
+	}
 
 	termWidth := render.TerminalWidth(w)
 	if cfg.render.termWidth > 0 {
@@ -174,11 +187,15 @@ func resolveChromaStyle(cfg *config, profile colorprofile.Profile, w io.Writer, 
 // resolveProfile determines the terminal color profile for the given writer
 // and config. The resolution order is:
 //  1. cfg.render.noColor == true or NO_COLOR is set → Ascii (no color)
-//  2. w is an *os.File → colorprofile.Detect(w, os.Environ())
-//  3. otherwise → NoTTY (non-file writers without NO_COLOR are treated as piped output)
+//  2. cfg.render.hasProfile == true → use cfg.render.colorProfile (caller pre-detected)
+//  3. w is an *os.File → colorprofile.Detect(w, os.Environ())
+//  4. otherwise → NoTTY (non-file writers without NO_COLOR are treated as piped output)
 func resolveProfile(w io.Writer, cfg *config) colorprofile.Profile {
 	if cfg.render.noColor || os.Getenv("NO_COLOR") != "" {
 		return colorprofile.Ascii
+	}
+	if cfg.render.hasProfile {
+		return cfg.render.colorProfile
 	}
 	if f, ok := w.(*os.File); ok {
 		return colorprofile.Detect(f, os.Environ())

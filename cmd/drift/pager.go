@@ -9,16 +9,46 @@ import (
 	"github.com/charmbracelet/x/term"
 )
 
-// resolvePager returns the pager command to use.
-// Resolution order: $PAGER env → "less -R" (if less on PATH) → "more".
+// resolvePager returns the pager command to use, ensuring ANSI color codes are
+// preserved. Resolution order: $PAGER env → "less -R" (if less on PATH) → "more".
+//
+// When the user-configured pager is "less" (or a path ending in /less), -R /
+// --RAW-CONTROL-CHARS is added if neither flag is already present. This matches
+// the behaviour of delta and git, which both force -R so that ANSI sequences are
+// passed through rather than displayed as escape characters.
 func resolvePager() string {
 	if p := os.Getenv("PAGER"); p != "" {
-		return p
+		return ensureLessColors(p)
 	}
 	if _, err := exec.LookPath("less"); err == nil {
 		return "less -R"
 	}
 	return "more"
+}
+
+// ensureLessColors returns cmd unchanged unless cmd invokes less, in which case
+// it appends -R if neither -R nor --RAW-CONTROL-CHARS is already present.
+// This preserves any flags the user already set (e.g. PAGER="less -F -X").
+func ensureLessColors(cmd string) string {
+	parts := strings.Fields(cmd)
+	if len(parts) == 0 {
+		return cmd
+	}
+	// Check whether the first word is "less" (bare name or absolute/relative path).
+	base := parts[0]
+	if idx := strings.LastIndex(base, "/"); idx >= 0 {
+		base = base[idx+1:]
+	}
+	if base != "less" {
+		return cmd
+	}
+	// Already has a flag that enables raw ANSI passthrough.
+	for _, p := range parts[1:] {
+		if p == "-R" || p == "--RAW-CONTROL-CHARS" {
+			return cmd
+		}
+	}
+	return cmd + " -R"
 }
 
 // shouldPage reports whether the pager should be invoked for the given output.

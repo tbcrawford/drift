@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/charmbracelet/colorprofile"
 	"github.com/tbcrawford/drift"
 )
 
@@ -180,6 +181,50 @@ func TestRender_NoColorEnvVar(t *testing.T) {
 	output := buf.String()
 	if strings.Contains(output, "\033[") {
 		t.Errorf("NO_COLOR=1 output contains ANSI codes:\n%s", output)
+	}
+}
+
+// TestRender_WithColorProfile verifies that when WithColorProfile is set to
+// TrueColor, ANSI escape codes ARE generated even when writing to a bytes.Buffer
+// (which would otherwise trigger the NoTTY fallback in resolveProfile).
+// This covers the pager buffering path: the CLI detects the profile from the
+// real TTY, injects it via WithColorProfile, and renders to a buffer — the
+// buffer should contain ANSI codes that the pager then displays.
+func TestRender_WithColorProfile(t *testing.T) {
+	result, err := drift.Diff("old\n", "new\n")
+	if err != nil {
+		t.Fatalf("Diff error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	// bytes.Buffer → resolveProfile would normally return NoTTY (no colors).
+	// WithColorProfile(TrueColor) forces color output regardless of writer type.
+	if err := drift.Render(result, &buf, drift.WithColorProfile(colorprofile.TrueColor)); err != nil {
+		t.Fatalf("Render error: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "\033[") {
+		t.Errorf("WithColorProfile(TrueColor) on bytes.Buffer produced no ANSI codes; got:\n%s", output)
+	}
+}
+
+// TestRender_WithColorProfile_NoTTY verifies that WithColorProfile(NoTTY) produces
+// plain output with no ANSI codes, matching the default bytes.Buffer behavior.
+func TestRender_WithColorProfile_NoTTY(t *testing.T) {
+	result, err := drift.Diff("old\n", "new\n")
+	if err != nil {
+		t.Fatalf("Diff error: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := drift.Render(result, &buf, drift.WithColorProfile(colorprofile.NoTTY)); err != nil {
+		t.Fatalf("Render error: %v", err)
+	}
+
+	output := buf.String()
+	if strings.Contains(output, "\033[") {
+		t.Errorf("WithColorProfile(NoTTY) output contains ANSI codes:\n%s", output)
 	}
 }
 

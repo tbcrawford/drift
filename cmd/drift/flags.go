@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/term"
 	"github.com/tbcrawford/drift"
 )
@@ -76,13 +77,17 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		opts = append(opts, drift.WithoutLineNumbers())
 	}
 
-	// Measure terminal width from the real output stream now, before any
-	// bytes.Buffer is involved. This ensures split-view panels fill the
-	// actual terminal width rather than always defaulting to 80 columns.
+	// Measure terminal width and detect color profile from the real output stream
+	// now, before any bytes.Buffer is involved. This ensures:
+	//   - split-view panels fill the actual terminal width (not the 80-column default)
+	//   - ANSI colors are preserved when output is buffered for paging
+	// Both WithTermWidth and WithColorProfile short-circuit the per-call probes
+	// in buildRenderPipeline, so no internal API changes are needed.
 	if f, ok := streams.Out.(*os.File); ok {
 		if w, _, err := term.GetSize(f.Fd()); err == nil && w > 0 {
 			opts = append(opts, drift.WithTermWidth(w))
 		}
+		opts = append(opts, drift.WithColorProfile(colorprofile.Detect(f, os.Environ())))
 	}
 
 	return &rootOptions{

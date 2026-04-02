@@ -1,6 +1,10 @@
 package drift
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/charmbracelet/colorprofile"
+)
 
 // Algorithm selects the diff algorithm to use.
 type Algorithm int
@@ -28,6 +32,8 @@ type diffConfig struct {
 // renderConfig holds options that affect terminal rendering.
 type renderConfig struct {
 	noColor       bool
+	colorProfile  colorprofile.Profile
+	hasProfile    bool // true when colorProfile was explicitly set via WithColorProfile
 	lang          string
 	theme         string
 	split         bool
@@ -75,6 +81,22 @@ func WithContext(n int) Option {
 // environment variable is set.
 func WithNoColor() Option {
 	return func(c *config) { c.render.noColor = true }
+}
+
+// WithColorProfile sets the terminal color profile used for rendering.
+// Use this to preserve ANSI colors when rendering to a buffer that will later
+// be written to a real terminal (e.g., through a pager). Without this, a
+// bytes.Buffer destination causes resolveProfile to return NoTTY and emit
+// plain text. Detect the profile from the real output file before buffering:
+//
+//	if f, ok := streams.Out.(*os.File); ok {
+//	    opts = append(opts, drift.WithColorProfile(colorprofile.Detect(f, os.Environ())))
+//	}
+func WithColorProfile(p colorprofile.Profile) Option {
+	return func(c *config) {
+		c.render.colorProfile = p
+		c.render.hasProfile = true
+	}
 }
 
 // WithLang overrides the language used for Chroma syntax highlighting.

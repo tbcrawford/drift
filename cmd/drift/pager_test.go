@@ -8,11 +8,43 @@ import (
 
 // TestPagerResolvePager verifies the $PAGER env var resolution order.
 func TestPagerResolvePager(t *testing.T) {
-	t.Run("uses $PAGER when set", func(t *testing.T) {
+	t.Run("uses $PAGER when set to non-less pager", func(t *testing.T) {
 		t.Setenv("PAGER", "bat")
 		got := resolvePager()
 		if got != "bat" {
 			t.Errorf("resolvePager() = %q, want %q", got, "bat")
+		}
+	})
+
+	t.Run("adds -R when PAGER=less without flags", func(t *testing.T) {
+		t.Setenv("PAGER", "less")
+		got := resolvePager()
+		if got != "less -R" {
+			t.Errorf("resolvePager() = %q, want %q", got, "less -R")
+		}
+	})
+
+	t.Run("preserves -R when PAGER already has it", func(t *testing.T) {
+		t.Setenv("PAGER", "less -R")
+		got := resolvePager()
+		if got != "less -R" {
+			t.Errorf("resolvePager() = %q, want %q", got, "less -R")
+		}
+	})
+
+	t.Run("preserves other less flags and adds -R", func(t *testing.T) {
+		t.Setenv("PAGER", "less -F -X")
+		got := resolvePager()
+		if got != "less -F -X -R" {
+			t.Errorf("resolvePager() = %q, want %q", got, "less -F -X -R")
+		}
+	})
+
+	t.Run("preserves --RAW-CONTROL-CHARS when already set", func(t *testing.T) {
+		t.Setenv("PAGER", "less --RAW-CONTROL-CHARS")
+		got := resolvePager()
+		if got != "less --RAW-CONTROL-CHARS" {
+			t.Errorf("resolvePager() = %q, want %q", got, "less --RAW-CONTROL-CHARS")
 		}
 	})
 
@@ -31,6 +63,32 @@ func TestPagerResolvePager(t *testing.T) {
 			t.Errorf("resolvePager() = %q, want %q or %q", got, "less -R", "more")
 		}
 	})
+}
+
+// TestEnsureLessColors verifies the -R injection logic for less.
+func TestEnsureLessColors(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"less", "less -R"},
+		{"less -R", "less -R"},
+		{"less --RAW-CONTROL-CHARS", "less --RAW-CONTROL-CHARS"},
+		{"less -F -X", "less -F -X -R"},
+		{"less -F -R -X", "less -F -R -X"},
+		{"/usr/bin/less", "/usr/bin/less -R"},
+		{"/usr/bin/less -R", "/usr/bin/less -R"},
+		{"bat", "bat"},
+		{"bat --style=plain", "bat --style=plain"},
+		{"more", "more"},
+		{"delta", "delta"},
+	}
+	for _, tc := range tests {
+		got := ensureLessColors(tc.input)
+		if got != tc.want {
+			t.Errorf("ensureLessColors(%q) = %q, want %q", tc.input, got, tc.want)
+		}
+	}
 }
 
 // TestPagerShouldPage verifies the short-circuit conditions in shouldPage.
