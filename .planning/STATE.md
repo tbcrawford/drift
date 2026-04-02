@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Milestone complete
-stopped_at: Completed 20-02-PLAN.md (Directory diff CLI wiring)
-last_updated: "2026-04-02T00:26:32.806Z"
+stopped_at: Completed 21-01-PLAN.md (gitignore-aware directory diff)
+last_updated: "2026-04-02T16:22:44.146Z"
 progress:
-  total_phases: 20
-  completed_phases: 9
-  total_plans: 21
-  completed_plans: 21
+  total_phases: 21
+  completed_phases: 10
+  total_plans: 22
+  completed_plans: 22
 ---
 
 # Project State
@@ -72,6 +72,7 @@ Plan: Not started
 | Phase 19-add-pager-support-for-large-diffs-that-automatically-gets-invoked-in-tty-terminal-instances P02 | 147 | 2 tasks | 3 files |
 | Phase 20-add-directory-diff-support-with-automatic-pager-and-file-name-headers P20-01 | 79 | 1 tasks | 2 files |
 | Phase 20-add-directory-diff-support-with-automatic-pager-and-file-name-headers P02 | 168 | 2 tasks | 3 files |
+| Phase 21 P01 | 213 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,9 @@ Recent decisions affecting current work:
 - [Phase 20]: diffDirectories reads both files with os.ReadFile for byte-equality — no diff needed at walk stage; filepath.ToSlash ensures cross-platform display Names
 - [Phase 20]: runDirectoryDiff is a separate function from runRoot for single-responsibility; directory detection via isDir at top of runRoot dispatches to dir path
 - [Phase 20]: Directory diff shares pager routing with single-file path by accumulating into bytes.Buffer then counting lines
+- [Phase 21]: filterGitIgnored uses NUL-separated stdin/stdout with git check-ignore -z --stdin for robust path handling
+- [Phase 21]: workSet rebuilt after filtering in gitDirectoryVsHEAD so deleted-file detection excludes ignored paths
+- [Phase 21]: isInsideGitRepo added to dirwalk.go for per-side gitignore detection in diffDirectories; fail-open on all git errors
 
 ### Roadmap Evolution
 
@@ -150,6 +154,7 @@ Recent decisions affecting current work:
 - Phase 18 added: Auto algorithm mode — O(N) heuristic selects Myers or Histogram; Auto becomes the new default
 - Phase 19 added: add pager support for large diffs that automatically gets invoked in tty terminal instances
 - Phase 20 added: add directory diff support with automatic pager and file name headers
+- Phase 21 added: respect gitignore rules where necessary
 
 ### Quick Tasks Completed
 
@@ -177,6 +182,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T00:23:51.088Z
-Stopped at: Completed 20-02-PLAN.md (Directory diff CLI wiring)
+Last session: 2026-04-02T16:22:44.140Z
+Stopped at: Completed 21-01-PLAN.md (gitignore-aware directory diff)
 Resume file: None

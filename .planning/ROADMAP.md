@@ -335,7 +335,7 @@ Plans:
 **Goal:** When walking directories (both `diffDirectories` and `gitDirectoryVsHEAD`), skip files that git marks as ignored so that build artifacts, vendor directories, and other gitignored files never appear in diff output. Uses `git check-ignore -z --stdin` for per-directory filtering with fail-open behavior when git is unavailable.
 **Requirements**: GITIGNORE-01, GITIGNORE-02
 **Depends on:** Phase 20
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 21-01-PLAN.md — filterGitIgnored helper + gitDirectoryVsHEAD + diffDirectories gitignore filtering
+- [x] 21-01-PLAN.md — filterGitIgnored helper + gitDirectoryVsHEAD + diffDirectories gitignore filtering
