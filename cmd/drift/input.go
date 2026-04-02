@@ -7,6 +7,12 @@ import (
 	"path/filepath"
 )
 
+// isDir reports whether path exists and is a directory.
+func isDir(path string) bool {
+	st, err := os.Stat(path)
+	return err == nil && st.IsDir()
+}
+
 // resolveInputs returns old/new content and display names for diff headers.
 // Either two positional paths (or "-" for stdin), a single file path inside a git worktree (vs HEAD),
 // or both --from and --to (non-empty) with no positionals.
