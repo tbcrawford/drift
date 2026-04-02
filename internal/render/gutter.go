@@ -78,6 +78,41 @@ func gutterStyleForCell(style *chroma.Style, isDark, noColor bool, oldColumn boo
 	}
 }
 
+// gutterStyleKey uniquely identifies a gutter cell style variant.
+// There are at most 6 distinct styles per render call (2 sides × 3 ops).
+type gutterStyleKey struct {
+	oldColumn bool
+	op        edittype.Op
+}
+
+// GutterStyleCache pre-computes all gutter cell styles for a render call.
+// Build it once at the start of a render; reuse for every line in every hunk.
+// This eliminates per-line lipgloss.NewStyle() allocations in the hot render loop.
+type GutterStyleCache struct {
+	styles map[gutterStyleKey]lipgloss.Style
+}
+
+// NewGutterStyleCache builds a GutterStyleCache from the resolved render config.
+// Call once per Render invocation (not per hunk, not per line).
+// Pre-populates all 6 combinations of (oldColumn: bool) × (op: Equal|Delete|Insert).
+func NewGutterStyleCache(style *chroma.Style, isDark, noColor bool) *GutterStyleCache {
+	cache := &GutterStyleCache{
+		styles: make(map[gutterStyleKey]lipgloss.Style, 6),
+	}
+	for _, oldCol := range []bool{true, false} {
+		for _, op := range []edittype.Op{edittype.Equal, edittype.Delete, edittype.Insert} {
+			k := gutterStyleKey{oldColumn: oldCol, op: op}
+			cache.styles[k] = gutterStyleForCell(style, isDark, noColor, oldCol, op)
+		}
+	}
+	return cache
+}
+
+// Get returns the pre-computed lipgloss.Style for the given gutter cell variant.
+func (c *GutterStyleCache) Get(oldColumn bool, op edittype.Op) lipgloss.Style {
+	return c.styles[gutterStyleKey{oldColumn: oldColumn, op: op}]
+}
+
 // styledGutterColumnSeparator returns gutterColumnSeparator with dim foreground when color is on.
 func styledGutterColumnSeparator(cfg *RenderConfig) string {
 	if cfg == nil || cfg.NoColor {

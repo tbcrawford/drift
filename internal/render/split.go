@@ -66,6 +66,12 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 		formatter = highlight.FormatterForProfile(cfg.Profile)
 	}
 
+	// Pre-compute separator and gutter cache once for the whole render call.
+	gutterSep := styledGutterColumnSeparator(cfg)
+	if cfg.ShowLineNumbers && cfg.GutterCache == nil {
+		cfg.GutterCache = NewGutterStyleCache(style, cfg.IsDark, cfg.NoColor)
+	}
+
 	for _, h := range result.Hunks {
 		header := fmt.Sprintf("@@ -%d,%d +%d,%d @@", h.OldStart, h.OldLines, h.NewStart, h.NewLines)
 		if _, err := fmt.Fprintln(w, header); err != nil {
@@ -86,7 +92,7 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 				}
 				leftLines = append(leftLines, renderPanelContent(lContent, panelWidth, lBg))
 				rightLines = append(rightLines, renderPanelContent(rContent, rightPanelWidth, rBg))
-				sepLines = append(sepLines, styledGutterColumnSeparator(cfg))
+				sepLines = append(sepLines, gutterSep)
 			}
 		} else {
 			oldW, newW := gutterPairWidths(pairs)
@@ -108,12 +114,12 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 					rBg, _ = highlight.DiffLineStyle(style, pair.rightOp, cfg.IsDark)
 				}
 
-				leftG := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, pair.leftOp), oldW, pair.leftOldNum)
-				rightG := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, pair.rightOp), newW, pair.rightNewNum)
+				leftG := GutterNumberRender(cfg.GutterCache.Get(true, pair.leftOp), oldW, pair.leftOldNum)
+				rightG := GutterNumberRender(cfg.GutterCache.Get(false, pair.rightOp), newW, pair.rightNewNum)
 
 				leftLines = append(leftLines, lipgloss.JoinHorizontal(lipgloss.Top, leftG, renderPanelContent(lContent, leftCodeW, lBg)))
 				rightLines = append(rightLines, lipgloss.JoinHorizontal(lipgloss.Top, rightG, renderPanelContent(rContent, rightCodeW, rBg)))
-				sepLines = append(sepLines, styledGutterColumnSeparator(cfg))
+				sepLines = append(sepLines, gutterSep)
 			}
 		}
 

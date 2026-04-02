@@ -60,6 +60,12 @@ type RenderConfig struct {
 	// WordDiff enables word-level intra-line highlights for consecutive delete/insert
 	// lines (unified) and paired split rows. When false, only line-level styling applies.
 	WordDiff bool
+
+	// GutterCache is a pre-computed cache of all gutter cell styles for this render call.
+	// When non-nil and ShowLineNumbers is true, renderers use cache lookups instead of
+	// constructing a new lipgloss.Style per line. Set automatically by Unified and Split
+	// when ShowLineNumbers is enabled.
+	GutterCache *GutterStyleCache
 }
 
 // Unified writes a Git-compatible unified diff of result to w.
@@ -112,6 +118,12 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 	}
 
 	gutterSep := styledGutterColumnSeparator(cfg)
+
+	// Pre-build gutter style cache once for the whole render call.
+	// This eliminates per-line lipgloss.NewStyle() allocations in the hot render loop.
+	if cfg.ShowLineNumbers && cfg.GutterCache == nil {
+		cfg.GutterCache = NewGutterStyleCache(style, cfg.IsDark, cfg.NoColor)
+	}
 
 	termWidth := cfg.TermWidth
 	if termWidth == 0 {
@@ -168,13 +180,13 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 							return err
 						}
 					} else {
-						goLeft := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, line.Op), oldW, line.OldNum)
-						goRight := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, line.Op), newW, line.NewNum)
+						goLeft := GutterNumberRender(cfg.GutterCache.Get(true, line.Op), oldW, line.OldNum)
+						goRight := GutterNumberRender(cfg.GutterCache.Get(false, line.Op), newW, line.NewNum)
 						if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft, gutterSep, goRight, codeDel); err != nil {
 							return err
 						}
-						goLeft2 := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, ins.Op), oldW, ins.OldNum)
-						goRight2 := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, ins.Op), newW, ins.NewNum)
+						goLeft2 := GutterNumberRender(cfg.GutterCache.Get(true, ins.Op), oldW, ins.OldNum)
+						goRight2 := GutterNumberRender(cfg.GutterCache.Get(false, ins.Op), newW, ins.NewNum)
 						if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft2, gutterSep, goRight2, codeIns); err != nil {
 							return err
 						}
@@ -200,8 +212,8 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 				continue
 			}
 
-			goLeft := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, true, line.Op), oldW, line.OldNum)
-			goRight := GutterNumberRender(gutterStyleForCell(style, cfg.IsDark, cfg.NoColor, false, line.Op), newW, line.NewNum)
+			goLeft := GutterNumberRender(cfg.GutterCache.Get(true, line.Op), oldW, line.OldNum)
+			goRight := GutterNumberRender(cfg.GutterCache.Get(false, line.Op), newW, line.NewNum)
 			if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft, gutterSep, goRight, code); err != nil {
 				return err
 			}
