@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
-status: Milestone complete
-stopped_at: Completed 19-02-PLAN.md (Pager CLI wiring)
-last_updated: "2026-04-01T23:32:44.268Z"
+status: Ready to execute
+stopped_at: Completed 20-01-PLAN.md (Directory diff walker and filePair type)
+last_updated: "2026-04-02T00:19:07.742Z"
 progress:
-  total_phases: 19
+  total_phases: 20
   completed_phases: 8
-  total_plans: 19
-  completed_plans: 19
+  total_plans: 21
+  completed_plans: 20
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 19 — add-pager-support-for-large-diffs
+**Current focus:** Phase 20 — add-directory-diff-support-with-automatic-pager-and-file-name-headers
 
 ## Current Position
 
-Phase: 19
-Plan: Not started
+Phase: 20 (add-directory-diff-support-with-automatic-pager-and-file-name-headers) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Plan: Not started
 | Phase 18-auto-algorithm-mode P18-01 | 253 | 7 tasks | 6 files |
 | Phase 19-add-pager-support-for-large-diffs-that-automatically-gets-invoked-in-tty-terminal-instances P19-01 | 61 | 1 tasks | 2 files |
 | Phase 19-add-pager-support-for-large-diffs-that-automatically-gets-invoked-in-tty-terminal-instances P02 | 147 | 2 tasks | 3 files |
+| Phase 20-add-directory-diff-support-with-automatic-pager-and-file-name-headers P20-01 | 79 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,7 @@ Recent decisions affecting current work:
 - [Phase 19-01]: io.Pipe used for pager stdin rather than os.Pipe — avoids fd leaks and integrates cleanly with exec.Command.Stdin
 - [Phase 19-02]: runRoot renders to bytes.Buffer before deciding pager vs direct write — enables line counting without consuming output
 - [Phase 19-02]: startPager failure falls back to direct write — pager subprocess failure is non-fatal
+- [Phase 20]: diffDirectories reads both files with os.ReadFile for byte-equality — no diff needed at walk stage; filepath.ToSlash ensures cross-platform display Names
 
 ### Roadmap Evolution
 
@@ -172,6 +174,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T23:29:02.518Z
-Stopped at: Completed 19-02-PLAN.md (Pager CLI wiring)
+Last session: 2026-04-02T00:19:07.737Z
+Stopped at: Completed 20-01-PLAN.md (Directory diff walker and filePair type)
 Resume file: None
