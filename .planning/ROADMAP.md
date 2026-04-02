@@ -353,3 +353,14 @@ Plans:
 
 Plans:
 - [x] TBD (run /gsd:plan-phase 22 to break down) (completed 2026-04-02)
+
+### Phase 23: performance analysis and optimization
+
+**Goal:** Identify and eliminate the dominant rendering performance bottlenecks via CPU profiling: cache gutter lipgloss.Style objects per render call (eliminating per-line `lipgloss.NewStyle()` in the gutter hot path) and replace per-token `lipgloss.Style` allocations in `HighlightLineWithLineBackground` with a direct ANSI SGR escape builder. Measure improvement against a baseline benchmark suite that covers the color rendering path.
+**Requirements**: PERF-01, PERF-02, PERF-03, PERF-04
+**Depends on:** Phase 22
+**Plans:** 2 plans
+
+Plans:
+- [ ] 23-01-PLAN.md — Baseline benchmarks (color path) + GutterStyleCache to eliminate per-line lipgloss.NewStyle()
+- [ ] 23-02-PLAN.md — Replace per-token lipgloss.Style in HighlightLineWithLineBackground with direct ANSI SGR builder
