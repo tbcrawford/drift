@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/charmbracelet/x/term"
 	"github.com/tbcrawford/drift"
 )
 
@@ -72,6 +74,15 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 	}
 	if flags.noLineNumbers {
 		opts = append(opts, drift.WithoutLineNumbers())
+	}
+
+	// Measure terminal width from the real output stream now, before any
+	// bytes.Buffer is involved. This ensures split-view panels fill the
+	// actual terminal width rather than always defaulting to 80 columns.
+	if f, ok := streams.Out.(*os.File); ok {
+		if w, _, err := term.GetSize(f.Fd()); err == nil && w > 0 {
+			opts = append(opts, drift.WithTermWidth(w))
+		}
 	}
 
 	return &rootOptions{
