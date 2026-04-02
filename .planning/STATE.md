@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Milestone complete
-stopped_at: Completed 21-01-PLAN.md (gitignore-aware directory diff)
-last_updated: "2026-04-02T16:22:44.146Z"
+stopped_at: Completed 22-02-PLAN.md (go-git test infrastructure)
+last_updated: "2026-04-02T17:02:12.949Z"
 progress:
-  total_phases: 21
-  completed_phases: 10
-  total_plans: 22
-  completed_plans: 22
+  total_phases: 22
+  completed_phases: 11
+  total_plans: 24
+  completed_plans: 24
 ---
 
 # Project State
@@ -73,6 +73,8 @@ Plan: Not started
 | Phase 20-add-directory-diff-support-with-automatic-pager-and-file-name-headers P20-01 | 79 | 1 tasks | 2 files |
 | Phase 20-add-directory-diff-support-with-automatic-pager-and-file-name-headers P02 | 168 | 2 tasks | 3 files |
 | Phase 21 P01 | 213 | 3 tasks | 4 files |
+| Phase 22 P01 | 6 | 2 tasks | 3 files |
+| Phase 22 P02 | 6 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -139,6 +141,9 @@ Recent decisions affecting current work:
 - [Phase 21]: filterGitIgnored uses NUL-separated stdin/stdout with git check-ignore -z --stdin for robust path handling
 - [Phase 21]: workSet rebuilt after filtering in gitDirectoryVsHEAD so deleted-file detection excludes ignored paths
 - [Phase 21]: isInsideGitRepo added to dirwalk.go for per-side gitignore detection in diffDirectories; fail-open on all git errors
+- [Phase 22]: go-git PlainOpenWithOptions(DetectDotGit=true) replaces all git subprocess calls — no git binary required at runtime
+- [Phase 22]: tree.Files() iterator replaces git ls-tree subprocess for deleted-file detection in gitDirectoryVsHEAD
+- [Phase 22]: gitignore.ReadPatterns + NewMatcher replaces git check-ignore -z --stdin subprocess in filterGitIgnored
 
 ### Roadmap Evolution
 
@@ -155,6 +160,7 @@ Recent decisions affecting current work:
 - Phase 19 added: add pager support for large diffs that automatically gets invoked in tty terminal instances
 - Phase 20 added: add directory diff support with automatic pager and file name headers
 - Phase 21 added: respect gitignore rules where necessary
+- Phase 22 added: replace all git actions by the library or cli in this repository with go-git (github.com/go-git/go-git)
 
 ### Quick Tasks Completed
 
@@ -182,6 +188,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T16:22:44.140Z
-Stopped at: Completed 21-01-PLAN.md (gitignore-aware directory diff)
+Last session: 2026-04-02T17:02:12.945Z
+Stopped at: Completed 22-02-PLAN.md (go-git test infrastructure)
 Resume file: None
