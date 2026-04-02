@@ -96,3 +96,45 @@ func TestGutterStyleForCell_contextHasNoBackgroundColor(t *testing.T) {
 		t.Fatalf("context gutter should not set background (no gray wash), got %q", out)
 	}
 }
+
+// TestGutterStyleCache_cacheCorrectness verifies that NewGutterStyleCache pre-populates
+// all 6 style variants (2 sides × 3 ops) and that Get() returns styles producing
+// identical ANSI output to gutterStyleForCell called directly.
+func TestGutterStyleCache_cacheCorrectness(t *testing.T) {
+	t.Parallel()
+	style := styles.Get("github-dark")
+	if style == nil {
+		t.Fatal("github-dark style")
+	}
+	cache := NewGutterStyleCache(style, true, false)
+
+	// Verify all 6 combinations produce same output as direct gutterStyleForCell.
+	for _, oldCol := range []bool{true, false} {
+		for _, op := range []edittype.Op{edittype.Equal, edittype.Delete, edittype.Insert} {
+			directSt := gutterStyleForCell(style, true, false, oldCol, op)
+			cachedSt := cache.Get(oldCol, op)
+			directOut := GutterNumberRender(directSt, 5, 42)
+			cachedOut := GutterNumberRender(cachedSt, 5, 42)
+			if directOut != cachedOut {
+				t.Errorf("cache mismatch for oldColumn=%v op=%v:\ndirect: %q\ncached: %q",
+					oldCol, op, directOut, cachedOut)
+			}
+		}
+	}
+}
+
+// TestGutterStyleCache_noColor verifies that noColor cache returns plain styles.
+func TestGutterStyleCache_noColor(t *testing.T) {
+	t.Parallel()
+	style := styles.Get("github")
+	if style == nil {
+		t.Fatal("github style")
+	}
+	cache := NewGutterStyleCache(style, false, true) // noColor=true
+	st := cache.Get(true, edittype.Delete)
+	out := GutterNumberRender(st, 3, 1)
+	// No-color output should have no ANSI background sequences.
+	if strings.Contains(out, "\x1b[") {
+		t.Errorf("noColor cache produced ANSI escape sequences: %q", out)
+	}
+}
