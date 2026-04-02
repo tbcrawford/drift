@@ -37,6 +37,8 @@ type rootOptions struct {
 	args      []string
 	showTheme bool // retained for show-theme stderr callback wiring
 	noPager   bool
+	noColor   bool // mirrors --no-color; used for plain-text header rendering
+	termWidth int  // terminal width for header rule; 0 means use default (80)
 }
 
 // resolveRootOptions converts raw cobra flags into a fully populated rootOptions.
@@ -83,8 +85,10 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 	//   - ANSI colors are preserved when output is buffered for paging
 	// Both WithTermWidth and WithColorProfile short-circuit the per-call probes
 	// in buildRenderPipeline, so no internal API changes are needed.
+	var resolvedTermWidth int
 	if f, ok := streams.Out.(*os.File); ok {
 		if w, _, err := term.GetSize(f.Fd()); err == nil && w > 0 {
+			resolvedTermWidth = w
 			opts = append(opts, drift.WithTermWidth(w))
 		}
 		opts = append(opts, drift.WithColorProfile(colorprofile.Detect(f, os.Environ())))
@@ -98,5 +102,7 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		args:      args,
 		showTheme: flags.showTheme,
 		noPager:   flags.noPager,
+		noColor:   flags.noColor,
+		termWidth: resolvedTermWidth,
 	}, nil
 }

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/tbcrawford/drift"
@@ -68,8 +69,55 @@ With one path inside a git repository, diffs the working tree against HEAD.`,
 	return cmd
 }
 
+// writeFileHeader writes a styled file header into buf before each file's diff output.
+//
+// Styled (color) format:
+//
+//	▸ filename
+//	────────────────────────────────────────────────────────────
+//
+// Plain (--no-color / NoTTY) format:
+//
+//	▸ filename
+//	------------------------------------------------------------
+//
+// A blank line follows the rule so the diff hunk below has breathing room.
+func writeFileHeader(buf *bytes.Buffer, name string, noColor bool, termWidth int) {
+	const fallbackWidth = 80
+	width := termWidth
+	if width <= 0 {
+		width = fallbackWidth
+	}
+
+	if noColor {
+		buf.WriteString("▸ " + name + "\n")
+		buf.WriteString(strings.Repeat("-", width) + "\n")
+		buf.WriteString("\n")
+		return
+	}
+
+	// Accent color for the ▸ glyph — a muted slate-blue (ANSI 256 #63).
+	chevronStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("63")).
+		Bold(true)
+
+	// Filename in a muted foreground (bright white on dark / dark gray on light).
+	nameStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("250"))
+
+	// Rule in a dimmer tone so it recedes behind the filename.
+	ruleStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("238"))
+
+	rule := strings.Repeat("─", width)
+
+	buf.WriteString(chevronStyle.Render("▸") + " " + nameStyle.Render(name) + "\n")
+	buf.WriteString(ruleStyle.Render(rule) + "\n")
+	buf.WriteString("\n")
+}
+
 // runDirectoryDiff iterates over file pairs produced by diffDirectories, renders
-// each changed/added/removed file's diff into buf preceded by a "=== name ===" header.
+// each changed/added/removed file's diff into buf preceded by a styled file header.
 // Returns hasDiff=true if any file pair produced output.
 func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (hasDiff bool, err error) {
 	for _, pair := range pairs {
@@ -101,7 +149,7 @@ func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (h
 		}
 
 		hasDiff = true
-		fmt.Fprintf(buf, "=== %s ===\n", pair.Name)
+		writeFileHeader(buf, pair.Name, opts.noColor, opts.termWidth)
 		if rErr := drift.RenderWithNames(result, buf, oldName, newName, opts.driftOpts...); rErr != nil {
 			return false, newExitCode(2, rErr.Error())
 		}
@@ -110,7 +158,7 @@ func runDirectoryDiff(pairs []filePair, opts *rootOptions, buf *bytes.Buffer) (h
 }
 
 // runGitDirectoryDiff renders git HEAD-vs-working-tree diffs for all changed
-// files under a single directory into buf, with "=== name ===" headers.
+// files under a single directory into buf, with styled file headers.
 func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, buf *bytes.Buffer) (hasDiff bool, err error) {
 	for _, pair := range pairs {
 		result, dErr := drift.Diff(pair.HeadContent, pair.WorkContent, opts.driftOpts...)
@@ -121,7 +169,7 @@ func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, buf *bytes.Buff
 			continue
 		}
 		hasDiff = true
-		fmt.Fprintf(buf, "=== %s ===\n", pair.Name)
+		writeFileHeader(buf, pair.Name, opts.noColor, opts.termWidth)
 		if rErr := drift.RenderWithNames(result, buf, pair.OldName, pair.NewName, opts.driftOpts...); rErr != nil {
 			return false, newExitCode(2, rErr.Error())
 		}

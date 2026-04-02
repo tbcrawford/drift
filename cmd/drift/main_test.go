@@ -173,8 +173,10 @@ func TestRunCLI_directoryDiff_differs(t *testing.T) {
 		t.Fatalf("expected exit 1 for differing dirs, got %d stderr=%q", code, errOut.String())
 	}
 	stdout := out.String()
-	if !strings.Contains(stdout, "=== a.txt ===") {
-		t.Fatalf("expected file header '=== a.txt ===' in output: %q", stdout)
+	// The header contains the ▸ chevron and the filename; ANSI codes may appear
+	// between them in color mode, so check each element independently.
+	if !strings.Contains(stdout, "▸") || !strings.Contains(stdout, "a.txt") {
+		t.Fatalf("expected file header with '▸' and 'a.txt' in output: %q", stdout)
 	}
 	if !strings.Contains(stdout, "@@") {
 		t.Fatalf("expected diff hunk '@@' in output: %q", stdout)
@@ -196,8 +198,8 @@ func TestRunCLI_directoryDiff_fileAdded(t *testing.T) {
 		t.Fatalf("expected exit 1 for added file, got %d stderr=%q", code, errOut.String())
 	}
 	stdout := out.String()
-	if !strings.Contains(stdout, "=== added.txt ===") {
-		t.Fatalf("expected header '=== added.txt ===' in output: %q", stdout)
+	if !strings.Contains(stdout, "▸ added.txt") {
+		t.Fatalf("expected header '▸ added.txt' in output: %q", stdout)
 	}
 	if !strings.Contains(stdout, "+new content") {
 		t.Fatalf("expected '+new content' line in output: %q", stdout)
@@ -219,8 +221,8 @@ func TestRunCLI_directoryDiff_fileRemoved(t *testing.T) {
 		t.Fatalf("expected exit 1 for removed file, got %d stderr=%q", code, errOut.String())
 	}
 	stdout := out.String()
-	if !strings.Contains(stdout, "=== removed.txt ===") {
-		t.Fatalf("expected header '=== removed.txt ===' in output: %q", stdout)
+	if !strings.Contains(stdout, "▸ removed.txt") {
+		t.Fatalf("expected header '▸ removed.txt' in output: %q", stdout)
 	}
 	if !strings.Contains(stdout, "-old content") {
 		t.Fatalf("expected '-old content' line in output: %q", stdout)
