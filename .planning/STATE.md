@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
-status: Ready to execute
-stopped_at: Completed 20-01-PLAN.md (Directory diff walker and filePair type)
-last_updated: "2026-04-02T00:19:07.742Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 20-02-PLAN.md (Directory diff CLI wiring)
+last_updated: "2026-04-02T00:23:51.094Z"
 progress:
   total_phases: 20
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 21
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # Project State
@@ -71,6 +71,7 @@ Plan: 2 of 2
 | Phase 19-add-pager-support-for-large-diffs-that-automatically-gets-invoked-in-tty-terminal-instances P19-01 | 61 | 1 tasks | 2 files |
 | Phase 19-add-pager-support-for-large-diffs-that-automatically-gets-invoked-in-tty-terminal-instances P02 | 147 | 2 tasks | 3 files |
 | Phase 20-add-directory-diff-support-with-automatic-pager-and-file-name-headers P20-01 | 79 | 1 tasks | 2 files |
+| Phase 20-add-directory-diff-support-with-automatic-pager-and-file-name-headers P02 | 168 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -132,6 +133,8 @@ Recent decisions affecting current work:
 - [Phase 19-02]: runRoot renders to bytes.Buffer before deciding pager vs direct write — enables line counting without consuming output
 - [Phase 19-02]: startPager failure falls back to direct write — pager subprocess failure is non-fatal
 - [Phase 20]: diffDirectories reads both files with os.ReadFile for byte-equality — no diff needed at walk stage; filepath.ToSlash ensures cross-platform display Names
+- [Phase 20]: runDirectoryDiff is a separate function from runRoot for single-responsibility; directory detection via isDir at top of runRoot dispatches to dir path
+- [Phase 20]: Directory diff shares pager routing with single-file path by accumulating into bytes.Buffer then counting lines
 
 ### Roadmap Evolution
 
@@ -174,6 +177,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T00:19:07.737Z
-Stopped at: Completed 20-01-PLAN.md (Directory diff walker and filePair type)
+Last session: 2026-04-02T00:23:51.088Z
+Stopped at: Completed 20-02-PLAN.md (Directory diff CLI wiring)
 Resume file: None
