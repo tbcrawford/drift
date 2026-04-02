@@ -321,10 +321,11 @@ Plans:
 
 ### Phase 20: add directory diff support with automatic pager and file name headers
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** When two directory paths are given as positional arguments, drift walks both trees, diffs every file that differs (or is exclusive to one side), and prints a `=== <filename> ===` header before each per-file diff. Added files diff against empty; removed files diff empty against the old content. Identical directories exit 0 silently. The existing pager from Phase 19 handles large multi-file output automatically.
+**Requirements**: DIR-01, DIR-02, DIR-03
 **Depends on:** Phase 19
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 20 to break down)
+- [ ] 20-01-PLAN.md — Directory diff primitives: filePair type + diffDirectories walker in cmd/drift/dirwalk.go with unit tests
+- [ ] 20-02-PLAN.md — Wire directory diff into runRoot: dir detection, file name headers, runDirectoryDiff orchestrator, integration tests
