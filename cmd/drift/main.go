@@ -69,6 +69,36 @@ With one path inside a git repository, diffs the working tree against HEAD.`,
 	return cmd
 }
 
+// fileHeaderName returns the display name to use in the file header for the
+// single-file and two-file diff paths. Returns "" when no meaningful file name
+// is available (--from/--to flags, stdin "-", or no args).
+func fileHeaderName(args []string) string {
+	switch len(args) {
+	case 1:
+		if args[0] == "-" {
+			return ""
+		}
+		return args[0]
+	case 2:
+		a, b := args[0], args[1]
+		if a == "-" && b == "-" {
+			return ""
+		}
+		if a == "-" {
+			return b
+		}
+		if b == "-" {
+			return a
+		}
+		if a == b {
+			return a
+		}
+		return a + " → " + b
+	default:
+		return ""
+	}
+}
+
 // writeFileHeader writes a styled file header into buf before each file's diff output.
 //
 // Styled (color) format:
@@ -258,8 +288,15 @@ func runRoot(opts *rootOptions) error {
 		return nil
 	}
 
+	// Derive a display name for the file header, when a real file path is available.
+	// Skip when input comes from --from/--to flags or stdin ("-").
+	headerName := fileHeaderName(opts.args)
+
 	// Render to a buffer so we can count lines and decide whether to page.
 	var buf bytes.Buffer
+	if headerName != "" {
+		writeFileHeader(&buf, headerName, opts.noColor, opts.termWidth)
+	}
 	if err := drift.RenderWithNames(result, &buf, oldName, newName, opts.driftOpts...); err != nil {
 		return newExitCode(2, err.Error())
 	}
