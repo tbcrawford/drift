@@ -339,3 +339,17 @@ Plans:
 
 Plans:
 - [x] 21-01-PLAN.md — filterGitIgnored helper + gitDirectoryVsHEAD + diffDirectories gitignore filtering
+
+### Phase 22: replace all git actions by the library or cli in this repository with https://github.com/go-git/go-git
+
+**Goal:** Replace all `exec.Command("git", ...)` subprocess calls in `cmd/drift/gitworktree.go` and `cmd/drift/dirwalk.go` with pure-Go equivalents using `github.com/go-git/go-git/v5`, eliminating the runtime dependency on the `git` binary. Update tests to use real in-memory/on-disk go-git repos instead of fake shell scripts.
+**Requirements**: GIT-01
+**Depends on:** Phase 21
+**Plans:** 2 plans
+
+Plans:
+- [ ] 22-01-PLAN.md — Add go-git dependency + rewrite gitworktree.go with go-git API (no more exec.Command)
+- [ ] 22-02-PLAN.md — Rewrite gitworktree_test.go with go-git test repos + full module test verification
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 22 to break down)
