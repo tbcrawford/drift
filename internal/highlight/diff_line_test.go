@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/tbcrawford/drift/internal/edittype"
@@ -88,5 +89,70 @@ func TestReplaceAnsiBackground_swapsOnlyBackground(t *testing.T) {
 	oldBg := fmt.Sprintf("48;2;%d;%d;%d", lineBg.Red(), lineBg.Green(), lineBg.Blue())
 	if strings.Contains(replaced, oldBg) {
 		t.Fatalf("line background %q should be absent after replacement, got:\n%q", oldBg, replaced)
+	}
+}
+
+// TestHighlightLineWithLineBackground_fastResetAfterEachToken verifies that every token
+// in the fast implementation is followed by \x1b[0m (SGR reset) to prevent color bleed.
+func TestHighlightLineWithLineBackground_fastResetAfterEachToken(t *testing.T) {
+	t.Parallel()
+	style := styles.Get("github-dark")
+	if style == nil {
+		t.Fatal("github-dark")
+	}
+	bg, ok := DiffLineStyle(style, edittype.Delete, true)
+	if !ok {
+		t.Fatal("expected DiffLineStyle for delete")
+	}
+	lexer := lexers.Fallback
+	out, err := HighlightLineWithLineBackground("hello world", lexer, style, bg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Output must contain at least one SGR reset sequence.
+	if !strings.Contains(out, "\x1b[0m") {
+		t.Fatalf("expected SGR reset \\x1b[0m after token, got %q", out)
+	}
+}
+
+// TestHighlightLineWithLineBackground_fastTrailingNewlineStripped verifies that
+// the fast path strips trailing newlines from output (matching original behavior).
+func TestHighlightLineWithLineBackground_fastTrailingNewlineStripped(t *testing.T) {
+	t.Parallel()
+	style := styles.Get("github")
+	if style == nil {
+		t.Fatal("github")
+	}
+	bg, ok := DiffLineStyle(style, edittype.Delete, false)
+	if !ok {
+		t.Fatal("expected DiffLineStyle for delete")
+	}
+	lexer := lexers.Fallback
+	// Input has trailing newline — output must not.
+	out, err := HighlightLineWithLineBackground("hello\n", lexer, style, bg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.HasSuffix(out, "\n") {
+		t.Fatalf("expected trailing newline to be stripped, got %q", out)
+	}
+}
+
+// TestHighlightLineWithLineBackground_noLineBg_returnsUnmodified verifies that
+// when lineBg is not set, the function returns the line unchanged (fast path guard).
+func TestHighlightLineWithLineBackground_noLineBg_returnsUnmodified(t *testing.T) {
+	t.Parallel()
+	style := styles.Get("github")
+	if style == nil {
+		t.Fatal("github")
+	}
+	lexer := lexers.Fallback
+	var unset chroma.Colour
+	out, err := HighlightLineWithLineBackground("hello", lexer, style, unset)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != "hello" {
+		t.Fatalf("expected unmodified 'hello', got %q", out)
 	}
 }
