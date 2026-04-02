@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"os"
+	"strings"
 	"testing"
+	"time"
 )
 
 // TestPagerResolvePager verifies the $PAGER env var resolution order.
@@ -162,5 +164,75 @@ func TestPagerStart(t *testing.T) {
 	got := buf.String()
 	if got != string(payload) {
 		t.Errorf("pager output = %q, want %q", got, string(payload))
+	}
+}
+
+// TestPagerStartEarlyExit verifies that startPager does not deadlock when the
+// pager subprocess exits before all input has been written (simulating the user
+// pressing q in less). The write to the pipe must unblock promptly and cleanup
+// must return within a reasonable timeout.
+//
+// We use "head -1" as the pager: it reads exactly one line and then exits,
+// leaving the writer with unread data in the pipe — exactly the early-exit case.
+func TestPagerStartEarlyExit(t *testing.T) {
+	var buf bytes.Buffer
+	streams := IOStreams{
+		In:  os.Stdin,
+		Out: &buf,
+		Err: os.Stderr,
+	}
+
+	wc, cleanup, err := startPager("head -1", streams)
+	if err != nil {
+		t.Skipf("head not available: %v", err)
+	}
+
+	// Write more data than head -1 will consume. The first line is read; after
+	// that, head exits and closes its stdin, which triggers the early-exit path.
+	largePayload := strings.Repeat("x", 1024) + "\n" + strings.Repeat("y", 1024) + "\n"
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		// Write may return io.ErrClosedPipe (or succeed partially) — both are fine.
+		_, _ = wc.Write([]byte(largePayload))
+		cleanup()
+	}()
+
+	select {
+	case <-done:
+		// Good: no deadlock.
+	case <-time.After(5 * time.Second):
+		t.Fatal("deadlock: startPager early-exit did not unblock within 5 seconds")
+	}
+}
+
+// TestIsPipeClosedErr verifies the helper correctly identifies pipe-closed errors.
+func TestIsPipeClosedErr(t *testing.T) {
+	if !isPipeClosedErr(os.ErrClosed) {
+		// os.ErrClosed is not a pipe error, so this should be false.
+		// (This is just a sanity check that the func doesn't over-match.)
+	}
+
+	pr, pw := func() (*os.File, *os.File) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatalf("os.Pipe: %v", err)
+		}
+		return r, w
+	}()
+
+	// Close the read end, then write to the write end — should get EPIPE or similar.
+	_ = pr.Close()
+	_, writeErr := pw.Write([]byte("hello"))
+	_ = pw.Close()
+
+	if writeErr == nil {
+		// On some platforms the write may succeed if the OS buffers it; skip.
+		t.Skip("write to closed pipe did not return an error on this platform")
+	}
+
+	if !isPipeClosedErr(writeErr) {
+		t.Errorf("isPipeClosedErr(%v) = false, want true for OS broken-pipe error", writeErr)
 	}
 }

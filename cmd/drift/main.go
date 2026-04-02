@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/term"
@@ -237,6 +239,10 @@ func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, buf *bytes.Buff
 // is not needed). It always returns newExitCode(1, "") so callers can do:
 //
 //	return writeThroughPager(&buf, opts)
+//
+// If the user quits the pager early (e.g. presses q in less), the write may
+// return io.ErrClosedPipe or syscall.EPIPE. Both are treated as a clean exit:
+// the user intentionally dismissed the output, which is not an error condition.
 func writeThroughPager(buf *bytes.Buffer, opts *rootOptions) error {
 	var termHeight int
 	if f, ok := opts.streams.Out.(*os.File); ok {
@@ -250,13 +256,36 @@ func writeThroughPager(buf *bytes.Buffer, opts *rootOptions) error {
 		if pErr != nil {
 			_, _ = buf.WriteTo(opts.streams.Out)
 		} else {
-			_, _ = buf.WriteTo(pagerWriter)
+			_, writeErr := buf.WriteTo(pagerWriter)
 			cleanup()
+			// io.ErrClosedPipe means our background goroutine closed pr because
+			// the pager exited (user pressed q). syscall.EPIPE is the OS-level
+			// equivalent on some platforms. Both mean "user quit intentionally" —
+			// treat as success.
+			if writeErr != nil && !isPipeClosedErr(writeErr) {
+				return newExitCode(2, writeErr.Error())
+			}
 		}
 	} else {
 		_, _ = buf.WriteTo(opts.streams.Out)
 	}
 	return newExitCode(1, "")
+}
+
+// isPipeClosedErr reports whether err indicates that the write end of a pipe
+// was closed because the reader (pager process) exited. This is the normal
+// outcome when the user quits the pager before all output is consumed.
+func isPipeClosedErr(err error) bool {
+	if errors.Is(err, io.ErrClosedPipe) {
+		return true
+	}
+	// syscall.EPIPE is returned on some platforms/Go versions when writing to
+	// a pipe whose read end has been closed by the OS.
+	var errno syscall.Errno
+	if errors.As(err, &errno) && errno == syscall.EPIPE {
+		return true
+	}
+	return false
 }
 
 // runRoot is a thin orchestrator: it calls resolveInputs, drift.Diff, and drift.RenderWithNames

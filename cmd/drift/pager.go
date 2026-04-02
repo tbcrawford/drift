@@ -68,6 +68,13 @@ func shouldPage(out io.Writer, lineCount int, termHeight int, noPager bool) bool
 // startPager launches the pager subprocess with its stdin connected to a pipe.
 // The caller writes diff output to the returned WriteCloser, then calls the
 // cleanup func to flush and wait. Pager stdout and stderr are wired to streams.
+//
+// Early-exit handling: a background goroutine waits for the pager process to
+// exit and then closes the read end of the pipe (pr). This causes any in-flight
+// pw.Write() call to return io.ErrClosedPipe instead of blocking forever, which
+// happens when the user quits the pager (e.g. presses q in less) before all
+// output has been written. cleanup() signals that the caller is done writing,
+// then waits for the background goroutine to finish.
 func startPager(pagerCmd string, streams IOStreams) (io.WriteCloser, func(), error) {
 	parts := strings.Fields(pagerCmd)
 	if len(parts) == 0 {
@@ -83,10 +90,25 @@ func startPager(pagerCmd string, streams IOStreams) (io.WriteCloser, func(), err
 		_ = pw.Close()
 		return nil, nil, err
 	}
-	cleanup := func() {
-		_ = pw.Close()
-		_ = pr.Close()
+
+	// done is closed by the background goroutine once cmd.Wait() returns.
+	done := make(chan struct{})
+
+	// Background goroutine: wait for the pager to exit (for any reason —
+	// normal EOF or user pressing q), then close pr so that any blocked
+	// pw.Write() unblocks with io.ErrClosedPipe.
+	go func() {
+		defer close(done)
 		_ = cmd.Wait()
+		_ = pr.Close()
+	}()
+
+	cleanup := func() {
+		// Signal EOF to the pager: close the write end so the pager can drain
+		// and exit naturally (if it hasn't already).
+		_ = pw.Close()
+		// Wait for the background goroutine (cmd.Wait + pr.Close) to finish.
+		<-done
 	}
 	return pw, cleanup, nil
 }
