@@ -6,6 +6,170 @@ import (
 	"testing"
 )
 
+// --- diffDirectories gitignore filtering tests ---
+
+func TestDiffDirectories_gitignore_skipsIgnoredInOld(t *testing.T) {
+	// oldDir has "keep.go" (not ignored) and "dist/app" (ignored).
+	// Only keep.go should appear in pairs (as removed, since newDir is empty).
+	bin := t.TempDir()
+	oldDir := t.TempDir()
+	newDir := t.TempDir()
+	oldAbs, _ := filepath.Abs(oldDir)
+
+	// Create files in oldDir.
+	if err := os.WriteFile(filepath.Join(oldDir, "keep.go"), []byte("content"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	distDir := filepath.Join(oldDir, "dist")
+	if err := os.MkdirAll(distDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(distDir, "app"), []byte("artifact"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Fake git: oldDir is inside a repo; check-ignore marks dist/app as ignored.
+	script := "#!/bin/sh\n" +
+		"joined=\"$*\"\n" +
+		"case \"$joined\" in\n" +
+		"  *rev-parse*--is-inside-work-tree*) echo true; exit 0 ;;\n" +
+		"  *rev-parse*--show-toplevel*) echo \"" + oldAbs + "\"; exit 0 ;;\n" +
+		"  *check-ignore*) printf 'dist/app\\0'; exit 0 ;;\n" +
+		"esac\n" +
+		"echo \"fake git: $joined\" >&2; exit 99\n"
+	writeFakeGit(t, bin, script)
+	prependPath(t, bin)
+
+	pairs, err := diffDirectories(oldDir, newDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	for _, p := range pairs {
+		if p.Name == "dist/app" {
+			t.Errorf("ignored file dist/app should not appear in pairs")
+		}
+	}
+	found := false
+	for _, p := range pairs {
+		if p.Name == "keep.go" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("keep.go should appear in pairs (removed); got: %+v", pairs)
+	}
+}
+
+func TestDiffDirectories_gitignore_skipsIgnoredInNew(t *testing.T) {
+	// newDir has "keep.go" and "dist/app" (ignored); oldDir is empty.
+	// dist/app should not appear; keep.go should appear as added.
+	bin := t.TempDir()
+	oldDir := t.TempDir()
+	newDir := t.TempDir()
+	newAbs, _ := filepath.Abs(newDir)
+
+	if err := os.WriteFile(filepath.Join(newDir, "keep.go"), []byte("content"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	distDir := filepath.Join(newDir, "dist")
+	if err := os.MkdirAll(distDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(distDir, "app"), []byte("artifact"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// oldDir: not in git repo; newDir: in repo, check-ignore marks dist/app.
+	script := "#!/bin/sh\n" +
+		"joined=\"$*\"\n" +
+		"# oldDir rev-parse returns false (not in repo), newDir returns true.\n" +
+		"# We fake by matching the -C arg. Since both dirs are temp, just check\n" +
+		"# whether arguments include the newDir absolute path.\n" +
+		"case \"$joined\" in\n" +
+		"  *rev-parse*--is-inside-work-tree*) echo true; exit 0 ;;\n" +
+		"  *rev-parse*--show-toplevel*) echo \"" + newAbs + "\"; exit 0 ;;\n" +
+		"  *check-ignore*) printf 'dist/app\\0'; exit 0 ;;\n" +
+		"esac\n" +
+		"echo \"fake git: $joined\" >&2; exit 99\n"
+	writeFakeGit(t, bin, script)
+	prependPath(t, bin)
+
+	pairs, err := diffDirectories(oldDir, newDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	for _, p := range pairs {
+		if p.Name == "dist/app" {
+			t.Errorf("ignored file dist/app should not appear in pairs")
+		}
+	}
+	found := false
+	for _, p := range pairs {
+		if p.Name == "keep.go" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("keep.go should appear as added; got: %+v", pairs)
+	}
+}
+
+func TestDiffDirectories_gitignore_noRepo_walksAll(t *testing.T) {
+	// Dirs not in a git repo → all files included (fail-open).
+	bin := t.TempDir()
+	oldDir := t.TempDir()
+	newDir := t.TempDir()
+
+	if err := os.WriteFile(filepath.Join(oldDir, "keep.go"), []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(newDir, "keep.go"), []byte("new"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Fake git returns false for is-inside-work-tree.
+	script := "#!/bin/sh\n" +
+		"joined=\"$*\"\n" +
+		"case \"$joined\" in\n" +
+		"  *rev-parse*--is-inside-work-tree*) echo false; exit 0 ;;\n" +
+		"esac\n" +
+		"echo \"fake git: $joined\" >&2; exit 99\n"
+	writeFakeGit(t, bin, script)
+	prependPath(t, bin)
+
+	pairs, err := diffDirectories(oldDir, newDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(pairs) != 1 || pairs[0].Name != "keep.go" {
+		t.Errorf("expected keep.go pair; got: %+v", pairs)
+	}
+}
+
+func TestDiffDirectories_gitignore_gitNotFound_walksAll(t *testing.T) {
+	// No git in PATH → fail open, walk all files.
+	oldDir := t.TempDir()
+	newDir := t.TempDir()
+
+	if err := os.WriteFile(filepath.Join(oldDir, "keep.go"), []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(newDir, "keep.go"), []byte("new"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Use an empty temp dir as PATH so git is not found.
+	t.Setenv("PATH", t.TempDir())
+
+	pairs, err := diffDirectories(oldDir, newDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(pairs) != 1 || pairs[0].Name != "keep.go" {
+		t.Errorf("expected keep.go pair; got: %+v", pairs)
+	}
+}
+
 // TestDiffDirectories covers all 8 behavior cases specified in the plan.
 func TestDiffDirectories(t *testing.T) {
 	t.Run("empty dirs returns empty slice", func(t *testing.T) {

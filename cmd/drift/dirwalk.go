@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 )
 
 // filePair represents a single file entry in a directory diff.
@@ -55,9 +56,30 @@ func diffDirectories(oldDir, newDir string) ([]filePair, error) {
 		return nil, fmt.Errorf("walking old dir: %w", err)
 	}
 
-	var pairs []filePair
+	// Filter oldFiles through gitignore if oldDir is inside a git repo.
+	if repoRoot, ok := isInsideGitRepo(oldDir); ok {
+		oldRelPaths := make([]string, 0, len(oldFiles))
+		for rel := range oldFiles {
+			oldRelPaths = append(oldRelPaths, rel)
+		}
+		kept, _ := filterGitIgnored(repoRoot, oldRelPaths)
+		keptSet := make(map[string]struct{}, len(kept))
+		for _, p := range kept {
+			keptSet[p] = struct{}{}
+		}
+		for rel := range oldFiles {
+			if _, ok := keptSet[rel]; !ok {
+				delete(oldFiles, rel)
+			}
+		}
+	}
 
-	// Walk newDir; compare against oldFiles.
+	// Walk newDir, collecting all entries first, then filter through gitignore.
+	type newEntry struct {
+		relSlash string
+		absPath  string
+	}
+	var newEntries []newEntry
 	if err := filepath.WalkDir(newDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -69,46 +91,70 @@ func diffDirectories(oldDir, newDir string) ([]filePair, error) {
 		if err != nil {
 			return err
 		}
-		relSlash := filepath.ToSlash(rel)
+		newEntries = append(newEntries, newEntry{relSlash: filepath.ToSlash(rel), absPath: path})
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("walking new dir: %w", err)
+	}
 
-		if oldPath, inOld := oldFiles[relSlash]; inOld {
+	// Filter newEntries through gitignore if newDir is inside a git repo.
+	if repoRoot, ok := isInsideGitRepo(newDir); ok {
+		newRelPaths := make([]string, 0, len(newEntries))
+		for _, e := range newEntries {
+			newRelPaths = append(newRelPaths, e.relSlash)
+		}
+		kept, _ := filterGitIgnored(repoRoot, newRelPaths)
+		keptSet := make(map[string]struct{}, len(kept))
+		for _, p := range kept {
+			keptSet[p] = struct{}{}
+		}
+		filtered := newEntries[:0]
+		for _, e := range newEntries {
+			if _, ok := keptSet[e.relSlash]; ok {
+				filtered = append(filtered, e)
+			}
+		}
+		newEntries = filtered
+	}
+
+	var pairs []filePair
+
+	// Compare newEntries against oldFiles.
+	for _, ne := range newEntries {
+		if oldPath, inOld := oldFiles[ne.relSlash]; inOld {
 			// File exists on both sides — compare contents.
-			delete(oldFiles, relSlash)
+			delete(oldFiles, ne.relSlash)
 			oldBytes, err := os.ReadFile(oldPath)
 			if err != nil {
-				return fmt.Errorf("reading old %s: %w", relSlash, err)
+				return nil, fmt.Errorf("reading old %s: %w", ne.relSlash, err)
 			}
-			newBytes, err := os.ReadFile(path)
+			newBytes, err := os.ReadFile(ne.absPath)
 			if err != nil {
-				return fmt.Errorf("reading new %s: %w", relSlash, err)
+				return nil, fmt.Errorf("reading new %s: %w", ne.relSlash, err)
 			}
 			if !bytes.Equal(oldBytes, newBytes) {
-				// Carry content so runDirectoryDiff can use it without re-reading.
 				pairs = append(pairs, filePair{
-					Name:       relSlash,
+					Name:       ne.relSlash,
 					OldPath:    oldPath,
-					NewPath:    path,
+					NewPath:    ne.absPath,
 					OldContent: string(oldBytes),
 					NewContent: string(newBytes),
 				})
 			}
 		} else {
-			// File only in new — added. Read content now for consistency.
-			newBytes, err := os.ReadFile(path)
+			// File only in new — added.
+			newBytes, err := os.ReadFile(ne.absPath)
 			if err != nil {
-				return fmt.Errorf("reading new %s: %w", relSlash, err)
+				return nil, fmt.Errorf("reading new %s: %w", ne.relSlash, err)
 			}
 			pairs = append(pairs, filePair{
-				Name:       relSlash,
+				Name:       ne.relSlash,
 				OldPath:    "",
-				NewPath:    path,
+				NewPath:    ne.absPath,
 				OldContent: "",
 				NewContent: string(newBytes),
 			})
 		}
-		return nil
-	}); err != nil {
-		return nil, fmt.Errorf("walking new dir: %w", err)
 	}
 
 	// Remaining entries in oldFiles exist only on old side — removed. Read content now.
@@ -150,4 +196,18 @@ func requireDir(path string) error {
 		return fmt.Errorf("%q is not a directory", path)
 	}
 	return nil
+}
+
+// isInsideGitRepo reports whether dir is inside a git worktree and returns the
+// repo root if so. Returns ("", false) if not in a repo or if git is unavailable.
+func isInsideGitRepo(dir string) (repoRoot string, ok bool) {
+	inside, err := gitRevParseIsInsideWorkTree(dir)
+	if err != nil || inside != "true" {
+		return "", false
+	}
+	root, err := gitRevParseShowToplevel(dir)
+	if err != nil {
+		return "", false
+	}
+	return strings.TrimSpace(root), true
 }
