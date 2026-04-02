@@ -14,7 +14,14 @@
 //	BenchmarkRenderSplit10kColor-14                     211   5862243 ns/op     3363175 B/op     58522 allocs/op
 //	BenchmarkRenderSplitWithLineNumbers10kColor-14      217   5528098 ns/op     3349645 B/op     58521 allocs/op
 //
-// Post-optimization (Plan 23-02): [to be updated after Plan 23-02]
+// Post-optimization (Plan 23-02 — gutter cache + direct ANSI SGR builder):
+//
+//	BenchmarkDiff10k-14                                3396    352790 ns/op      855250 B/op        16 allocs/op  (unchanged)
+//	BenchmarkRenderUnified10k-14                        610   1972759 ns/op     1036870 B/op     26445 allocs/op  (unchanged)
+//	BenchmarkRenderSplit10k-14                          505   2427972 ns/op     1559211 B/op     36048 allocs/op  (unchanged)
+//	BenchmarkRenderUnified10kColor-14                   280   4516417 ns/op     1834636 B/op     43827 allocs/op  (-21% ns/op, -16.4% allocs/op)
+//	BenchmarkRenderSplit10kColor-14                     233   5072443 ns/op     3336400 B/op     54690 allocs/op  (-6.5% ns/op)
+//	BenchmarkRenderSplitWithLineNumbers10kColor-14      227   5293071 ns/op     3345171 B/op     54690 allocs/op  (-4.2% ns/op)
 package drift
 
 import (
