@@ -2,6 +2,19 @@
 //
 // Expect each benchmark iteration to finish in under one second on a modern laptop;
 // smoke test with: go test -bench=. -benchtime=100ms
+//
+// Phase 23 Performance Optimization Results:
+//
+// Baseline (pre-optimization, Phase 23-01):
+//
+//	BenchmarkDiff10k-14                                3308    361504 ns/op      855252 B/op        16 allocs/op
+//	BenchmarkRenderUnified10k-14                        650   2020439 ns/op     1029465 B/op     26436 allocs/op
+//	BenchmarkRenderSplit10k-14                          500   2473840 ns/op     1558587 B/op     36039 allocs/op
+//	BenchmarkRenderUnified10kColor-14                   234   5700141 ns/op     1955308 B/op     52387 allocs/op
+//	BenchmarkRenderSplit10kColor-14                     211   5862243 ns/op     3363175 B/op     58522 allocs/op
+//	BenchmarkRenderSplitWithLineNumbers10kColor-14      217   5528098 ns/op     3349645 B/op     58521 allocs/op
+//
+// Post-optimization (Plan 23-02): [to be updated after Plan 23-02]
 package drift
 
 import (
@@ -9,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/charmbracelet/colorprofile"
 )
 
 func generateLines(n int) (old, new string) {
@@ -31,6 +46,7 @@ func generateLines(n int) (old, new string) {
 }
 
 func BenchmarkDiff10k(b *testing.B) {
+	b.ReportAllocs()
 	old, newText := generateLines(10000)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -41,6 +57,7 @@ func BenchmarkDiff10k(b *testing.B) {
 }
 
 func BenchmarkRenderUnified10k(b *testing.B) {
+	b.ReportAllocs()
 	old, newText := generateLines(10000)
 	result, err := Diff(old, newText, WithAlgorithm(Myers))
 	if err != nil {
@@ -57,6 +74,7 @@ func BenchmarkRenderUnified10k(b *testing.B) {
 }
 
 func BenchmarkRenderSplit10k(b *testing.B) {
+	b.ReportAllocs()
 	old, newText := generateLines(10000)
 	result, err := Diff(old, newText, WithAlgorithm(Myers))
 	if err != nil {
@@ -67,6 +85,74 @@ func BenchmarkRenderSplit10k(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
 		if err := Render(result, &buf, WithNoColor(), WithSplit()); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkRenderUnified10kColor benchmarks the expensive color rendering path
+// (no WithNoColor — exercises per-line lipgloss gutter style and Chroma token highlighting).
+func BenchmarkRenderUnified10kColor(b *testing.B) {
+	b.ReportAllocs()
+	old, newText := generateLines(10000)
+	result, err := Diff(old, newText, WithAlgorithm(Myers))
+	if err != nil {
+		b.Fatal(err)
+	}
+	var buf bytes.Buffer
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		buf.Reset()
+		if err := Render(result, &buf,
+			WithTermWidth(200),
+			WithColorProfile(colorprofile.TrueColor),
+		); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkRenderSplit10kColor benchmarks the expensive color rendering path for split view.
+func BenchmarkRenderSplit10kColor(b *testing.B) {
+	b.ReportAllocs()
+	old, newText := generateLines(10000)
+	result, err := Diff(old, newText, WithAlgorithm(Myers))
+	if err != nil {
+		b.Fatal(err)
+	}
+	var buf bytes.Buffer
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		buf.Reset()
+		if err := Render(result, &buf,
+			WithSplit(),
+			WithTermWidth(200),
+			WithColorProfile(colorprofile.TrueColor),
+		); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkRenderSplitWithLineNumbers10kColor benchmarks split view with line numbers
+// and color enabled — exercises gutterStyleForCell for every line in the hot path.
+func BenchmarkRenderSplitWithLineNumbers10kColor(b *testing.B) {
+	b.ReportAllocs()
+	old, newText := generateLines(10000)
+	result, err := Diff(old, newText, WithAlgorithm(Myers))
+	if err != nil {
+		b.Fatal(err)
+	}
+	var buf bytes.Buffer
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		buf.Reset()
+		if err := Render(result, &buf,
+			WithSplit(),
+			WithLineNumbers(true),
+			WithTermWidth(200),
+			WithColorProfile(colorprofile.TrueColor),
+		); err != nil {
 			b.Fatal(err)
 		}
 	}
