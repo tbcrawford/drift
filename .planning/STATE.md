@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "git pager mode: drift as drop-in replacement for delta"
-status: Phase 25 complete
-stopped_at: Completed 25-02-PLAN.md (wire git pager mode into drift CLI)
-last_updated: "2026-04-02T21:00:00.000Z"
+status: Phase 26 complete
+stopped_at: Completed 26-03-PLAN.md (CLI function tests for parseAlgorithm, fileHeaderName, exitCodeErr, streamThroughPager, resolveInputs, gitShowHEADBlobFromTree)
+last_updated: "2026-04-03T20:01:30Z"
 progress:
-  total_phases: 25
-  completed_phases: 25
-  total_plans: 35
-  completed_plans: 35
+  total_phases: 26
+  completed_phases: 26
+  total_plans: 38
+  completed_plans: 38
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A Go developer can `import "github.com/tbcrawford/drift"` and get a production-quality, richly-rendered diff with one function call — the same quality they see in GitHub's PR review UI but in the terminal.
-**Current focus:** Phase 25 complete — git pager mode (drift as drop-in for delta)
+**Current focus:** Phase 26 complete — test coverage enhancement (edge cases, regressions, shared fixtures)
 
 ## Current Position
 
-Phase: 25
-Plan: Complete (2/2 plans done)
+Phase: 26
+Plan: Complete (3/3 plans done)
 
 ## Performance Metrics
 
@@ -77,6 +77,9 @@ Plan: Complete (2/2 plans done)
 | Phase 22 P02 | 6 | 2 tasks | 4 files |
 | Phase 23-performance-analysis-and-optimization P01 | 8min | 2 tasks | 4 files |
 | Phase 23-performance-analysis-and-optimization P02 | 12min | 2 tasks | 3 files |
+| Phase 26-enhance-test-coverage P26-01 | ~15min | 2 tasks | 2 files |
+| Phase 26-enhance-test-coverage P26-02 | ~20min | 2 tasks | 2 files |
+| Phase 26-enhance-test-coverage P26-03 | ~25min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -170,6 +173,7 @@ Recent decisions affecting current work:
 - Phase 23 added: performance analysis and optimization — deep profiling of `drift --split` on real repos; identify bottlenecks vs delta; explore streaming render to pager and other improvements
 - Phase 24 added: performance optimization phase 2 — target sub-500ms response time for `drift --split` on real repos, benchmark against delta, explore delta source for strategies
 - Phase 25 added: git pager mode — use `drift` as a drop-in replacement for `delta` as a git pager (GIT_PAGER / core.pager / interactive.diffFilter)
+- Phase 26 added: enhance test coverage: edge cases, regressions, and shared fixtures — review previous phase docs for uncovered regressions, identify common fixtures, improve overall coverage
 
 ### Quick Tasks Completed
 
@@ -197,6 +201,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T20:10:00.000Z
-Stopped at: Completed 23-02-PLAN.md (direct ANSI SGR builder for token highlighting)
+Last session: 2026-04-03T20:01:30Z
+Stopped at: Completed 26-03-PLAN.md (CLI function tests — parseAlgorithm, fileHeaderName, exitCodeErr, streamThroughPager, resolveInputs, gitShowHEADBlobFromTree)
 Resume file: None
