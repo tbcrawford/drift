@@ -349,8 +349,16 @@ func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, w io.Writer) (h
 //
 // If the pager cannot be started, falls back to writing directly to opts.streams.Out.
 // renderFn returns (hasDiff, error): hasDiff=false means no output, so exit 0.
+//
+// When drift is invoked as git's core.pager, git sets GIT_PAGER_IN_USE in the
+// environment. In that case we must NOT start a nested pager — git already owns
+// the terminal session and has configured its own pager environment (e.g. LESS=FRX).
+// Launching another less inside that context produces the chain git→drift→less,
+// where the nested less inherits -F (quit-if-one-screen) and silently exits without
+// displaying anything. Instead, write rendered output directly to stdout (the TTY).
 func streamThroughPager(opts *rootOptions, renderFn func(w io.Writer) (hasDiff bool, err error)) error {
-	if f, ok := opts.streams.Out.(*os.File); ok && !opts.noPager {
+	_, gitPagerInUse := os.LookupEnv("GIT_PAGER_IN_USE")
+	if f, ok := opts.streams.Out.(*os.File); ok && !opts.noPager && !gitPagerInUse {
 		// TTY path: start pager before any rendering so output streams immediately.
 		pagerWriter, cleanup, pErr := startPager(resolvePager(), opts.streams)
 		if pErr == nil {
@@ -367,7 +375,7 @@ func streamThroughPager(opts *rootOptions, renderFn func(w io.Writer) (hasDiff b
 		// Pager failed to start — fall through to direct write.
 		_ = f
 	}
-	// Non-TTY or pager fallback: write directly to stdout.
+	// Non-TTY, git-pager context, or pager fallback: write directly to stdout.
 	hasDiff, err := renderFn(opts.streams.Out)
 	if err != nil {
 		return newExitCode(2, err.Error())
@@ -386,7 +394,12 @@ func streamThroughPager(opts *rootOptions, renderFn func(w io.Writer) (hasDiff b
 // If the user quits the pager early (e.g. presses q in less), the write may
 // return io.ErrClosedPipe or syscall.EPIPE. Both are treated as a clean exit:
 // the user intentionally dismissed the output, which is not an error condition.
+//
+// When drift is invoked as git's core.pager (GIT_PAGER_IN_USE is set), we skip
+// launching a nested pager and write directly to stdout — git already owns the
+// terminal session.
 func writeThroughPager(buf *bytes.Buffer, opts *rootOptions) error {
+	_, gitPagerInUse := os.LookupEnv("GIT_PAGER_IN_USE")
 	var termHeight int
 	if f, ok := opts.streams.Out.(*os.File); ok {
 		if _, h, tErr := term.GetSize(f.Fd()); tErr == nil {
@@ -394,7 +407,7 @@ func writeThroughPager(buf *bytes.Buffer, opts *rootOptions) error {
 		}
 	}
 	lineCount := strings.Count(buf.String(), "\n")
-	if shouldPage(opts.streams.Out, lineCount, termHeight, opts.noPager) {
+	if !gitPagerInUse && shouldPage(opts.streams.Out, lineCount, termHeight, opts.noPager) {
 		pagerWriter, cleanup, pErr := startPager(resolvePager(), opts.streams)
 		if pErr != nil {
 			_, _ = buf.WriteTo(opts.streams.Out)

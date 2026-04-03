@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"io"
 	"strings"
+
+	"github.com/charmbracelet/x/ansi"
 )
 
 // parsedFileDiff holds the reconstructed old/new content for one file
@@ -77,7 +79,11 @@ func parseUnifiedDiff(r io.Reader) ([]parsedFileDiff, error) {
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		line := scanner.Text()
+		// Git sends ANSI-colored output when it detects a TTY (i.e. when drift
+		// is configured as core.pager and stdout is a terminal). Strip escape
+		// sequences before parsing so prefix checks like "diff --git " work
+		// regardless of whether git colors its output.
+		line := ansi.Strip(scanner.Text())
 
 		switch {
 		// New file block: always starts a fresh parsedFileDiff.
