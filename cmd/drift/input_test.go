@@ -139,3 +139,44 @@ func TestResolveInputs_onlyFrom(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+// --- additional resolveInputs coverage ---
+
+// TestResolveInputs_fileAndStdin covers the b=="-" case where old is a file and new is stdin.
+func TestResolveInputs_fileAndStdin(t *testing.T) {
+	t.Helper()
+	dir := t.TempDir()
+	p1 := filepath.Join(dir, "old.txt")
+	if err := os.WriteFile(p1, []byte("file content\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdin := strings.NewReader("stdin content\n")
+	old, new_, on, nn, err := resolveInputs([]string{p1, "-"}, "", "", stdin)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if old != "file content\n" {
+		t.Errorf("old = %q, want %q", old, "file content\n")
+	}
+	if new_ != "stdin content\n" {
+		t.Errorf("new_ = %q, want %q", new_, "stdin content\n")
+	}
+	if on != "old.txt" {
+		t.Errorf("oldName = %q, want %q", on, "old.txt")
+	}
+	if nn != "-" {
+		t.Errorf("newName = %q, want %q", nn, "-")
+	}
+}
+
+// TestResolveInputs_tooManyArgs covers the 3+ positional arguments error path.
+func TestResolveInputs_tooManyArgs(t *testing.T) {
+	t.Helper()
+	_, _, _, _, err := resolveInputs([]string{"a", "b", "c"}, "", "", strings.NewReader(""))
+	if err == nil {
+		t.Fatal("expected error for too many args, got nil")
+	}
+	if !strings.Contains(strings.ToLower(err.Error()), "too many") {
+		t.Errorf("expected 'too many' in error, got: %v", err)
+	}
+}

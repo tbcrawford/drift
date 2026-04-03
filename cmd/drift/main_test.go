@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"testing"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/tbcrawford/drift"
 )
 
 // ttyReader wraps an io.Reader and signals to isStdinPipe that it is a TTY
@@ -703,5 +705,185 @@ func TestRunCLI_installPager(t *testing.T) {
 	}
 	if !strings.Contains(stdout, "drift --color-only") {
 		t.Errorf("expected 'drift --color-only' in output, got: %q", stdout)
+	}
+}
+
+// --- parseAlgorithm tests ---
+
+func TestParseAlgorithm_validCases(t *testing.T) {
+	cases := []struct {
+		input string
+		want  drift.Algorithm
+	}{
+		{"auto", drift.Auto},
+		{"Auto", drift.Auto},
+		{"myers", drift.Myers},
+		{"MYERS", drift.Myers},
+		{"patience", drift.Patience},
+		{"Patience", drift.Patience},
+		{"histogram", drift.Histogram},
+		{"Histogram", drift.Histogram},
+		{"  histogram  ", drift.Histogram}, // trimmed
+	}
+	for _, tc := range cases {
+		got, err := parseAlgorithm(tc.input)
+		if err != nil {
+			t.Errorf("parseAlgorithm(%q): unexpected error: %v", tc.input, err)
+			continue
+		}
+		if got != tc.want {
+			t.Errorf("parseAlgorithm(%q) = %v, want %v", tc.input, got, tc.want)
+		}
+	}
+}
+
+func TestParseAlgorithm_invalid(t *testing.T) {
+	_, err := parseAlgorithm("bogus")
+	if err == nil {
+		t.Fatal("expected error for invalid algorithm, got nil")
+	}
+	if !strings.Contains(err.Error(), "invalid algorithm") {
+		t.Errorf("expected 'invalid algorithm' in error, got: %v", err)
+	}
+	ec, ok := err.(*exitCodeErr)
+	if !ok {
+		t.Fatalf("expected *exitCodeErr, got %T", err)
+	}
+	if ec.code != 2 {
+		t.Errorf("expected exit code 2, got %d", ec.code)
+	}
+}
+
+// --- exitCodeErr.Error tests ---
+
+func TestExitCodeErr_Error(t *testing.T) {
+	err := newExitCode(1, "something went wrong")
+	if err.Error() != "something went wrong" {
+		t.Errorf("Error() = %q, want %q", err.Error(), "something went wrong")
+	}
+}
+
+func TestExitCodeErr_EmptyMsg(t *testing.T) {
+	err := newExitCode(1, "")
+	if err.Error() != "" {
+		t.Errorf("Error() = %q, want empty string", err.Error())
+	}
+}
+
+// --- fileHeaderName tests ---
+
+func TestFileHeaderName_noArgs(t *testing.T) {
+	if got := fileHeaderName([]string{}); got != "" {
+		t.Errorf("got %q, want empty string", got)
+	}
+}
+
+func TestFileHeaderName_oneArgStdin(t *testing.T) {
+	if got := fileHeaderName([]string{"-"}); got != "" {
+		t.Errorf("got %q, want empty string", got)
+	}
+}
+
+func TestFileHeaderName_oneArgPath(t *testing.T) {
+	if got := fileHeaderName([]string{"foo/bar.go"}); got != "foo/bar.go" {
+		t.Errorf("got %q, want %q", got, "foo/bar.go")
+	}
+}
+
+func TestFileHeaderName_twoArgsBothStdin(t *testing.T) {
+	if got := fileHeaderName([]string{"-", "-"}); got != "" {
+		t.Errorf("got %q, want empty string", got)
+	}
+}
+
+func TestFileHeaderName_twoArgsFirstStdin(t *testing.T) {
+	if got := fileHeaderName([]string{"-", "new.go"}); got != "new.go" {
+		t.Errorf("got %q, want %q", got, "new.go")
+	}
+}
+
+func TestFileHeaderName_twoArgsSecondStdin(t *testing.T) {
+	if got := fileHeaderName([]string{"old.go", "-"}); got != "old.go" {
+		t.Errorf("got %q, want %q", got, "old.go")
+	}
+}
+
+func TestFileHeaderName_twoArgsSame(t *testing.T) {
+	if got := fileHeaderName([]string{"same.go", "same.go"}); got != "same.go" {
+		t.Errorf("got %q, want %q", got, "same.go")
+	}
+}
+
+func TestFileHeaderName_twoArgsDifferent(t *testing.T) {
+	want := "old.go → new.go"
+	if got := fileHeaderName([]string{"old.go", "new.go"}); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestFileHeaderName_threeArgs(t *testing.T) {
+	// 3+ args falls through to default → empty string
+	if got := fileHeaderName([]string{"a", "b", "c"}); got != "" {
+		t.Errorf("got %q, want empty string", got)
+	}
+}
+
+// --- streamThroughPager tests (non-TTY / buffer path) ---
+
+func TestStreamThroughPager_noDiff(t *testing.T) {
+	var out bytes.Buffer
+	opts := &rootOptions{
+		streams: IOStreams{In: strings.NewReader(""), Out: &out, Err: &out},
+		noPager: true,
+	}
+	err := streamThroughPager(opts, func(w io.Writer) (bool, error) {
+		return false, nil // no diff
+	})
+	if err != nil {
+		t.Errorf("expected nil error when no diff, got: %v", err)
+	}
+}
+
+func TestStreamThroughPager_hasDiff(t *testing.T) {
+	var out bytes.Buffer
+	opts := &rootOptions{
+		streams: IOStreams{In: strings.NewReader(""), Out: &out, Err: &out},
+		noPager: true,
+	}
+	err := streamThroughPager(opts, func(w io.Writer) (bool, error) {
+		_, _ = fmt.Fprint(w, "some diff output")
+		return true, nil
+	})
+	if err == nil {
+		t.Fatal("expected exit-code error when diff exists, got nil")
+	}
+	ec, ok := err.(*exitCodeErr)
+	if !ok {
+		t.Fatalf("expected *exitCodeErr, got %T", err)
+	}
+	if ec.code != 1 {
+		t.Errorf("expected exit code 1, got %d", ec.code)
+	}
+}
+
+func TestStreamThroughPager_renderError(t *testing.T) {
+	var out bytes.Buffer
+	opts := &rootOptions{
+		streams: IOStreams{In: strings.NewReader(""), Out: &out, Err: &out},
+		noPager: true,
+	}
+	renderErr := fmt.Errorf("render failed")
+	err := streamThroughPager(opts, func(w io.Writer) (bool, error) {
+		return false, renderErr
+	})
+	if err == nil {
+		t.Fatal("expected error from failed render, got nil")
+	}
+	ec, ok := err.(*exitCodeErr)
+	if !ok {
+		t.Fatalf("expected *exitCodeErr, got %T", err)
+	}
+	if ec.code != 2 {
+		t.Errorf("expected exit code 2, got %d", ec.code)
 	}
 }

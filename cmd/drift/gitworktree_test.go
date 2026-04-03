@@ -537,3 +537,83 @@ func TestResolveGitWorkingTreeVsHEAD_missingHEADBlob(t *testing.T) {
 		t.Fatalf("expected empty old and disk content new; old=%q new=%q", old, newText)
 	}
 }
+
+// --- gitShowHEADBlobFromTree tests ---
+
+// TestGitShowHEADBlobFromTree_nilTree verifies that a nil tree returns ("", nil).
+func TestGitShowHEADBlobFromTree_nilTree(t *testing.T) {
+	content, err := gitShowHEADBlobFromTree(nil, "any/file.go")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if content != "" {
+		t.Errorf("expected empty content for nil tree, got: %q", content)
+	}
+}
+
+// TestGitShowHEADBlobFromTree_existingFile verifies that a committed file is returned.
+func TestGitShowHEADBlobFromTree_existingFile(t *testing.T) {
+	repoDir := makeTestRepo(t, map[string]string{
+		"hello.go": "package main\n",
+	})
+
+	repo, err := git.PlainOpen(repoDir)
+	if err != nil {
+		t.Fatalf("PlainOpen: %v", err)
+	}
+	head, err := repo.Head()
+	if err != nil {
+		t.Fatalf("Head: %v", err)
+	}
+	commit, err := repo.CommitObject(head.Hash())
+	if err != nil {
+		t.Fatalf("CommitObject: %v", err)
+	}
+	tree, err := commit.Tree()
+	if err != nil {
+		t.Fatalf("Tree: %v", err)
+	}
+
+	content, err := gitShowHEADBlobFromTree(tree, "hello.go")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if content != "package main\n" {
+		t.Errorf("content = %q, want %q", content, "package main\n")
+	}
+}
+
+// TestGitShowHEADBlobFromTree_notFound verifies that a missing file returns ("", nil).
+func TestGitShowHEADBlobFromTree_notFound(t *testing.T) {
+	repoDir := makeTestRepo(t, map[string]string{
+		"existing.go": "package main\n",
+	})
+
+	repo, err := git.PlainOpen(repoDir)
+	if err != nil {
+		t.Fatalf("PlainOpen: %v", err)
+	}
+	head, err := repo.Head()
+	if err != nil {
+		t.Fatalf("Head: %v", err)
+	}
+	commit, err := repo.CommitObject(head.Hash())
+	if err != nil {
+		t.Fatalf("CommitObject: %v", err)
+	}
+	tree, err := commit.Tree()
+	if err != nil {
+		t.Fatalf("Tree: %v", err)
+	}
+
+	content, err := gitShowHEADBlobFromTree(tree, "does-not-exist.go")
+	if err != nil {
+		t.Fatalf("unexpected error for missing file: %v", err)
+	}
+	if content != "" {
+		t.Errorf("expected empty content for missing file, got: %q", content)
+	}
+}
+
+// Compile-time assertion: ensure object import is used.
+var _ = (*object.Tree)(nil)
