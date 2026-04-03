@@ -60,6 +60,19 @@ index abc..def 100644
 Binary files a/img.png and b/img.png differ
 `
 
+// ansiColoredUnifiedDiff mimics what git sends when drift is configured as
+// core.pager and git detects a TTY — every significant line is wrapped in
+// ANSI escape sequences (bold, colour codes, resets).
+const ansiColoredUnifiedDiff = "\x1b[1mdiff --git a/foo.go b/foo.go\x1b[0m\n" +
+	"\x1b[1mindex abc..def 100644\x1b[0m\n" +
+	"\x1b[1m--- a/foo.go\x1b[0m\n" +
+	"\x1b[1m+++ b/foo.go\x1b[0m\n" +
+	"\x1b[36m@@ -1,3 +1,3 @@\x1b[0m\n" +
+	" package main\n" +
+	"\x1b[31m-func old() {}\x1b[0m\n" +
+	"\x1b[32m+func new() {}\x1b[0m\n" +
+	" // end\n"
+
 // TestRunCLI_pagerMode_singleFile verifies that when stdin is a pipe containing
 // a unified diff for one file with no positional args, drift re-renders it.
 func TestRunCLI_pagerMode_singleFile(t *testing.T) {
@@ -131,6 +144,54 @@ func TestRunCLI_pagerMode_withArgs(t *testing.T) {
 	// Should NOT have file headers from the piped unified diff
 	if strings.Contains(stdout, "foo.go") {
 		t.Errorf("pager mode should NOT be triggered when --from/--to flags present, got: %q", stdout)
+	}
+}
+
+// TestRunCLI_pagerMode_ANSIColoredInput verifies that drift correctly parses and
+// renders ANSI-colored unified diff input. When drift runs as git's core.pager,
+// git detects a TTY and sends color-coded output — every significant line is
+// wrapped in escape sequences. Before the fix, parseUnifiedDiff prefix checks
+// (e.g. strings.HasPrefix(line, "diff --git ")) never matched, returning 0
+// files and producing no output.
+func TestRunCLI_pagerMode_ANSIColoredInput(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(ansiColoredUnifiedDiff),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color"})
+	if code != 1 {
+		t.Fatalf("expected exit 1 (diff detected), got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+	stdout := out.String()
+	if !strings.Contains(stdout, "foo.go") {
+		t.Errorf("expected rendered output containing 'foo.go'; ANSI sequences may have broken parsing. got: %q", stdout)
+	}
+	// Raw ANSI-colored diff header must not leak into rendered output.
+	if strings.Contains(stdout, "\x1b[1mdiff --git") {
+		t.Errorf("raw ANSI-colored diff header leaked into rendered output: %q", stdout)
+	}
+}
+
+// TestRunCLI_pagerMode_GitPagerInUse verifies that setting GIT_PAGER_IN_USE
+// does not suppress rendered output. When drift is git's pager, it must write
+// directly to stdout rather than spawning a nested pager subprocess.
+func TestRunCLI_pagerMode_GitPagerInUse(t *testing.T) {
+	t.Setenv("GIT_PAGER_IN_USE", "1")
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(ansiColoredUnifiedDiff),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color"})
+	if code != 1 {
+		t.Fatalf("expected exit 1 (diff detected), got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+	stdout := out.String()
+	if !strings.Contains(stdout, "foo.go") {
+		t.Errorf("GIT_PAGER_IN_USE suppressed output — expected 'foo.go' in stdout, got: %q", stdout)
 	}
 }
 

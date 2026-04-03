@@ -263,6 +263,41 @@ rename to new_name.go
 		}
 	})
 
+	// Regression test: git sends ANSI-colored output when stdout is a TTY (i.e.
+	// when drift runs as core.pager). Before the fix, strings.HasPrefix checks
+	// like `line == "diff --git ..."` never matched because every line was
+	// prefixed with escape sequences, causing parseUnifiedDiff to return 0 files.
+	t.Run("ANSI-colored git output", func(t *testing.T) {
+		// Mimic what `git diff --color=always` produces: escape sequences wrap
+		// every significant line, content lines are plain.
+		input := "\x1b[1mdiff --git a/main.go b/main.go\x1b[0m\n" +
+			"\x1b[1mindex abc..def 100644\x1b[0m\n" +
+			"\x1b[1m--- a/main.go\x1b[0m\n" +
+			"\x1b[1m+++ b/main.go\x1b[0m\n" +
+			"\x1b[36m@@ -1,3 +1,3 @@\x1b[0m\n" +
+			" package main\n" +
+			"\x1b[31m-func old() {}\x1b[0m\n" +
+			"\x1b[32m+func new() {}\x1b[0m\n" +
+			" // end\n"
+		files, err := parseUnifiedDiff(strings.NewReader(input))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(files) != 1 {
+			t.Fatalf("expected 1 file, got %d (ANSI escape sequences may have broken prefix matching)", len(files))
+		}
+		f := files[0]
+		if f.Name != "main.go" {
+			t.Errorf("expected Name=main.go, got %q", f.Name)
+		}
+		if !strings.Contains(f.OldContent, "func old() {}") {
+			t.Errorf("OldContent should contain 'func old() {}', got: %q", f.OldContent)
+		}
+		if !strings.Contains(f.NewContent, "func new() {}") {
+			t.Errorf("NewContent should contain 'func new() {}', got: %q", f.NewContent)
+		}
+	})
+
 	t.Run("no newline at end of file marker skipped", func(t *testing.T) {
 		input := `diff --git a/noeol.txt b/noeol.txt
 --- a/noeol.txt

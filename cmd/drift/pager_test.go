@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -204,6 +206,67 @@ func TestPagerStartEarlyExit(t *testing.T) {
 		// Good: no deadlock.
 	case <-time.After(5 * time.Second):
 		t.Fatal("deadlock: startPager early-exit did not unblock within 5 seconds")
+	}
+}
+
+// TestStreamThroughPager_SkipsNestedPagerWhenGitPagerInUse verifies that
+// streamThroughPager does not launch a nested pager subprocess when
+// GIT_PAGER_IN_USE is set in the environment.
+//
+// Regression test for: when drift runs as git's core.pager, git sets
+// GIT_PAGER_IN_USE. Without this guard, drift would start a nested less
+// subprocess. Git also sets LESS=FRX, so the inner less inherits -F
+// (quit-if-one-screen) and silently exits without displaying any output.
+//
+// We detect pager invocation by using a sentinel PAGER ("sed s/^/PAGED:/")
+// that transforms every output line. If the pager is invoked, rendered output
+// will contain "PAGED:" prefixes. If GIT_PAGER_IN_USE is respected, drift
+// writes directly to stdout and the output is untransformed.
+func TestStreamThroughPager_SkipsNestedPagerWhenGitPagerInUse(t *testing.T) {
+	if _, err := exec.LookPath("sed"); err != nil {
+		t.Skip("sed not available")
+	}
+
+	t.Setenv("GIT_PAGER_IN_USE", "1")
+	// Sentinel pager: if invoked, adds "PAGED:" to every line.
+	// streamThroughPager must NOT invoke this when GIT_PAGER_IN_USE is set.
+	t.Setenv("PAGER", "sed s/^/PAGED:/")
+
+	// Use os.Pipe() so Out is *os.File, satisfying the guard that triggers
+	// the pager-start branch when GIT_PAGER_IN_USE is absent.
+	pr, pw, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+	defer pr.Close()
+
+	streams := IOStreams{In: strings.NewReader(""), Out: pw, Err: os.Stderr}
+	opts := &rootOptions{streams: streams}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_ = streamThroughPager(opts, func(w io.Writer) (bool, error) {
+			_, _ = io.WriteString(w, "rendered output\n")
+			return true, nil
+		})
+		pw.Close()
+	}()
+
+	output, _ := io.ReadAll(pr)
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("timeout: streamThroughPager did not return within 5s")
+	}
+
+	got := string(output)
+	if strings.Contains(got, "PAGED:") {
+		t.Error("nested pager was invoked despite GIT_PAGER_IN_USE being set; output lines were transformed by sed")
+	}
+	if !strings.Contains(got, "rendered output") {
+		t.Errorf("expected direct output when GIT_PAGER_IN_USE is set, got: %q", got)
 	}
 }
 
