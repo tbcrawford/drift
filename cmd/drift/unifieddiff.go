@@ -43,7 +43,7 @@ func parseUnifiedDiff(r io.Reader) ([]parsedFileDiff, error) {
 		current *parsedFileDiff
 		oldBuf  strings.Builder
 		newBuf  strings.Builder
-		cur     state = stateHeader
+		cur     = stateHeader
 		// isNewFile / isDeletedFile track whether we should skip reconstructing
 		// the null side for added/deleted files.
 		isNewFile     bool

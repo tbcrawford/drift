@@ -209,9 +209,10 @@ func TestPagerStartEarlyExit(t *testing.T) {
 
 // TestIsPipeClosedErr verifies the helper correctly identifies pipe-closed errors.
 func TestIsPipeClosedErr(t *testing.T) {
-	if !isPipeClosedErr(os.ErrClosed) {
-		// os.ErrClosed is not a pipe error, so this should be false.
-		// (This is just a sanity check that the func doesn't over-match.)
+	// os.ErrClosed is not a pipe error, so isPipeClosedErr should return false.
+	// This is a sanity check that the func doesn't over-match.
+	if isPipeClosedErr(os.ErrClosed) {
+		t.Error("isPipeClosedErr: os.ErrClosed should not be considered a pipe-closed error")
 	}
 
 	pr, pw := func() (*os.File, *os.File) {
