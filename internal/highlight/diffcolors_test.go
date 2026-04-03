@@ -3,8 +3,99 @@ package highlight
 import (
 	"testing"
 
+	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/styles"
 )
+
+// blendClose asserts two colours are within ±2 per channel (float rounding).
+func blendClose(t *testing.T, label string, got, want chroma.Colour) {
+	t.Helper()
+	diff := func(a, b uint8) int {
+		if a > b {
+			return int(a - b)
+		}
+		return int(b - a)
+	}
+	if diff(got.Red(), want.Red()) > 2 || diff(got.Green(), want.Green()) > 2 || diff(got.Blue(), want.Blue()) > 2 {
+		t.Errorf("%s: got #%02x%02x%02x want ~#%02x%02x%02x",
+			label, got.Red(), got.Green(), got.Blue(), want.Red(), want.Green(), want.Blue())
+	}
+}
+
+// TestBlendChromaTowardTerminalBase_dark verifies dark-terminal blending.
+// base dark=(18,18,22); mix=0.78; src=#ff0000:
+//
+//	r = 255*0.22 + 18*0.78 ≈ 56+14 = 70
+//	g = 0*0.22  + 18*0.78 ≈ 14
+//	b = 0*0.22  + 22*0.78 ≈ 17
+func TestBlendChromaTowardTerminalBase_dark(t *testing.T) {
+	c := chroma.MustParseColour("#ff0000")
+	got := blendChromaTowardTerminalBase(c, true)
+	blendClose(t, "dark red", got, chroma.NewColour(70, 14, 17))
+}
+
+// TestBlendChromaTowardTerminalBase_light verifies light-terminal blending.
+// base light=(255,255,255); mix=0.78; src=#ff0000:
+//
+//	r = 255
+//	g = 0*0.22 + 255*0.78 ≈ 199
+//	b = 0*0.22 + 255*0.78 ≈ 199
+func TestBlendChromaTowardTerminalBase_light(t *testing.T) {
+	c := chroma.MustParseColour("#ff0000")
+	got := blendChromaTowardTerminalBase(c, false)
+	blendClose(t, "light red", got, chroma.NewColour(255, 199, 199))
+}
+
+// TestFallbackDiffChroma covers all four constant values.
+func TestFallbackDiffChroma_allVariants(t *testing.T) {
+	cases := []struct {
+		isDark, del bool
+		want        string
+	}{
+		{true, true, "#3a2228"},
+		{true, false, "#243520"},
+		{false, true, "#ffeaea"},
+		{false, false, "#e6f7e6"},
+	}
+	for _, c := range cases {
+		got := fallbackDiffChroma(c.isDark, c.del)
+		want := chroma.MustParseColour(c.want)
+		if got != want {
+			t.Errorf("fallbackDiffChroma(isDark=%v,del=%v): got %s want %s", c.isDark, c.del, got, want)
+		}
+	}
+}
+
+// TestDiffEntryChromaColour_usesBackground verifies Background field is preferred.
+func TestDiffEntryChromaColour_prefersBackground(t *testing.T) {
+	bg := chroma.MustParseColour("#aabbcc")
+	e := chroma.StyleEntry{Background: bg, Colour: chroma.MustParseColour("#112233")}
+	got := diffEntryChromaColour(e, true)
+	if got != bg {
+		t.Errorf("expected Background=%s, got %s", bg, got)
+	}
+}
+
+// TestDiffEntryChromaColour_blendsColourWhenNoBackground verifies Colour blend fallback.
+func TestDiffEntryChromaColour_blendsColour(t *testing.T) {
+	c := chroma.MustParseColour("#ff0000")
+	e := chroma.StyleEntry{Colour: c}
+	got := diffEntryChromaColour(e, true)
+	if !got.IsSet() {
+		t.Error("expected set colour from Colour blend path")
+	}
+	if got == c {
+		t.Error("blended result should differ from source colour")
+	}
+}
+
+// TestDiffEntryChromaColour_zeroWhenBothUnset verifies empty entry returns zero.
+func TestDiffEntryChromaColour_zeroWhenBothUnset(t *testing.T) {
+	got := diffEntryChromaColour(chroma.StyleEntry{}, true)
+	if got.IsSet() {
+		t.Errorf("expected zero (unset) colour, got %s", got)
+	}
+}
 
 func TestGutterBackgroundHex_matchesTerrasortPalette(t *testing.T) {
 	t.Parallel()
