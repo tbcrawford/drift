@@ -393,3 +393,15 @@ Plans:
 Plans:
 - [x] 25-01-PLAN.md — Unified diff parser: parseUnifiedDiff + parsedFileDiff type in unifieddiff.go (completed 2026-04-02)
 - [x] 25-02-PLAN.md — Wire pager mode into runRoot: stdin-pipe detection, runPagerMode, --color-only, drift install-pager (completed 2026-04-02)
+
+### Phase 26: enhance test coverage: edge cases, regressions, and shared fixtures
+
+**Goal:** Raise overall test coverage from 79.4% toward 85%+ by covering the 0%-coverage builder API methods, zero-coverage internal rendering helpers, and low-coverage CLI functions — without adding new features.
+**Requirements**: TEST-01
+**Depends on:** Phase 25
+**Plans:** 3 plans
+
+Plans:
+- [ ] 26-01-PLAN.md — Builder API (9 uncovered methods) + ApplyOffset internal helper
+- [ ] 26-02-PLAN.md — diffcolors.go internal helpers + split renderer / gutter edge cases
+- [ ] 26-03-PLAN.md — CLI coverage: parseAlgorithm, fileHeaderName, streamThroughPager, resolveRootOptions flags, gitShowHEADBlobFromTree, resolveInputs uncovered branches
