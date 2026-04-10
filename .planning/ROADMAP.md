@@ -416,3 +416,14 @@ Plans:
 Plans:
 - [x] 27-01-PLAN.md — funcctx package + Hunk.FuncName field + hunk.Build() wiring + drift.Diff() lang plumbing
 - [x] 27-02-PLAN.md — Renderer @@ header update (unified + split) + integration tests + CLI smoke test
+
+### Phase 28: add ux chrome theme support — the existing chrome is the drift theme, alongside add a delta theme and explore what delta's chrome looks like that decorates around the diffs themselves
+
+**Goal:** Introduce a `ChromeTheme` abstraction for the decorative chrome around diff output (file headers, separator rules). The existing drift style (slate-blue ▸ chevron + full-width rule) becomes `DriftTheme`; a new `DeltaTheme` produces a Unicode box (┌─ filename ─┐) inspired by delta's `file-decoration-style = blue box`. A `--chrome drift|delta` CLI flag selects between them.
+**Requirements**: TBD
+**Depends on:** Phase 27
+**Plans:** 2 plans
+
+Plans:
+- [ ] 28-01-PLAN.md — ChromeTheme interface + DriftTheme + DeltaTheme in internal/chrome package
+- [ ] 28-02-PLAN.md — Wire --chrome flag through rootFlags → rootOptions; replace writeFileHeader with chromeTheme.RenderFileHeader

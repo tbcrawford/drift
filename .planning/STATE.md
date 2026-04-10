@@ -4,13 +4,13 @@ milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Ready to execute
 stopped_at: Completed 27-01-PLAN.md and 27-02-PLAN.md
-last_updated: "2026-04-10T19:24:42.199Z"
+last_updated: "2026-04-10T19:51:33.529Z"
 progress:
-  total_phases: 27
+  total_phases: 28
   completed_phases: 16
-  total_plans: 35
+  total_plans: 37
   completed_plans: 35
-  percent: 100
+  percent: 95
 ---
 
 # Project State
@@ -181,6 +181,7 @@ Recent decisions affecting current work:
 - Phase 25 added: git pager mode — use `drift` as a drop-in replacement for `delta` as a git pager (GIT_PAGER / core.pager / interactive.diffFilter)
 - Phase 26 added: enhance test coverage: edge cases, regressions, and shared fixtures — review previous phase docs for uncovered regressions, identify common fixtures, improve overall coverage
 - Phase 27 added: add function context to hunk header where possible
+- Phase 28 added: add ux chrome theme support — the existing chrome is the drift theme, alongside add a delta theme and explore what delta's chrome looks like that decorates around the diffs themselves
 
 ### Quick Tasks Completed
 
