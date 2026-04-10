@@ -959,3 +959,115 @@ func TestRunCLI_pagerMode_noCodeFragment(t *testing.T) {
 		}
 	}
 }
+
+// --- Chrome theme tests (Phase 28) ---
+
+// tempFiles creates two temp files with given content and returns their paths.
+// The caller is responsible for cleanup (t.Cleanup is registered).
+func tempFiles(t *testing.T, oldContent, newContent string) (oldPath, newPath string) {
+	t.Helper()
+	dir := t.TempDir()
+	oldPath = filepath.Join(dir, "old.txt")
+	newPath = filepath.Join(dir, "new.txt")
+	if err := os.WriteFile(oldPath, []byte(oldContent), 0o644); err != nil {
+		t.Fatalf("tempFiles: write old: %v", err)
+	}
+	if err := os.WriteFile(newPath, []byte(newContent), 0o644); err != nil {
+		t.Fatalf("tempFiles: write new: %v", err)
+	}
+	return oldPath, newPath
+}
+
+// TestRunCLI_chromeDrift verifies that --chrome drift produces the ▸ chevron header.
+func TestRunCLI_chromeDrift(t *testing.T) {
+	oldPath, newPath := tempFiles(t, "line one\n", "line two\n")
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--no-color", "--chrome", "drift", oldPath, newPath})
+	if code != 1 {
+		t.Fatalf("expected exit 1 (diff), got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+	if !strings.Contains(out.String(), "▸") {
+		t.Errorf("expected '▸' chevron in drift chrome output, got: %q", out.String())
+	}
+}
+
+// TestRunCLI_chromeDelta verifies that --chrome delta produces a box header.
+// With --no-color, DeltaTheme uses the ASCII fallback (+-- filename --+).
+func TestRunCLI_chromeDelta(t *testing.T) {
+	oldPath, newPath := tempFiles(t, "line one\n", "line two\n")
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--no-color", "--chrome", "delta", oldPath, newPath})
+	if code != 1 {
+		t.Fatalf("expected exit 1 (diff), got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+	// With --no-color, DeltaTheme uses ASCII: +-- filename --+ / +----------+
+	if !strings.Contains(out.String(), "+--") {
+		t.Errorf("expected '+--' ASCII box in delta chrome output (no-color), got: %q", out.String())
+	}
+}
+
+// TestRunCLI_chromeDefault verifies that omitting --chrome produces the drift ▸ header.
+func TestRunCLI_chromeDefault(t *testing.T) {
+	oldPath, newPath := tempFiles(t, "line one\n", "line two\n")
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--no-color", oldPath, newPath})
+	if code != 1 {
+		t.Fatalf("expected exit 1 (diff), got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+	if !strings.Contains(out.String(), "▸") {
+		t.Errorf("expected '▸' chevron (default drift chrome), got: %q", out.String())
+	}
+}
+
+// TestRunCLI_chromeUnknown verifies that --chrome bogus exits with code 2.
+func TestRunCLI_chromeUnknown(t *testing.T) {
+	oldPath, newPath := tempFiles(t, "line one\n", "line two\n")
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--chrome", "bogus", oldPath, newPath})
+	if code != 2 {
+		t.Fatalf("expected exit 2 for unknown chrome theme, got %d; stderr=%q", code, errOut.String())
+	}
+}
+
+// TestResolveRootOptions_chromeDefault verifies that unset --chrome flag → DriftTheme.
+func TestResolveRootOptions_chromeDefault(t *testing.T) {
+	flags := &rootFlags{algorithm: "auto", context: 3}
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	opts, err := resolveRootOptions(flags, streams, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if opts.chromeTheme.Name() != "drift" {
+		t.Errorf("expected chromeTheme.Name()=%q, got %q", "drift", opts.chromeTheme.Name())
+	}
+}
+
+// TestResolveRootOptions_chromeDelta verifies that --chrome delta → DeltaTheme.
+func TestResolveRootOptions_chromeDelta(t *testing.T) {
+	flags := &rootFlags{algorithm: "auto", context: 3, chrome: "delta"}
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	opts, err := resolveRootOptions(flags, streams, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if opts.chromeTheme.Name() != "delta" {
+		t.Errorf("expected chromeTheme.Name()=%q, got %q", "delta", opts.chromeTheme.Name())
+	}
+}
+
+// TestResolveRootOptions_chromeUnknown verifies that --chrome bogus → non-nil error.
+func TestResolveRootOptions_chromeUnknown(t *testing.T) {
+	flags := &rootFlags{algorithm: "auto", context: 3, chrome: "bogus"}
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	_, err := resolveRootOptions(flags, streams, nil)
+	if err == nil {
+		t.Fatal("expected non-nil error for unknown chrome theme, got nil")
+	}
+}

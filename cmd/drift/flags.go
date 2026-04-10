@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/term"
 	"github.com/tbcrawford/drift"
+	"github.com/tbcrawford/drift/internal/chrome"
 	"github.com/tbcrawford/drift/internal/highlight"
 	"github.com/tbcrawford/drift/internal/terminal"
 )
@@ -28,22 +29,24 @@ type rootFlags struct {
 	showTheme     bool
 	noPager       bool
 	colorOnly     bool
+	chrome        string
 }
 
 // rootOptions holds fully resolved values ready for execution.
 // All decisions (algorithm parsing, option building, streams assignment)
 // are made in resolveRootOptions — nothing is deferred to run time.
 type rootOptions struct {
-	streams   IOStreams
-	driftOpts []drift.Option
-	from      string
-	to        string
-	args      []string
-	showTheme bool // retained for show-theme stderr callback wiring
-	noPager   bool
-	noColor   bool // mirrors --no-color; used for plain-text header rendering
-	termWidth int  // terminal width for header rule; 0 means use default (80)
-	colorOnly bool // mirrors --color-only; pager mode pass-through with ANSI coloring
+	streams     IOStreams
+	driftOpts   []drift.Option
+	from        string
+	to          string
+	args        []string
+	showTheme   bool // retained for show-theme stderr callback wiring
+	noPager     bool
+	noColor     bool               // mirrors --no-color; used for plain-text header rendering
+	termWidth   int                // terminal width for header rule; 0 means use default (80)
+	colorOnly   bool               // mirrors --color-only; pager mode pass-through with ANSI coloring
+	chromeTheme chrome.ChromeTheme // resolved chrome decoration theme (default: DriftTheme)
 }
 
 // resolveRootOptions converts raw cobra flags into a fully populated rootOptions.
@@ -130,16 +133,24 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		}
 	}
 
+	// Resolve chrome decoration theme from --chrome flag value.
+	// Empty string → DriftTheme (default). Unknown names return an error.
+	chromeTheme, err := chrome.ParseChromeTheme(flags.chrome)
+	if err != nil {
+		return nil, newExitCode(2, err.Error())
+	}
+
 	return &rootOptions{
-		streams:   streams,
-		driftOpts: opts,
-		from:      flags.from,
-		to:        flags.to,
-		args:      args,
-		showTheme: flags.showTheme,
-		noPager:   flags.noPager,
-		noColor:   flags.noColor,
-		termWidth: resolvedTermWidth,
-		colorOnly: flags.colorOnly,
+		streams:     streams,
+		driftOpts:   opts,
+		from:        flags.from,
+		to:          flags.to,
+		args:        args,
+		showTheme:   flags.showTheme,
+		noPager:     flags.noPager,
+		noColor:     flags.noColor,
+		termWidth:   resolvedTermWidth,
+		colorOnly:   flags.colorOnly,
+		chromeTheme: chromeTheme,
 	}, nil
 }

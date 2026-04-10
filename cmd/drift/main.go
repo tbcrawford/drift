@@ -11,7 +11,6 @@ import (
 	"strings"
 	"syscall"
 
-	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/term"
 	git "github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
@@ -123,7 +122,7 @@ func runPagerMode(r io.Reader, opts *rootOptions) error {
 			}
 
 			var buf bytes.Buffer
-			writeFileHeader(&buf, f.Name, opts.noColor, opts.termWidth)
+			buf.WriteString(opts.chromeTheme.RenderFileHeader(f.Name, opts.noColor, opts.termWidth))
 			if rErr := drift.RenderWithNames(result, &buf, f.OldName, f.NewName, opts.driftOpts...); rErr != nil {
 				return false, newExitCode(2, rErr.Error())
 			}
@@ -169,6 +168,7 @@ With one path inside a git repository, diffs the working tree against HEAD.`,
 	_ = cmd.Flags().MarkHidden("show-theme")
 	cmd.Flags().BoolVar(&flags.noPager, "no-pager", false, "disable automatic pager for large output")
 	cmd.Flags().BoolVar(&flags.colorOnly, "color-only", false, "re-color stdin diff without restructuring (for interactive.diffFilter)")
+	cmd.Flags().StringVar(&flags.chrome, "chrome", "", "chrome decoration theme: drift (default), delta")
 
 	installPagerCmd := &cobra.Command{
 		Use:   "install-pager",
@@ -220,53 +220,6 @@ func fileHeaderName(args []string) string {
 	}
 }
 
-// writeFileHeader writes a styled file header into buf before each file's diff output.
-//
-// Styled (color) format:
-//
-//	▸ filename
-//	────────────────────────────────────────────────────────────
-//
-// Plain (--no-color / NoTTY) format:
-//
-//	▸ filename
-//	------------------------------------------------------------
-//
-// A blank line follows the rule so the diff hunk below has breathing room.
-func writeFileHeader(buf *bytes.Buffer, name string, noColor bool, termWidth int) {
-	const fallbackWidth = 80
-	width := termWidth
-	if width <= 0 {
-		width = fallbackWidth
-	}
-
-	if noColor {
-		buf.WriteString("▸ " + name + "\n")
-		buf.WriteString(strings.Repeat("-", width) + "\n")
-		buf.WriteString("\n")
-		return
-	}
-
-	// Accent color for the ▸ glyph — a muted slate-blue (ANSI 256 #63).
-	chevronStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("63")).
-		Bold(true)
-
-	// Filename in a muted foreground (bright white on dark / dark gray on light).
-	nameStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("250"))
-
-	// Rule in a dimmer tone so it recedes behind the filename.
-	ruleStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("238"))
-
-	rule := strings.Repeat("─", width)
-
-	buf.WriteString(chevronStyle.Render("▸") + " " + nameStyle.Render(name) + "\n")
-	buf.WriteString(ruleStyle.Render(rule) + "\n")
-	buf.WriteString("\n")
-}
-
 // runDirectoryDiff iterates over file pairs produced by diffDirectories, renders
 // each changed/added/removed file's diff into w preceded by a styled file header.
 // Diffs are computed in parallel (one goroutine per file) and merged in sorted order.
@@ -294,7 +247,7 @@ func runDirectoryDiff(pairs []filePair, opts *rootOptions, w io.Writer) (hasDiff
 				return nil // skip (e.g. CRLF-only difference normalised away)
 			}
 
-			writeFileHeader(&results[i], pair.Name, opts.noColor, opts.termWidth)
+			results[i].WriteString(opts.chromeTheme.RenderFileHeader(pair.Name, opts.noColor, opts.termWidth))
 			return drift.RenderWithNames(result, &results[i], oldName, newName, opts.driftOpts...)
 		})
 	}
@@ -334,7 +287,7 @@ func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, w io.Writer) (h
 			if result.IsEqual {
 				return nil
 			}
-			writeFileHeader(&results[i], pair.Name, opts.noColor, opts.termWidth)
+			results[i].WriteString(opts.chromeTheme.RenderFileHeader(pair.Name, opts.noColor, opts.termWidth))
 			return drift.RenderWithNames(result, &results[i], pair.OldName, pair.NewName, opts.driftOpts...)
 		})
 	}
@@ -539,7 +492,7 @@ func runRoot(opts *rootOptions) error {
 	// Render to a buffer so we can count lines and decide whether to page.
 	var buf bytes.Buffer
 	if headerName != "" {
-		writeFileHeader(&buf, headerName, opts.noColor, opts.termWidth)
+		buf.WriteString(opts.chromeTheme.RenderFileHeader(headerName, opts.noColor, opts.termWidth))
 	}
 	if err := drift.RenderWithNames(result, &buf, oldName, newName, opts.driftOpts...); err != nil {
 		return newExitCode(2, err.Error())
