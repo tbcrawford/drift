@@ -112,6 +112,16 @@ func runPagerMode(r io.Reader, opts *rootOptions) error {
 			if result.IsEqual {
 				continue
 			}
+
+			// Backfill CodeFragment from git @@ headers into each rendered hunk.
+			// Drift re-computes hunks independently; we match them by position.
+			// If counts differ (edge case), we fill as many as we can safely.
+			for i := range result.Hunks {
+				if i < len(f.Hunks) {
+					result.Hunks[i].CodeFragment = f.Hunks[i].CodeFragment
+				}
+			}
+
 			var buf bytes.Buffer
 			writeFileHeader(&buf, f.Name, opts.noColor, opts.termWidth)
 			if rErr := drift.RenderWithNames(result, &buf, f.OldName, f.NewName, opts.driftOpts...); rErr != nil {

@@ -131,9 +131,15 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 	}
 
 	for _, h := range result.Hunks {
-		// Hunk header: @@ -OldStart,OldLines +NewStart,NewLines @@
-		header := fmt.Sprintf("@@ -%d,%d +%d,%d @@\n",
-			h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+		// Hunk header: @@ -OldStart,OldLines +NewStart,NewLines @@ [CodeFragment]
+		var header string
+		if h.CodeFragment != "" {
+			header = fmt.Sprintf("@@ -%d,%d +%d,%d @@ %s\n",
+				h.OldStart, h.OldLines, h.NewStart, h.NewLines, h.CodeFragment)
+		} else {
+			header = fmt.Sprintf("@@ -%d,%d +%d,%d @@\n",
+				h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+		}
 		if _, err := fmt.Fprint(w, header); err != nil {
 			return err
 		}

@@ -49,11 +49,12 @@ type Line struct {
 // Hunk represents a contiguous block of changes with surrounding context lines.
 // OldStart/OldLines and NewStart/NewLines are used to generate @@ hunk headers.
 type Hunk struct {
-	OldStart int    // 1-indexed start line in old file
-	OldLines int    // number of lines from old file in this hunk
-	NewStart int    // 1-indexed start line in new file
-	NewLines int    // number of lines from new file in this hunk
-	Lines    []Line // all lines in the hunk (context + changes)
+	OldStart     int    // 1-indexed start line in old file
+	OldLines     int    // number of lines from old file in this hunk
+	NewStart     int    // 1-indexed start line in new file
+	NewLines     int    // number of lines from new file in this hunk
+	Lines        []Line // all lines in the hunk (context + changes)
+	CodeFragment string // function/class context from git @@ header; "" in standalone mode
 }
 
 // DiffResult is the structured output of a diff operation.

@@ -887,3 +887,75 @@ func TestStreamThroughPager_renderError(t *testing.T) {
 		t.Errorf("expected exit code 2, got %d", ec.code)
 	}
 }
+
+// --- Code fragment (Phase 27) tests ---
+
+// gitDiffWithCodeFragment is a minimal git unified diff where the @@ header
+// includes a code_fragment (function context) that git appends automatically.
+// Importantly, the diff content does NOT contain "parseXYZ" (our sentinel),
+// so the only way it can appear in rendered output is via the @@ header backfill.
+const gitDiffWithCodeFragment = `diff --git a/options.go b/options.go
+--- a/options.go
++++ b/options.go
+@@ -5,4 +5,4 @@ func parseXYZ()
+ package main
+
+-	x := 1
++	x := 2
+ }
+`
+
+// TestRunCLI_pagerMode_codeFragment verifies that when drift acts as a git pager
+// and the @@ header contains a code_fragment (function context), the rendered
+// output includes that code_fragment in the @@ hunk header line.
+// The sentinel "parseXYZ" does NOT appear in the diff content lines, so its
+// presence in the rendered output can only come from the @@ header backfill.
+func TestRunCLI_pagerMode_codeFragment(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(gitDiffWithCodeFragment),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color"})
+	if code != 1 {
+		t.Fatalf("expected exit 1 for differing input, got %d; stderr=%q stdout=%q",
+			code, errOut.String(), out.String())
+	}
+	stdout := out.String()
+	// "parseXYZ" is absent from the diff content lines — it can only appear
+	// in the rendered output if CodeFragment was threaded into the @@ header.
+	if !strings.Contains(stdout, "parseXYZ") {
+		t.Errorf("expected code_fragment 'parseXYZ' in rendered @@ header, got:\n%s", stdout)
+	}
+	// The @@ hunk header should be present.
+	if !strings.Contains(stdout, "@@") {
+		t.Errorf("expected @@ hunk header in rendered output, got:\n%s", stdout)
+	}
+}
+
+// TestRunCLI_pagerMode_noCodeFragment verifies that when the @@ header has no
+// code_fragment, the hunk header renders cleanly as "@@ -x,y +a,b @@" with no
+// trailing space or content (no regression).
+func TestRunCLI_pagerMode_noCodeFragment(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(singleFileUnifiedDiff), // existing fixture; no code_fragment
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color"})
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d; stderr=%q", code, errOut.String())
+	}
+	stdout := out.String()
+	if !strings.Contains(stdout, "@@") {
+		t.Errorf("expected @@ hunk header in output, got:\n%s", stdout)
+	}
+	// Verify no trailing space on @@ header lines when CodeFragment is empty.
+	for _, line := range strings.Split(stdout, "\n") {
+		if strings.HasPrefix(line, "@@ ") && strings.HasSuffix(line, "@@ ") {
+			t.Errorf("@@ header line has trailing space (regression): %q", line)
+		}
+	}
+}

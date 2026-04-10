@@ -73,7 +73,14 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 	}
 
 	for _, h := range result.Hunks {
-		header := fmt.Sprintf("@@ -%d,%d +%d,%d @@", h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+		var header string
+		if h.CodeFragment != "" {
+			header = fmt.Sprintf("@@ -%d,%d +%d,%d @@ %s",
+				h.OldStart, h.OldLines, h.NewStart, h.NewLines, h.CodeFragment)
+		} else {
+			header = fmt.Sprintf("@@ -%d,%d +%d,%d @@",
+				h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+		}
 		if _, err := fmt.Fprintln(w, header); err != nil {
 			return err
 		}
