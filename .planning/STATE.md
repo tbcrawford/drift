@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Ready to execute
-stopped_at: Phase 27 context gathered
-last_updated: "2026-04-10T19:13:27.215Z"
+stopped_at: Completed 27-01-PLAN.md and 27-02-PLAN.md
+last_updated: "2026-04-10T19:24:42.199Z"
 progress:
   total_phases: 27
-  completed_phases: 15
+  completed_phases: 16
   total_plans: 35
-  completed_plans: 33
-  percent: 94
+  completed_plans: 35
+  percent: 100
 ---
 
 # Project State
@@ -81,6 +81,8 @@ Plan: Complete (3/3 plans done)
 | Phase 26-enhance-test-coverage P26-01 | ~15min | 2 tasks | 2 files |
 | Phase 26-enhance-test-coverage P26-02 | ~20min | 2 tasks | 2 files |
 | Phase 26-enhance-test-coverage P26-03 | ~25min | 1 tasks | 3 files |
+| Phase 27 P01 | 4 | 1 tasks | 2 files |
+| Phase 27 P02 | 4 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -154,6 +156,9 @@ Recent decisions affecting current work:
 - [Phase 23]: GutterCache field added to RenderConfig (not passed as separate arg) — avoids threading another parameter through all renderer call sites
 - [Phase 23]: highlightLineWithLineBackgroundFast uses direct ANSI SGR builder; lipgloss removed from linebackground.go hot path entirely
 - [Phase 23]: bgSeq (background ANSI sub-sequence "48;2;R;G;B") pre-computed once per HighlightLineWithLineBackground call — was per-token before
+- [Phase 27]: Extract code_fragment from git @@ hunk headers using strings.Index; no regex (per CONTEXT.md D-03)
+- [Phase 27]: Backfill edittype.Hunk.CodeFragment in runPagerMode by positional match; i < len(f.Hunks) guard per T-27-05
+- [Phase 27]: Standalone drift.Diff() path unchanged; CodeFragment always '' in non-pager mode (CONTEXT.md D-02/D-08)
 
 ### Roadmap Evolution
 
@@ -203,6 +208,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-10T19:06:18.135Z
-Stopped at: Phase 27 context gathered
-Resume file: .planning/phases/27-add-function-context-to-hunk-header-where-possible/27-CONTEXT.md
+Last session: 2026-04-10T19:24:42.192Z
+Stopped at: Completed 27-01-PLAN.md and 27-02-PLAN.md
+Resume file: None

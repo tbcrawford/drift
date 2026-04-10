@@ -411,8 +411,8 @@ Plans:
 **Goal:** When language can be detected (via explicit `WithLang()` or filename extension), scan backward from each hunk's start line to find the nearest enclosing function or class declaration and append it to the `@@ -x,y +a,b @@` hunk header, matching git's behavior. Supported languages: Go, Python, JavaScript, TypeScript, C, C++, Java, Ruby, Rust.
 **Requirements**: FUNCCTX-01
 **Depends on:** Phase 26
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 27-01-PLAN.md — funcctx package + Hunk.FuncName field + hunk.Build() wiring + drift.Diff() lang plumbing
-- [ ] 27-02-PLAN.md — Renderer @@ header update (unified + split) + integration tests + CLI smoke test
+- [x] 27-01-PLAN.md — funcctx package + Hunk.FuncName field + hunk.Build() wiring + drift.Diff() lang plumbing
+- [x] 27-02-PLAN.md — Renderer @@ header update (unified + split) + integration tests + CLI smoke test
