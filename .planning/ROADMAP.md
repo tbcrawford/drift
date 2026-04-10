@@ -422,8 +422,8 @@ Plans:
 **Goal:** Introduce a `ChromeTheme` abstraction for the decorative chrome around diff output (file headers, separator rules). The existing drift style (slate-blue ▸ chevron + full-width rule) becomes `DriftTheme`; a new `DeltaTheme` produces a Unicode box (┌─ filename ─┐) inspired by delta's `file-decoration-style = blue box`. A `--chrome drift|delta` CLI flag selects between them.
 **Requirements**: TBD
 **Depends on:** Phase 27
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 28-01-PLAN.md — ChromeTheme interface + DriftTheme + DeltaTheme in internal/chrome package
-- [ ] 28-02-PLAN.md — Wire --chrome flag through rootFlags → rootOptions; replace writeFileHeader with chromeTheme.RenderFileHeader
+- [x] 28-01-PLAN.md — ChromeTheme interface + DriftTheme + DeltaTheme in internal/chrome package
+- [x] 28-02-PLAN.md — Wire --chrome flag through rootFlags → rootOptions; replace writeFileHeader with chromeTheme.RenderFileHeader

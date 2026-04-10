@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Ready to execute
-stopped_at: Completed 27-01-PLAN.md and 27-02-PLAN.md
-last_updated: "2026-04-10T19:51:33.529Z"
+stopped_at: Completed 28-01-PLAN.md and 28-02-PLAN.md
+last_updated: "2026-04-10T19:58:48.843Z"
 progress:
   total_phases: 28
-  completed_phases: 16
+  completed_phases: 17
   total_plans: 37
-  completed_plans: 35
-  percent: 95
+  completed_plans: 37
+  percent: 100
 ---
 
 # Project State
@@ -83,6 +83,7 @@ Plan: Complete (3/3 plans done)
 | Phase 26-enhance-test-coverage P26-03 | ~25min | 1 tasks | 3 files |
 | Phase 27 P01 | 4 | 1 tasks | 2 files |
 | Phase 27 P02 | 4 | 2 tasks | 5 files |
+| Phase 28 P28-01+02 | 349 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -159,6 +160,10 @@ Recent decisions affecting current work:
 - [Phase 27]: Extract code_fragment from git @@ hunk headers using strings.Index; no regex (per CONTEXT.md D-03)
 - [Phase 27]: Backfill edittype.Hunk.CodeFragment in runPagerMode by positional match; i < len(f.Hunks) guard per T-27-05
 - [Phase 27]: Standalone drift.Diff() path unchanged; CodeFragment always '' in non-pager mode (CONTEXT.md D-02/D-08)
+- [Phase 28]: DriftTheme exactly mirrors writeFileHeader() — visually identical, zero behavior change without --chrome flag
+- [Phase 28]: DeltaTheme uses slate-blue lipgloss.Color("63") matching drift chevron for visual cohesion; ASCII fallback for --no-color
+- [Phase 28]: ParseChromeTheme empty string → DriftTheme (backward compatible default); unknown names → exit code 2
+- [Phase 28]: lipgloss import removed from main.go — writeFileHeader deleted; logic fully encapsulated in internal/chrome
 
 ### Roadmap Evolution
 
@@ -209,6 +214,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-10T19:24:42.192Z
-Stopped at: Completed 27-01-PLAN.md and 27-02-PLAN.md
+Last session: 2026-04-10T19:58:48.835Z
+Stopped at: Completed 28-01-PLAN.md and 28-02-PLAN.md
 Resume file: None
