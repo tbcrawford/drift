@@ -1,15 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0.0
-milestone_name: "git pager mode: drift as drop-in replacement for delta"
+milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Phase 26 complete
-stopped_at: Completed 26-03-PLAN.md (CLI function tests for parseAlgorithm, fileHeaderName, exitCodeErr, streamThroughPager, resolveInputs, gitShowHEADBlobFromTree)
-last_updated: "2026-04-03T20:01:30Z"
+stopped_at: Phase 27 context gathered
+last_updated: "2026-04-10T19:06:18.142Z"
 progress:
-  total_phases: 26
-  completed_phases: 26
-  total_plans: 38
-  completed_plans: 38
+  total_phases: 27
+  completed_phases: 15
+  total_plans: 35
+  completed_plans: 33
+  percent: 94
 ---
 
 # Project State
@@ -174,6 +175,7 @@ Recent decisions affecting current work:
 - Phase 24 added: performance optimization phase 2 — target sub-500ms response time for `drift --split` on real repos, benchmark against delta, explore delta source for strategies
 - Phase 25 added: git pager mode — use `drift` as a drop-in replacement for `delta` as a git pager (GIT_PAGER / core.pager / interactive.diffFilter)
 - Phase 26 added: enhance test coverage: edge cases, regressions, and shared fixtures — review previous phase docs for uncovered regressions, identify common fixtures, improve overall coverage
+- Phase 27 added: add function context to hunk header where possible
 
 ### Quick Tasks Completed
 
@@ -201,6 +203,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T20:01:30Z
-Stopped at: Completed 26-03-PLAN.md (CLI function tests — parseAlgorithm, fileHeaderName, exitCodeErr, streamThroughPager, resolveInputs, gitShowHEADBlobFromTree)
-Resume file: None
+Last session: 2026-04-10T19:06:18.135Z
+Stopped at: Phase 27 context gathered
+Resume file: .planning/phases/27-add-function-context-to-hunk-header-where-possible/27-CONTEXT.md
