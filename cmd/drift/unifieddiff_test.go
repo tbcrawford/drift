@@ -325,3 +325,133 @@ rename to new_name.go
 		}
 	})
 }
+
+// TestParseUnifiedDiff_CodeFragment verifies that parseUnifiedDiff correctly
+// extracts the code_fragment from git @@ hunk header lines.
+func TestParseUnifiedDiff_CodeFragment(t *testing.T) {
+	t.Run("single hunk with code_fragment", func(t *testing.T) {
+		input := `diff --git a/main.go b/main.go
+--- a/main.go
++++ b/main.go
+@@ -12,7 +12,9 @@ func ParseOptions(args []string)
+ context
+-old line
++new line
+ context
+`
+		files, err := parseUnifiedDiff(strings.NewReader(input))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(files) != 1 {
+			t.Fatalf("expected 1 file, got %d", len(files))
+		}
+		f := files[0]
+		if len(f.Hunks) != 1 {
+			t.Fatalf("expected 1 hunk, got %d", len(f.Hunks))
+		}
+		if f.Hunks[0].CodeFragment != "func ParseOptions(args []string)" {
+			t.Errorf("CodeFragment = %q, want %q", f.Hunks[0].CodeFragment, "func ParseOptions(args []string)")
+		}
+		if f.Hunks[0].NewStart != 12 {
+			t.Errorf("NewStart = %d, want 12", f.Hunks[0].NewStart)
+		}
+	})
+
+	t.Run("hunk without code_fragment", func(t *testing.T) {
+		input := `diff --git a/main.go b/main.go
+--- a/main.go
++++ b/main.go
+@@ -1,3 +1,3 @@
+ context
+-old
++new
+ context
+`
+		files, err := parseUnifiedDiff(strings.NewReader(input))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(files) != 1 || len(files[0].Hunks) != 1 {
+			t.Fatalf("expected 1 file with 1 hunk")
+		}
+		if files[0].Hunks[0].CodeFragment != "" {
+			t.Errorf("expected empty CodeFragment, got %q", files[0].Hunks[0].CodeFragment)
+		}
+	})
+
+	t.Run("multi-hunk with different code_fragments", func(t *testing.T) {
+		input := `diff --git a/main.go b/main.go
+--- a/main.go
++++ b/main.go
+@@ -1,3 +1,3 @@ func Alpha()
+ ctx
+-old a
++new a
+ ctx
+@@ -20,3 +20,3 @@ func Beta()
+ ctx
+-old b
++new b
+ ctx
+`
+		files, err := parseUnifiedDiff(strings.NewReader(input))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(files) != 1 {
+			t.Fatalf("expected 1 file, got %d", len(files))
+		}
+		f := files[0]
+		if len(f.Hunks) != 2 {
+			t.Fatalf("expected 2 hunks, got %d", len(f.Hunks))
+		}
+		if f.Hunks[0].CodeFragment != "func Alpha()" {
+			t.Errorf("Hunks[0].CodeFragment = %q, want %q", f.Hunks[0].CodeFragment, "func Alpha()")
+		}
+		if f.Hunks[1].CodeFragment != "func Beta()" {
+			t.Errorf("Hunks[1].CodeFragment = %q, want %q", f.Hunks[1].CodeFragment, "func Beta()")
+		}
+	})
+
+	t.Run("ANSI-colored @@ line with code_fragment", func(t *testing.T) {
+		// ansi.Strip cleans ANSI before the switch; verify code_fragment still extracted.
+		input := "diff --git a/main.go b/main.go\n" +
+			"--- a/main.go\n" +
+			"+++ b/main.go\n" +
+			"\x1b[36m@@ -5,3 +5,3 @@ func Foo()\x1b[0m\n" +
+			" ctx\n" +
+			"-old\n" +
+			"+new\n"
+		files, err := parseUnifiedDiff(strings.NewReader(input))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(files) != 1 || len(files[0].Hunks) != 1 {
+			t.Fatalf("expected 1 file with 1 hunk")
+		}
+		if files[0].Hunks[0].CodeFragment != "func Foo()" {
+			t.Errorf("CodeFragment = %q, want %q", files[0].Hunks[0].CodeFragment, "func Foo()")
+		}
+	})
+
+	t.Run("whitespace-only code_fragment treated as empty", func(t *testing.T) {
+		input := "diff --git a/main.go b/main.go\n" +
+			"--- a/main.go\n" +
+			"+++ b/main.go\n" +
+			"@@ -1,3 +1,3 @@  \n" + // trailing spaces after @@
+			" ctx\n" +
+			"-old\n" +
+			"+new\n"
+		files, err := parseUnifiedDiff(strings.NewReader(input))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(files) != 1 || len(files[0].Hunks) != 1 {
+			t.Fatalf("expected 1 file with 1 hunk")
+		}
+		if files[0].Hunks[0].CodeFragment != "" {
+			t.Errorf("expected empty CodeFragment for whitespace-only, got %q", files[0].Hunks[0].CodeFragment)
+		}
+	})
+}

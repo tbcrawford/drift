@@ -2,11 +2,22 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 
 	"github.com/charmbracelet/x/ansi"
 )
+
+// hunkFragment holds the parsed @@ header metadata for one hunk, including
+// the optional code_fragment that git appends after the closing @@.
+// Example git hunk header: "@@ -12,7 +12,9 @@ func ParseOptions(args []string)"
+// → OldStart=12, NewStart=12, CodeFragment="func ParseOptions(args []string)"
+type hunkFragment struct {
+	OldStart     int
+	NewStart     int
+	CodeFragment string // text after the closing "@@"; "" when git omitted it
+}
 
 // parsedFileDiff holds the reconstructed old/new content for one file
 // extracted from a multi-file unified diff stream (e.g. git diff output).
@@ -27,6 +38,9 @@ type parsedFileDiff struct {
 	// IsBinary is true when the diff header indicates binary file changes.
 	// When true, OldContent and NewContent are empty.
 	IsBinary bool
+	// Hunks holds the per-hunk metadata extracted from git @@ header lines.
+	// Populated by parseUnifiedDiff; one entry per @@ line encountered.
+	Hunks []hunkFragment
 }
 
 // parseUnifiedDiff reads a multi-file unified diff (as produced by git diff,
@@ -134,12 +148,22 @@ func parseUnifiedDiff(r io.Reader) ([]parsedFileDiff, error) {
 				}
 			}
 
-		// Hunk header @@ — transition to stateHunk
+		// Hunk header @@ — transition to stateHunk; extract code_fragment.
 		case strings.HasPrefix(line, "@@ "):
 			if cur != stateHunk {
 				cur = stateHunk
 			}
-			// Hunk headers are not added to content.
+			if current != nil {
+				oldS, newS, cf, ok := parseHunkHeader(line)
+				if ok {
+					current.Hunks = append(current.Hunks, hunkFragment{
+						OldStart:     oldS,
+						NewStart:     newS,
+						CodeFragment: cf,
+					})
+				}
+			}
+			// Hunk header content is not added to OldContent/NewContent.
 
 		// Content lines within a hunk
 		case cur == stateHunk:
@@ -207,4 +231,58 @@ func stripABPrefix(path string) string {
 		return path[2:]
 	}
 	return path
+}
+
+// parseHunkHeader parses a git unified diff hunk header line and returns the
+// old-file start line, new-file start line, and optional code_fragment.
+//
+// Git format: "@@ -OldStart[,OldLines] +NewStart[,NewLines] @@ [code_fragment]"
+//
+// Returns ok=false if the line does not match the expected format.
+func parseHunkHeader(line string) (oldStart, newStart int, codeFragment string, ok bool) {
+	// Must start with "@@ "
+	if !strings.HasPrefix(line, "@@ ") {
+		return 0, 0, "", false
+	}
+	rest := line[3:] // skip "@@ "
+
+	// Find the closing " @@" — it may be followed by a space and code_fragment,
+	// or may be at the end of the line.
+	closeIdx := strings.Index(rest, " @@")
+	if closeIdx < 0 {
+		// No closing @@ found — malformed; skip.
+		return 0, 0, "", false
+	}
+
+	// The range section is everything before " @@": "-OldStart[,OldLines] +NewStart[,NewLines]"
+	rangeStr := rest[:closeIdx]
+
+	// code_fragment is everything after " @@", trimmed of whitespace.
+	after := rest[closeIdx+3:] // skip " @@"
+	cf := strings.TrimSpace(after)
+
+	// Parse old start line from "-X" or "-X,Y".
+	var oldS, newS int
+	if dashIdx := strings.Index(rangeStr, "-"); dashIdx >= 0 {
+		oldPart := rangeStr[dashIdx+1:]
+		if commaIdx := strings.IndexByte(oldPart, ','); commaIdx >= 0 {
+			oldPart = oldPart[:commaIdx]
+		} else if spaceIdx := strings.IndexByte(oldPart, ' '); spaceIdx >= 0 {
+			oldPart = oldPart[:spaceIdx]
+		}
+		fmt.Sscanf(oldPart, "%d", &oldS)
+	}
+
+	// Parse new start line from "+A" or "+A,B".
+	if plusIdx := strings.Index(rangeStr, "+"); plusIdx >= 0 {
+		newPart := rangeStr[plusIdx+1:]
+		if commaIdx := strings.IndexByte(newPart, ','); commaIdx >= 0 {
+			newPart = newPart[:commaIdx]
+		} else if spaceIdx := strings.IndexByte(newPart, ' '); spaceIdx >= 0 {
+			newPart = newPart[:spaceIdx]
+		}
+		fmt.Sscanf(newPart, "%d", &newS)
+	}
+
+	return oldS, newS, cf, true
 }
