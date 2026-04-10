@@ -405,3 +405,14 @@ Plans:
 - [ ] 26-01-PLAN.md — Builder API (9 uncovered methods) + ApplyOffset internal helper
 - [ ] 26-02-PLAN.md — diffcolors.go internal helpers + split renderer / gutter edge cases
 - [ ] 26-03-PLAN.md — CLI coverage: parseAlgorithm, fileHeaderName, streamThroughPager, resolveRootOptions flags, gitShowHEADBlobFromTree, resolveInputs uncovered branches
+
+### Phase 27: add function context to hunk header where possible
+
+**Goal:** When language can be detected (via explicit `WithLang()` or filename extension), scan backward from each hunk's start line to find the nearest enclosing function or class declaration and append it to the `@@ -x,y +a,b @@` hunk header, matching git's behavior. Supported languages: Go, Python, JavaScript, TypeScript, C, C++, Java, Ruby, Rust.
+**Requirements**: FUNCCTX-01
+**Depends on:** Phase 26
+**Plans:** 2 plans
+
+Plans:
+- [ ] 27-01-PLAN.md — funcctx package + Hunk.FuncName field + hunk.Build() wiring + drift.Diff() lang plumbing
+- [ ] 27-02-PLAN.md — Renderer @@ header update (unified + split) + integration tests + CLI smoke test
