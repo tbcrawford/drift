@@ -36,17 +36,18 @@ type rootFlags struct {
 // All decisions (algorithm parsing, option building, streams assignment)
 // are made in resolveRootOptions — nothing is deferred to run time.
 type rootOptions struct {
-	streams     IOStreams
-	driftOpts   []drift.Option
-	from        string
-	to          string
-	args        []string
-	showTheme   bool // retained for show-theme stderr callback wiring
-	noPager     bool
-	noColor     bool               // mirrors --no-color; used for plain-text header rendering
-	termWidth   int                // terminal width for header rule; 0 means use default (80)
-	colorOnly   bool               // mirrors --color-only; pager mode pass-through with ANSI coloring
-	chromeTheme chrome.ChromeTheme // resolved chrome decoration theme (default: DriftTheme)
+	streams      IOStreams
+	driftOpts    []drift.Option
+	from         string
+	to           string
+	args         []string
+	showTheme    bool // retained for show-theme stderr callback wiring
+	noPager      bool
+	noColor      bool               // mirrors --no-color; used for plain-text header rendering
+	termWidth    int                // terminal width for header rule; 0 means use default (80)
+	colorOnly    bool               // mirrors --color-only; pager mode pass-through with ANSI coloring
+	chromeTheme  chrome.ChromeTheme // resolved chrome decoration theme (default: DriftTheme)
+	contextLines int                // resolved --context value; used for git diff backfill
 }
 
 // resolveRootOptions converts raw cobra flags into a fully populated rootOptions.
@@ -139,18 +140,20 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 	if err != nil {
 		return nil, newExitCode(2, err.Error())
 	}
+	opts = append(opts, drift.WithHunkHeaderRenderer(chromeTheme.RenderHunkHeader))
 
 	return &rootOptions{
-		streams:     streams,
-		driftOpts:   opts,
-		from:        flags.from,
-		to:          flags.to,
-		args:        args,
-		showTheme:   flags.showTheme,
-		noPager:     flags.noPager,
-		noColor:     flags.noColor,
-		termWidth:   resolvedTermWidth,
-		colorOnly:   flags.colorOnly,
-		chromeTheme: chromeTheme,
+		streams:      streams,
+		driftOpts:    opts,
+		from:         flags.from,
+		to:           flags.to,
+		args:         args,
+		showTheme:    flags.showTheme,
+		noPager:      flags.noPager,
+		noColor:      flags.noColor,
+		termWidth:    resolvedTermWidth,
+		colorOnly:    flags.colorOnly,
+		chromeTheme:  chromeTheme,
+		contextLines: flags.context,
 	}, nil
 }

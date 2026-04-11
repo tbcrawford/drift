@@ -934,6 +934,37 @@ func TestRunCLI_pagerMode_codeFragment(t *testing.T) {
 	}
 }
 
+// TestRunCLI_pagerMode_chromeDelta_codeFragment verifies that --chrome delta in
+// pager mode renders the DeltaTheme hunk-header box (┐ / • / ┘ characters)
+// when the @@ header carries a code_fragment, instead of falling back to the
+// plain "@@ -x,y +a,b @@" format.
+func TestRunCLI_pagerMode_chromeDelta_codeFragment(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(gitDiffWithCodeFragment),
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color", "--chrome", "delta"})
+	if code != 1 {
+		t.Fatalf("expected exit 1 for differing input, got %d; stderr=%q stdout=%q",
+			code, errOut.String(), out.String())
+	}
+	stdout := out.String()
+	// DeltaTheme box characters must appear in output when codeFragment != "".
+	if !strings.Contains(stdout, "┐") && !strings.Contains(stdout, "• ") {
+		t.Errorf("expected DeltaTheme box characters (┐ or '• ') in rendered output, got:\n%s", stdout)
+	}
+	// Must NOT fall back to plain @@ format when DeltaTheme box is active.
+	if strings.Contains(stdout, "@@ -") {
+		t.Errorf("rendered output should not contain @@ fallback when DeltaTheme box is active, got:\n%s", stdout)
+	}
+	// The code fragment must appear in the box content line.
+	if !strings.Contains(stdout, "parseXYZ") {
+		t.Errorf("expected 'parseXYZ' code_fragment in DeltaTheme box, got:\n%s", stdout)
+	}
+}
+
 // TestRunCLI_pagerMode_noCodeFragment verifies that when the @@ header has no
 // code_fragment, the hunk header renders cleanly as "@@ -x,y +a,b @@" with no
 // trailing space or content (no regression).
@@ -992,8 +1023,8 @@ func TestRunCLI_chromeDrift(t *testing.T) {
 	}
 }
 
-// TestRunCLI_chromeDelta verifies that --chrome delta produces a box header.
-// With --no-color, DeltaTheme uses the ASCII fallback (+-- filename --+).
+// TestRunCLI_chromeDelta verifies that --chrome delta produces the Δ header.
+// With --no-color, DeltaTheme uses the ASCII fallback (Δ filename / dashes).
 func TestRunCLI_chromeDelta(t *testing.T) {
 	oldPath, newPath := tempFiles(t, "line one\n", "line two\n")
 	var out, errOut bytes.Buffer
@@ -1002,9 +1033,9 @@ func TestRunCLI_chromeDelta(t *testing.T) {
 	if code != 1 {
 		t.Fatalf("expected exit 1 (diff), got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
 	}
-	// With --no-color, DeltaTheme uses ASCII: +-- filename --+ / +----------+
-	if !strings.Contains(out.String(), "+--") {
-		t.Errorf("expected '+--' ASCII box in delta chrome output (no-color), got: %q", out.String())
+	// With --no-color, DeltaTheme emits "Δ filename" followed by a plain-dash rule.
+	if !strings.Contains(out.String(), "Δ ") {
+		t.Errorf("expected 'Δ ' delta glyph in delta chrome output (no-color), got: %q", out.String())
 	}
 }
 

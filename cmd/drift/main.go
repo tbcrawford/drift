@@ -485,9 +485,18 @@ func runRoot(opts *rootOptions) error {
 		return nil
 	}
 
-	// Derive a display name for the file header, when a real file path is available.
-	// Skip when input comes from --from/--to flags or stdin ("-").
+	// Backfill CodeFragment from git diff header lines when the input is a real
+	// git file (not --from/--to or stdin). Best-effort: gitHunkFragmentsForFile
+	// returns nil when git is unavailable or the file has no fragment context.
 	headerName := fileHeaderName(opts.args)
+	if headerName != "" && len(opts.args) == 1 {
+		frags := gitHunkFragmentsForFile(opts.args[0], opts.contextLines)
+		for i := range result.Hunks {
+			if cf, ok := frags[result.Hunks[i].NewStart]; ok {
+				result.Hunks[i].CodeFragment = cf
+			}
+		}
+	}
 
 	// Render to a buffer so we can count lines and decide whether to page.
 	var buf bytes.Buffer

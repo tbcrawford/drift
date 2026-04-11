@@ -35,22 +35,22 @@ func TestDriftTheme_noColor(t *testing.T) {
 func TestDeltaTheme_colored(t *testing.T) {
 	theme := chrome.DeltaTheme{}
 	out := theme.RenderFileHeader("foo.go", false, 80)
-	if !strings.Contains(out, "┌") {
-		t.Errorf("expected box corner '┌' in colored output, got: %q", out)
+	if !strings.Contains(out, "Δ") {
+		t.Errorf("expected delta glyph 'Δ' in colored output, got: %q", out)
 	}
 	if !strings.Contains(out, "foo.go") {
 		t.Errorf("expected filename 'foo.go' in colored output, got: %q", out)
 	}
-	if !strings.Contains(out, "┘") {
-		t.Errorf("expected box corner '┘' in colored output, got: %q", out)
+	if !strings.Contains(out, "─") {
+		t.Errorf("expected rule character '─' in colored output, got: %q", out)
 	}
 }
 
 func TestDeltaTheme_noColor(t *testing.T) {
 	theme := chrome.DeltaTheme{}
 	out := theme.RenderFileHeader("foo.go", true, 80)
-	if !strings.HasPrefix(out, "+--") {
-		t.Errorf("expected plain ASCII box starting with '+--', got: %q", out)
+	if !strings.HasPrefix(out, "Δ ") {
+		t.Errorf("expected output starting with 'Δ ', got: %q", out)
 	}
 }
 
@@ -97,5 +97,70 @@ func TestDriftTheme_zeroWidth(t *testing.T) {
 	// Should contain 80 dashes (plain fallback)
 	if !strings.Contains(out, strings.Repeat("-", 80)) {
 		t.Errorf("expected 80 dashes in fallback output, got: %q", out)
+	}
+}
+
+func TestDriftTheme_RenderHunkHeader(t *testing.T) {
+	theme := chrome.DriftTheme{}
+	// DriftTheme always returns "" to use the standard @@ format.
+	if got := theme.RenderHunkHeader(42, "func Foo()", false); got != "" {
+		t.Errorf("DriftTheme.RenderHunkHeader: expected empty string, got %q", got)
+	}
+	if got := theme.RenderHunkHeader(42, "", false); got != "" {
+		t.Errorf("DriftTheme.RenderHunkHeader (no fragment): expected empty string, got %q", got)
+	}
+}
+
+func TestDeltaTheme_RenderHunkHeader_noFragment(t *testing.T) {
+	theme := chrome.DeltaTheme{}
+	// No code fragment → return "" (fall back to standard @@ format).
+	if got := theme.RenderHunkHeader(10, "", false); got != "" {
+		t.Errorf("DeltaTheme.RenderHunkHeader with empty fragment: expected empty string, got %q", got)
+	}
+	if got := theme.RenderHunkHeader(10, "", true); got != "" {
+		t.Errorf("DeltaTheme.RenderHunkHeader with empty fragment (noColor): expected empty string, got %q", got)
+	}
+}
+
+func TestDeltaTheme_RenderHunkHeader_withFragment_noColor(t *testing.T) {
+	theme := chrome.DeltaTheme{}
+	out := theme.RenderHunkHeader(111, `module "spa_applications" {`, true)
+	if out == "" {
+		t.Fatal("expected non-empty output for non-empty code fragment")
+	}
+	if !strings.Contains(out, "• 111:") {
+		t.Errorf("expected '• 111:' in hunk header output, got: %q", out)
+	}
+	if !strings.Contains(out, `module "spa_applications" {`) {
+		t.Errorf("expected code fragment in hunk header output, got: %q", out)
+	}
+	// Plain box uses + as corner
+	if !strings.Contains(out, "+") {
+		t.Errorf("expected '+' box corner in plain output, got: %q", out)
+	}
+	// Should end with a newline
+	if !strings.HasSuffix(out, "\n") {
+		t.Errorf("expected trailing newline, got: %q", out)
+	}
+}
+
+func TestDeltaTheme_RenderHunkHeader_withFragment_colored(t *testing.T) {
+	theme := chrome.DeltaTheme{}
+	out := theme.RenderHunkHeader(111, `module "spa_applications" {`, false)
+	if out == "" {
+		t.Fatal("expected non-empty output for non-empty code fragment")
+	}
+	// Colored box uses ┐ and ┘ corners
+	if !strings.Contains(out, "┐") {
+		t.Errorf("expected '┐' box corner in colored output, got: %q", out)
+	}
+	if !strings.Contains(out, "┘") {
+		t.Errorf("expected '┘' box corner in colored output, got: %q", out)
+	}
+	if !strings.Contains(out, "• 111:") {
+		t.Errorf("expected '• 111:' in colored hunk header output, got: %q", out)
+	}
+	if !strings.HasSuffix(out, "\n") {
+		t.Errorf("expected trailing newline, got: %q", out)
 	}
 }

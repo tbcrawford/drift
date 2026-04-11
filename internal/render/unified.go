@@ -66,6 +66,12 @@ type RenderConfig struct {
 	// constructing a new lipgloss.Style per line. Set automatically by Unified and Split
 	// when ShowLineNumbers is enabled.
 	GutterCache *GutterStyleCache
+
+	// HunkHeaderRenderer is an optional function that overrides the default
+	// "@@ -old,n +new,n @@ fragment" hunk header format. When non-nil and the
+	// function returns a non-empty string, that string is written verbatim.
+	// When nil or the function returns "", the standard @@ format is emitted.
+	HunkHeaderRenderer func(newStart int, codeFragment string, noColor bool) string
 }
 
 // Unified writes a Git-compatible unified diff of result to w.
@@ -131,17 +137,28 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 	}
 
 	for _, h := range result.Hunks {
-		// Hunk header: @@ -OldStart,OldLines +NewStart,NewLines @@ [CodeFragment]
-		var header string
-		if h.CodeFragment != "" {
-			header = fmt.Sprintf("@@ -%d,%d +%d,%d @@ %s\n",
-				h.OldStart, h.OldLines, h.NewStart, h.NewLines, h.CodeFragment)
-		} else {
-			header = fmt.Sprintf("@@ -%d,%d +%d,%d @@\n",
-				h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+		// Hunk header: custom renderer takes priority; fall back to @@ format.
+		var headerWritten bool
+		if cfg.HunkHeaderRenderer != nil {
+			if rendered := cfg.HunkHeaderRenderer(h.NewStart, h.CodeFragment, cfg.NoColor); rendered != "" {
+				if _, err := fmt.Fprint(w, rendered); err != nil {
+					return err
+				}
+				headerWritten = true
+			}
 		}
-		if _, err := fmt.Fprint(w, header); err != nil {
-			return err
+		if !headerWritten {
+			var header string
+			if h.CodeFragment != "" {
+				header = fmt.Sprintf("@@ -%d,%d +%d,%d @@ %s\n",
+					h.OldStart, h.OldLines, h.NewStart, h.NewLines, h.CodeFragment)
+			} else {
+				header = fmt.Sprintf("@@ -%d,%d +%d,%d @@\n",
+					h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+			}
+			if _, err := fmt.Fprint(w, header); err != nil {
+				return err
+			}
 		}
 
 		var oldW, newW int

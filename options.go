@@ -31,19 +31,20 @@ type diffConfig struct {
 
 // renderConfig holds options that affect terminal rendering.
 type renderConfig struct {
-	noColor       bool
-	colorProfile  colorprofile.Profile
-	hasProfile    bool // true when colorProfile was explicitly set via WithColorProfile
-	isDark        bool
-	hasIsDark     bool // true when isDark was explicitly set via WithIsDark
-	lang          string
-	theme         string
-	split         bool
-	lineNumbers   bool
-	lineDiffStyle bool
-	wordDiff      bool
-	termWidth     int
-	themeResolved func(string)
+	noColor            bool
+	colorProfile       colorprofile.Profile
+	hasProfile         bool // true when colorProfile was explicitly set via WithColorProfile
+	isDark             bool
+	hasIsDark          bool // true when isDark was explicitly set via WithIsDark
+	lang               string
+	theme              string
+	split              bool
+	lineNumbers        bool
+	lineDiffStyle      bool
+	wordDiff           bool
+	termWidth          int
+	themeResolved      func(string)
+	hunkHeaderRenderer func(newStart int, codeFragment string, noColor bool) string
 }
 
 // config holds all configuration for Diff and Render operations.
@@ -170,6 +171,15 @@ func WithWordDiff(v bool) Option {
 // (the default) falls back to automatic detection (80 columns for non-TTYs).
 func WithTermWidth(w int) Option {
 	return func(c *config) { c.render.termWidth = w }
+}
+
+// WithHunkHeaderRenderer sets a custom function to render hunk headers.
+// When fn returns a non-empty string for a given (newStart, codeFragment, noColor)
+// triple, that string is written verbatim instead of the standard
+// "@@ -old,n +new,n @@" format. Returning "" falls back to the standard format.
+// Passing nil clears any previously set renderer.
+func WithHunkHeaderRenderer(fn func(newStart int, codeFragment string, noColor bool) string) Option {
+	return func(c *config) { c.render.hunkHeaderRenderer = fn }
 }
 
 // validate checks that all config fields hold valid values.

@@ -37,17 +37,18 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 	pipeline := buildRenderPipeline(w, cfg, "")
 
 	rcfg := &render.RenderConfig{
-		Lang:            cfg.render.lang,
-		Lexer:           pipeline.lexer,
-		Style:           pipeline.style,
-		Formatter:       pipeline.formatter,
-		Profile:         pipeline.profile,
-		NoColor:         cfg.render.noColor,
-		TermWidth:       pipeline.termWidth,
-		ShowLineNumbers: cfg.render.lineNumbers,
-		IsDark:          pipeline.isDark,
-		LineDiffStyle:   cfg.render.lineDiffStyle,
-		WordDiff:        cfg.render.wordDiff,
+		Lang:               cfg.render.lang,
+		Lexer:              pipeline.lexer,
+		Style:              pipeline.style,
+		Formatter:          pipeline.formatter,
+		Profile:            pipeline.profile,
+		NoColor:            cfg.render.noColor,
+		TermWidth:          pipeline.termWidth,
+		ShowLineNumbers:    cfg.render.lineNumbers,
+		IsDark:             pipeline.isDark,
+		LineDiffStyle:      cfg.render.lineDiffStyle,
+		WordDiff:           cfg.render.wordDiff,
+		HunkHeaderRenderer: cfg.render.hunkHeaderRenderer,
 	}
 
 	if cfg.render.split {
@@ -73,19 +74,20 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 	pipeline := buildRenderPipeline(w, cfg, oldName)
 
 	rcfg := &render.RenderConfig{
-		OldName:         oldName,
-		NewName:         newName,
-		Lang:            cfg.render.lang,
-		Lexer:           pipeline.lexer,
-		Style:           pipeline.style,
-		Formatter:       pipeline.formatter,
-		Profile:         pipeline.profile,
-		NoColor:         cfg.render.noColor,
-		TermWidth:       pipeline.termWidth,
-		ShowLineNumbers: cfg.render.lineNumbers,
-		IsDark:          pipeline.isDark,
-		LineDiffStyle:   cfg.render.lineDiffStyle,
-		WordDiff:        cfg.render.wordDiff,
+		OldName:            oldName,
+		NewName:            newName,
+		Lang:               cfg.render.lang,
+		Lexer:              pipeline.lexer,
+		Style:              pipeline.style,
+		Formatter:          pipeline.formatter,
+		Profile:            pipeline.profile,
+		NoColor:            cfg.render.noColor,
+		TermWidth:          pipeline.termWidth,
+		ShowLineNumbers:    cfg.render.lineNumbers,
+		IsDark:             pipeline.isDark,
+		LineDiffStyle:      cfg.render.lineDiffStyle,
+		WordDiff:           cfg.render.wordDiff,
+		HunkHeaderRenderer: cfg.render.hunkHeaderRenderer,
 	}
 
 	if cfg.render.split {

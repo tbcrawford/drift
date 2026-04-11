@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -393,4 +394,31 @@ type gitFilePair struct {
 	WorkContent string // content in working tree (empty if file is deleted)
 	OldName     string // display name for old side
 	NewName     string // display name for new side
+}
+
+// gitHunkFragmentsForFile runs "git diff --unified=N HEAD -- <path>" and returns
+// a map of newStart → codeFragment parsed from the @@ hunk headers.
+// This is best-effort: returns nil silently on any error (git not found, not a
+// git repo, no diff, file not tracked, etc.) — never blocks rendering.
+func gitHunkFragmentsForFile(path string, contextLines int) map[int]string {
+	cmd := exec.Command("git", "diff",
+		fmt.Sprintf("--unified=%d", contextLines),
+		"HEAD", "--", path)
+	out, err := cmd.Output()
+	if err != nil || len(out) == 0 {
+		return nil
+	}
+	frags := make(map[int]string)
+	for _, line := range strings.Split(string(out), "\n") {
+		if strings.HasPrefix(line, "@@ ") {
+			_, newS, cf, ok := parseHunkHeader(line)
+			if ok && cf != "" {
+				frags[newS] = cf
+			}
+		}
+	}
+	if len(frags) == 0 {
+		return nil
+	}
+	return frags
 }

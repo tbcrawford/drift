@@ -73,16 +73,28 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 	}
 
 	for _, h := range result.Hunks {
-		var header string
-		if h.CodeFragment != "" {
-			header = fmt.Sprintf("@@ -%d,%d +%d,%d @@ %s",
-				h.OldStart, h.OldLines, h.NewStart, h.NewLines, h.CodeFragment)
-		} else {
-			header = fmt.Sprintf("@@ -%d,%d +%d,%d @@",
-				h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+		// Hunk header: custom renderer takes priority; fall back to @@ format.
+		var headerWritten bool
+		if cfg.HunkHeaderRenderer != nil {
+			if rendered := cfg.HunkHeaderRenderer(h.NewStart, h.CodeFragment, cfg.NoColor); rendered != "" {
+				if _, err := fmt.Fprint(w, rendered); err != nil {
+					return err
+				}
+				headerWritten = true
+			}
 		}
-		if _, err := fmt.Fprintln(w, header); err != nil {
-			return err
+		if !headerWritten {
+			var header string
+			if h.CodeFragment != "" {
+				header = fmt.Sprintf("@@ -%d,%d +%d,%d @@ %s",
+					h.OldStart, h.OldLines, h.NewStart, h.NewLines, h.CodeFragment)
+			} else {
+				header = fmt.Sprintf("@@ -%d,%d +%d,%d @@",
+					h.OldStart, h.OldLines, h.NewStart, h.NewLines)
+			}
+			if _, err := fmt.Fprintln(w, header); err != nil {
+				return err
+			}
 		}
 
 		pairs := pairHunkLines(h.Lines)

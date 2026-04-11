@@ -1,31 +1,39 @@
 // Package chrome provides the ChromeTheme interface and its implementations for
-// decorating diff output with styled file headers.
+// decorating diff output with styled file headers and hunk headers.
 //
 // Two themes are available:
 //   - DriftTheme: the default drift style — a slate-blue ▸ chevron before the
 //     filename and a full-width ─ rule below it.
-//   - DeltaTheme: a box-decorated style inspired by delta's file-decoration-style —
-//     wraps the filename in a ┌─ ... ─┐ / └───────────┘ Unicode box.
+//   - DeltaTheme: a style inspired by delta — Δ before the filename, a full-width
+//     rule below, and a Unicode box wrapping the hunk header function context.
 //
 // Callers select a theme via [ParseChromeTheme] and pass it to
-// [ChromeTheme.RenderFileHeader] at render time.
+// [ChromeTheme.RenderFileHeader] and [ChromeTheme.RenderHunkHeader] at render time.
 package chrome
 
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"charm.land/lipgloss/v2"
 )
 
 // ChromeTheme renders the decorative "chrome" around diff sections
-// (file headers, separator rules). Implementations: [DriftTheme], [DeltaTheme].
+// (file headers, hunk headers, separator rules). Implementations: [DriftTheme], [DeltaTheme].
 type ChromeTheme interface {
 	// RenderFileHeader returns the fully formatted file header string
 	// (including trailing newlines) for the given filename.
 	// noColor disables all ANSI codes. termWidth is the terminal column count;
 	// 0 means use 80 as default.
 	RenderFileHeader(name string, noColor bool, termWidth int) string
+
+	// RenderHunkHeader returns the fully formatted hunk header string
+	// (including trailing newline) for the given line number and code fragment.
+	// When the returned string is empty, the caller falls back to the standard
+	// "@@ -old,n +new,n @@ fragment" format.
+	// noColor disables all ANSI codes.
+	RenderHunkHeader(lineNum int, codeFragment string, noColor bool) string
 
 	// Name returns the theme identifier (e.g. "drift", "delta").
 	Name() string
@@ -76,57 +84,80 @@ func (DriftTheme) RenderFileHeader(name string, noColor bool, termWidth int) str
 		ruleStyle.Render(rule) + "\n\n"
 }
 
-// DeltaTheme is a box-decorated chrome inspired by delta's file-decoration-style.
-// It wraps the filename in a ┌─ ... ─┐ / └───────────┘ Unicode box.
+// RenderHunkHeader returns "" — DriftTheme uses the standard "@@ ... @@" format.
+func (DriftTheme) RenderHunkHeader(_ int, _ string, _ bool) string { return "" }
+
+// DeltaTheme is a chrome inspired by delta's visual style.
+// File headers use Δ + filename + full-width rule (matching DriftTheme structure).
+// Hunk headers with a code fragment render a Unicode box around the function context.
 type DeltaTheme struct{}
 
 // Name returns "delta".
 func (DeltaTheme) Name() string { return "delta" }
 
-// RenderFileHeader renders the delta-style box-decorated file header.
+// RenderFileHeader renders the delta-style file header.
 //
 // Styled (color) format:
 //
-//	┌─ filename ─────────────────────────────────────────────────┐
-//	└────────────────────────────────────────────────────────────┘
+//	Δ filename
+//	────────────────────────────────────────────────────────────
 //
 // Plain (noColor) format:
 //
-//	+-- filename ------------------------------------------------+
-//	+------------------------------------------------------------+
+//	Δ filename
+//	------------------------------------------------------------
 //
-// A blank line follows the box so the diff hunk below has breathing room.
+// A blank line follows the rule so the diff hunk below has breathing room.
 func (DeltaTheme) RenderFileHeader(name string, noColor bool, termWidth int) string {
 	width := resolveWidth(termWidth)
 	if noColor {
-		// Plain ASCII box: +-- filename --...+ / +---------...+
-		inner := "-- " + name + " "
-		padding := width - 2 - len(inner)
-		if padding < 0 {
-			padding = 0
-		}
-		top := "+" + inner + strings.Repeat("-", padding) + "+"
-		bottom := "+" + strings.Repeat("-", width-2) + "+"
-		return top + "\n" + bottom + "\n\n"
+		return "Δ " + name + "\n" + strings.Repeat("-", width) + "\n\n"
 	}
-	// Styled box using slate-blue (matches drift chevron color) for borders.
-	boxColor := lipgloss.Color("63")   // slate blue
-	nameColor := lipgloss.Color("250") // muted white
-	boxStyle := lipgloss.NewStyle().Foreground(boxColor)
-	nameStyle := lipgloss.NewStyle().Foreground(nameColor)
+	// Accent color for the Δ glyph — muted slate-blue (ANSI 256 #63).
+	chevronStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63")).Bold(true)
+	// Filename in a muted foreground (bright white on dark / dark gray on light).
+	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("250"))
+	// Rule in a dimmer tone so it recedes behind the filename.
+	ruleStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("238"))
+	rule := strings.Repeat("─", width)
+	return chevronStyle.Render("Δ") + " " + nameStyle.Render(name) + "\n" +
+		ruleStyle.Render(rule) + "\n\n"
+}
 
-	// Build top bar: ┌─ filename ──────────────────────────────────────┐
-	// visibleLabel is the unstyled label to measure its visible width.
-	visibleLabel := "─ " + name + " "
-	padding := width - 2 - len(visibleLabel)
-	if padding < 0 {
-		padding = 0
+// RenderHunkHeader renders the delta-style hunk header box when codeFragment is non-empty.
+//
+// Styled (color) format:
+//
+//	───────────────────────────────────┐
+//	• 111: func name {                 │
+//	───────────────────────────────────┘
+//
+// Plain (noColor) format:
+//
+//	-----------------------------------+
+//	• 111: func name {                 |
+//	-----------------------------------+
+//
+// Returns "" when codeFragment is empty, signalling the caller to use the standard
+// "@@ ... @@" format.
+func (DeltaTheme) RenderHunkHeader(lineNum int, codeFragment string, noColor bool) string {
+	if codeFragment == "" {
+		return ""
 	}
-	// label uses styled name inside the border run.
-	label := "─ " + nameStyle.Render(name) + " "
-	top := boxStyle.Render("┌" + label + strings.Repeat("─", padding) + "┐")
-	bottom := boxStyle.Render("└" + strings.Repeat("─", width-2) + "┘")
-	return top + "\n" + bottom + "\n\n"
+	content := fmt.Sprintf("• %d: %s", lineNum, codeFragment)
+	n := utf8.RuneCountInString(content)
+	if noColor {
+		top := strings.Repeat("-", n+1) + "+"
+		middle := content + " |"
+		bottom := strings.Repeat("-", n+1) + "+"
+		return top + "\n" + middle + "\n" + bottom + "\n"
+	}
+	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63"))   // slate blue
+	contentStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("250")) // muted white
+	top := borderStyle.Render(strings.Repeat("─", n+1) + "┐")
+	middle := contentStyle.Render(content) + borderStyle.Render(" │")
+	bottom := borderStyle.Render(strings.Repeat("─", n+1) + "┘")
+	return top + "\n" + middle + "\n" + bottom + "\n"
 }
 
 // ParseChromeTheme maps a name string to a [ChromeTheme]. Returns an error
