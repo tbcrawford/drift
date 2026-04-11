@@ -113,14 +113,19 @@ func (c *GutterStyleCache) Get(oldColumn bool, op edittype.Op) lipgloss.Style {
 	return c.styles[gutterStyleKey{oldColumn: oldColumn, op: op}]
 }
 
-// styledGutterColumnSeparator returns gutterColumnSeparator with dim foreground when color is on.
+// styledGutterColumnSeparator returns the gutter column separator with dim foreground when color is on.
+// Uses cfg.GutterMiddleSep when non-empty; falls back to gutterColumnSeparator (" │").
 func styledGutterColumnSeparator(cfg *RenderConfig) string {
+	sep := gutterColumnSeparator // default " │"
+	if cfg != nil && cfg.GutterMiddleSep != "" {
+		sep = cfg.GutterMiddleSep
+	}
 	if cfg == nil || cfg.NoColor {
-		return gutterColumnSeparator
+		return sep
 	}
 	return lipgloss.NewStyle().
 		Foreground(lipgloss.Color(highlight.GutterDimForegroundHex(cfg.IsDark))).
-		Render(gutterColumnSeparator)
+		Render(sep)
 }
 
 // GutterNumberRender renders a line number (or blank when n==0) in a fixed display width.

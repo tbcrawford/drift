@@ -142,6 +142,12 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 	}
 	opts = append(opts, drift.WithHunkHeaderRenderer(chromeTheme.RenderHunkHeader))
 
+	// Wire gutter separator strings from the chrome theme.
+	// DriftTheme → (" │", "") — no behavioral change.
+	// DeltaTheme → (" ⋮ ", " │") — delta-style gutter format.
+	middleSep, rightBorder := chromeTheme.GutterSeparators(flags.noColor)
+	opts = append(opts, drift.WithGutterSeparators(middleSep, rightBorder))
+
 	return &rootOptions{
 		streams:      streams,
 		driftOpts:    opts,

@@ -35,11 +35,22 @@ type ChromeTheme interface {
 	// noColor disables all ANSI codes.
 	RenderHunkHeader(lineNum int, codeFragment string, noColor bool) string
 
+	// GutterSeparators returns the strings used between and after gutter number columns.
+	// middleSep is the separator between the old and new number columns (e.g. " │" or " ⋮ ").
+	// rightBorder is the string appended after the new number column before line content
+	// (e.g. "" or " │").
+	// noColor disables ANSI styling.
+	GutterSeparators(noColor bool) (middleSep, rightBorder string)
+
 	// Name returns the theme identifier (e.g. "drift", "delta").
 	Name() string
 }
 
 const fallbackWidth = 80
+
+// driftGutterSep is the default gutter column separator (space + U+2502 BOX DRAWINGS LIGHT VERTICAL).
+// This matches the gutterColumnSeparator constant in internal/render/gutter.go.
+const driftGutterSep = " │"
 
 func resolveWidth(termWidth int) int {
 	if termWidth <= 0 {
@@ -86,6 +97,12 @@ func (DriftTheme) RenderFileHeader(name string, noColor bool, termWidth int) str
 
 // RenderHunkHeader returns "" — DriftTheme uses the standard "@@ ... @@" format.
 func (DriftTheme) RenderHunkHeader(_ int, _ string, _ bool) string { return "" }
+
+// GutterSeparators returns the DriftTheme gutter separator strings.
+// middleSep is " │" (existing behavior); rightBorder is "" (no border after new column).
+func (DriftTheme) GutterSeparators(_ bool) (string, string) {
+	return driftGutterSep, ""
+}
 
 // DeltaTheme is a chrome inspired by delta's visual style.
 // File headers use Δ + filename + full-width rule (matching DriftTheme structure).
@@ -158,6 +175,14 @@ func (DeltaTheme) RenderHunkHeader(lineNum int, codeFragment string, noColor boo
 	middle := contentStyle.Render(content) + borderStyle.Render(" │")
 	bottom := borderStyle.Render(strings.Repeat("─", n+1) + "┘")
 	return top + "\n" + middle + "\n" + bottom + "\n"
+}
+
+// GutterSeparators returns the DeltaTheme gutter separator strings.
+// Delta format: middleSep = " ⋮ " (vertical ellipsis), rightBorder = " │" (light vertical).
+// The Unicode characters render without ANSI codes, so they are the same for both
+// color and noColor paths.
+func (DeltaTheme) GutterSeparators(_ bool) (string, string) {
+	return " ⋮ ", " │"
 }
 
 // ParseChromeTheme maps a name string to a [ChromeTheme]. Returns an error

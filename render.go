@@ -49,6 +49,8 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 		LineDiffStyle:      cfg.render.lineDiffStyle,
 		WordDiff:           cfg.render.wordDiff,
 		HunkHeaderRenderer: cfg.render.hunkHeaderRenderer,
+		GutterMiddleSep:    cfg.render.gutterMiddleSep,
+		GutterRightBorder:  cfg.render.gutterRightBorder,
 	}
 
 	if cfg.render.split {
@@ -88,6 +90,8 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 		LineDiffStyle:      cfg.render.lineDiffStyle,
 		WordDiff:           cfg.render.wordDiff,
 		HunkHeaderRenderer: cfg.render.hunkHeaderRenderer,
+		GutterMiddleSep:    cfg.render.gutterMiddleSep,
+		GutterRightBorder:  cfg.render.gutterRightBorder,
 	}
 
 	if cfg.render.split {

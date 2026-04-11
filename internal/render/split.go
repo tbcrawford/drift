@@ -67,6 +67,8 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 	}
 
 	// Pre-compute separator and gutter cache once for the whole render call.
+	// Note: cfg.GutterRightBorder is not applied in split mode — the panel separator
+	// (gutterSep between JoinHorizontal calls) serves the same visual role.
 	gutterSep := styledGutterColumnSeparator(cfg)
 	if cfg.ShowLineNumbers && cfg.GutterCache == nil {
 		cfg.GutterCache = NewGutterStyleCache(style, cfg.IsDark, cfg.NoColor)

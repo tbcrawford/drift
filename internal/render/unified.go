@@ -72,6 +72,15 @@ type RenderConfig struct {
 	// function returns a non-empty string, that string is written verbatim.
 	// When nil or the function returns "", the standard @@ format is emitted.
 	HunkHeaderRenderer func(newStart int, codeFragment string, noColor bool) string
+
+	// GutterMiddleSep is the separator string between old and new gutter columns.
+	// When empty, defaults to " │" (the standard TUI box vertical separator).
+	GutterMiddleSep string
+
+	// GutterRightBorder is the string appended after the new gutter column and before
+	// line content in unified mode. When empty, no right border is added (DriftTheme behavior).
+	// Not applied in split mode — the panel separator serves the same visual role.
+	GutterRightBorder string
 }
 
 // Unified writes a Git-compatible unified diff of result to w.
@@ -168,7 +177,10 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 
 		// contentW is the width available for highlighted content (prefix already excluded).
 		// We use it to extend line backgrounds to the full terminal width.
-		const gutterSepWidth = 2  // " │"
+		gutterSepWidth := len(cfg.GutterMiddleSep) + len(cfg.GutterRightBorder)
+		if gutterSepWidth == 0 {
+			gutterSepWidth = 2 // default " │"
+		}
 		contentW := termWidth - 1 // -1 for the +/-/space prefix
 		if cfg.ShowLineNumbers {
 			contentW -= oldW + gutterSepWidth + newW
@@ -205,12 +217,12 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 					} else {
 						goLeft := GutterNumberRender(cfg.GutterCache.Get(true, line.Op), oldW, line.OldNum)
 						goRight := GutterNumberRender(cfg.GutterCache.Get(false, line.Op), newW, line.NewNum)
-						if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft, gutterSep, goRight, codeDel); err != nil {
+						if _, err := fmt.Fprintf(w, "%s%s%s%s%s\n", goLeft, gutterSep, goRight, cfg.GutterRightBorder, codeDel); err != nil {
 							return err
 						}
 						goLeft2 := GutterNumberRender(cfg.GutterCache.Get(true, ins.Op), oldW, ins.OldNum)
 						goRight2 := GutterNumberRender(cfg.GutterCache.Get(false, ins.Op), newW, ins.NewNum)
-						if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft2, gutterSep, goRight2, codeIns); err != nil {
+						if _, err := fmt.Fprintf(w, "%s%s%s%s%s\n", goLeft2, gutterSep, goRight2, cfg.GutterRightBorder, codeIns); err != nil {
 							return err
 						}
 					}
@@ -237,7 +249,7 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 
 			goLeft := GutterNumberRender(cfg.GutterCache.Get(true, line.Op), oldW, line.OldNum)
 			goRight := GutterNumberRender(cfg.GutterCache.Get(false, line.Op), newW, line.NewNum)
-			if _, err := fmt.Fprintf(w, "%s%s%s%s\n", goLeft, gutterSep, goRight, code); err != nil {
+			if _, err := fmt.Fprintf(w, "%s%s%s%s%s\n", goLeft, gutterSep, goRight, cfg.GutterRightBorder, code); err != nil {
 				return err
 			}
 		}

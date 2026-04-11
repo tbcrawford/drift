@@ -45,6 +45,8 @@ type renderConfig struct {
 	termWidth          int
 	themeResolved      func(string)
 	hunkHeaderRenderer func(newStart int, codeFragment string, noColor bool) string
+	gutterMiddleSep    string
+	gutterRightBorder  string
 }
 
 // config holds all configuration for Diff and Render operations.
@@ -180,6 +182,18 @@ func WithTermWidth(w int) Option {
 // Passing nil clears any previously set renderer.
 func WithHunkHeaderRenderer(fn func(newStart int, codeFragment string, noColor bool) string) Option {
 	return func(c *config) { c.render.hunkHeaderRenderer = fn }
+}
+
+// WithGutterSeparators configures the gutter column separator strings.
+// middleSep is placed between the old and new line-number columns.
+// rightBorder is placed after the new line-number column and before line content in unified mode.
+// Both default to "" which preserves the built-in defaults (" │" middle, "" right border).
+// This is used internally by chrome themes; most callers do not need to set this directly.
+func WithGutterSeparators(middleSep, rightBorder string) Option {
+	return func(c *config) {
+		c.render.gutterMiddleSep = middleSep
+		c.render.gutterRightBorder = rightBorder
+	}
 }
 
 // validate checks that all config fields hold valid values.
