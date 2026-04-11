@@ -245,3 +245,39 @@ func TestDriftTheme_GutterSeparators(t *testing.T) {
 		t.Errorf("GutterSeparators(noColor): rightBorder = %q, want %q", right2, "")
 	}
 }
+
+func TestDeltaTheme_SplitSeparators(t *testing.T) {
+	theme := chrome.DeltaTheme{}
+	panelSep, cellBorder := theme.SplitSeparators(false)
+	if panelSep != "" {
+		t.Errorf("SplitSeparators(color): panelSep = %q, want %q", panelSep, "")
+	}
+	if cellBorder != "│" {
+		t.Errorf("SplitSeparators(color): gutterCellBorder = %q, want %q", cellBorder, "│")
+	}
+	panelSep2, cellBorder2 := theme.SplitSeparators(true)
+	if panelSep2 != "" {
+		t.Errorf("SplitSeparators(noColor): panelSep = %q, want %q", panelSep2, "")
+	}
+	if cellBorder2 != "│" {
+		t.Errorf("SplitSeparators(noColor): gutterCellBorder = %q, want %q", cellBorder2, "│")
+	}
+}
+
+func TestDriftTheme_SplitSeparators(t *testing.T) {
+	theme := chrome.DriftTheme{}
+	panelSep, cellBorder := theme.SplitSeparators(false)
+	if panelSep != " │" {
+		t.Errorf("SplitSeparators(color): panelSep = %q, want %q", panelSep, " │")
+	}
+	if cellBorder != "" {
+		t.Errorf("SplitSeparators(color): gutterCellBorder = %q, want %q", cellBorder, "")
+	}
+	panelSep2, cellBorder2 := theme.SplitSeparators(true)
+	if panelSep2 != " │" {
+		t.Errorf("SplitSeparators(noColor): panelSep = %q, want %q", panelSep2, " │")
+	}
+	if cellBorder2 != "" {
+		t.Errorf("SplitSeparators(noColor): gutterCellBorder = %q, want %q", cellBorder2, "")
+	}
+}

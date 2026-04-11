@@ -115,6 +115,7 @@ func (c *GutterStyleCache) Get(oldColumn bool, op edittype.Op) lipgloss.Style {
 
 // styledGutterColumnSeparator returns the gutter column separator with dim foreground when color is on.
 // Uses cfg.GutterMiddleSep when non-empty; falls back to gutterColumnSeparator (" │").
+// Used in unified mode only — split mode uses styledSplitPanelSep.
 func styledGutterColumnSeparator(cfg *RenderConfig) string {
 	sep := gutterColumnSeparator // default " │"
 	if cfg != nil && cfg.GutterMiddleSep != "" {
@@ -126,6 +127,51 @@ func styledGutterColumnSeparator(cfg *RenderConfig) string {
 	return lipgloss.NewStyle().
 		Foreground(lipgloss.Color(highlight.GutterDimForegroundHex(cfg.IsDark))).
 		Render(sep)
+}
+
+// splitPanelSepPlain returns the plain (unstyled) panel separator for split mode.
+// When cfg.SplitPanelSep is set, it is used directly. Otherwise, if ShowLineNumbers
+// is true and GutterCellBorder is non-empty, returns "" (the border acts as separator).
+// Falls back to gutterColumnSeparator (" │") in all other cases.
+func splitPanelSepPlain(cfg *RenderConfig) string {
+	if cfg == nil {
+		return gutterColumnSeparator
+	}
+	if cfg.SplitPanelSep != "" {
+		return cfg.SplitPanelSep
+	}
+	if cfg.ShowLineNumbers && cfg.GutterCellBorder != "" {
+		return "" // gutter border acts as visual separator
+	}
+	return gutterColumnSeparator
+}
+
+// styledSplitPanelSep returns the styled panel separator for split mode.
+// sep must be the pre-computed plain separator from splitPanelSepPlain.
+func styledSplitPanelSep(cfg *RenderConfig, sep string) string {
+	if sep == "" {
+		return ""
+	}
+	if cfg == nil || cfg.NoColor {
+		return sep
+	}
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(highlight.GutterDimForegroundHex(cfg.IsDark))).
+		Render(sep)
+}
+
+// styledGutterCellBorder returns the gutter cell border with dim foreground when color is on.
+// Used in split mode when cfg.GutterCellBorder is non-empty to produce "│ NNN │" gutter cells.
+func styledGutterCellBorder(cfg *RenderConfig) string {
+	if cfg == nil || cfg.GutterCellBorder == "" {
+		return ""
+	}
+	if cfg.NoColor {
+		return cfg.GutterCellBorder
+	}
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(highlight.GutterDimForegroundHex(cfg.IsDark))).
+		Render(cfg.GutterCellBorder)
 }
 
 // GutterNumberRender renders a line number (or blank when n==0) in a fixed display width.

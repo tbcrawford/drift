@@ -144,9 +144,15 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 
 	// Wire gutter separator strings from the chrome theme.
 	// DriftTheme → (" │", "") — no behavioral change.
-	// DeltaTheme → (" ⋮ ", " │") — delta-style gutter format.
+	// DeltaTheme → (" ⋮ ", " │") — delta-style unified gutter format.
 	middleSep, rightBorder := chromeTheme.GutterSeparators(flags.noColor)
 	opts = append(opts, drift.WithGutterSeparators(middleSep, rightBorder))
+
+	// Wire split-mode separator strings from the chrome theme.
+	// DriftTheme → (" │", "") — standard panel separator, no gutter cell borders.
+	// DeltaTheme → ("", "│") — no explicit separator; "│ NNN │" gutter cell borders.
+	panelSep, cellBorder := chromeTheme.SplitSeparators(flags.noColor)
+	opts = append(opts, drift.WithSplitSeparators(panelSep, cellBorder))
 
 	return &rootOptions{
 		streams:      streams,

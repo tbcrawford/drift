@@ -4,6 +4,7 @@ package render
 import (
 	"fmt"
 	"io"
+	"unicode/utf8"
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/charmbracelet/colorprofile"
@@ -73,14 +74,25 @@ type RenderConfig struct {
 	// When nil or the function returns "", the standard @@ format is emitted.
 	HunkHeaderRenderer func(newStart int, codeFragment string, noColor bool) string
 
-	// GutterMiddleSep is the separator string between old and new gutter columns.
-	// When empty, defaults to " │" (the standard TUI box vertical separator).
+	// GutterMiddleSep is the separator string between old and new gutter columns in
+	// unified mode. When empty, defaults to " │" (the standard TUI box vertical separator).
 	GutterMiddleSep string
 
 	// GutterRightBorder is the string appended after the new gutter column and before
 	// line content in unified mode. When empty, no right border is added (DriftTheme behavior).
-	// Not applied in split mode — the panel separator serves the same visual role.
+	// Not applied in split mode — the panel separator or GutterCellBorder serves that role.
 	GutterRightBorder string
+
+	// SplitPanelSep is the separator rendered between the left and right panels in split
+	// mode. When empty and GutterCellBorder is set (and ShowLineNumbers is true), the
+	// gutter border acts as the visual separator and no explicit separator is emitted.
+	// When empty and GutterCellBorder is not set, defaults to " │".
+	SplitPanelSep string
+
+	// GutterCellBorder is a single character (e.g. "│") prepended and appended to each
+	// gutter cell in split mode when ShowLineNumbers is true. Produces the delta-style
+	// "│ NNN │" gutter format. Empty means no border decoration (DriftTheme behavior).
+	GutterCellBorder string
 }
 
 // Unified writes a Git-compatible unified diff of result to w.
@@ -177,7 +189,7 @@ func Unified(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 
 		// contentW is the width available for highlighted content (prefix already excluded).
 		// We use it to extend line backgrounds to the full terminal width.
-		gutterSepWidth := len(cfg.GutterMiddleSep) + len(cfg.GutterRightBorder)
+		gutterSepWidth := utf8.RuneCountInString(cfg.GutterMiddleSep) + utf8.RuneCountInString(cfg.GutterRightBorder)
 		if gutterSepWidth == 0 {
 			gutterSepWidth = 2 // default " │"
 		}

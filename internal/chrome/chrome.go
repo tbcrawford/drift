@@ -35,12 +35,23 @@ type ChromeTheme interface {
 	// noColor disables all ANSI codes.
 	RenderHunkHeader(lineNum int, codeFragment string, noColor bool) string
 
-	// GutterSeparators returns the strings used between and after gutter number columns.
+	// GutterSeparators returns the strings used between and after gutter number columns
+	// in unified mode.
 	// middleSep is the separator between the old and new number columns (e.g. " │" or " ⋮ ").
 	// rightBorder is the string appended after the new number column before line content
 	// (e.g. "" or " │").
 	// noColor disables ANSI styling.
 	GutterSeparators(noColor bool) (middleSep, rightBorder string)
+
+	// SplitSeparators returns the strings used in split (side-by-side) mode.
+	// panelSep is the separator rendered between the left and right panels.
+	// When empty and gutterCellBorder is non-empty, the gutter border acts as the
+	// visual separator so no explicit panel separator is emitted.
+	// gutterCellBorder is the character (e.g. "│") prepended and appended to each
+	// gutter cell when ShowLineNumbers is true, producing "│ NNN │" style gutters.
+	// Empty means no border decoration (DriftTheme behavior).
+	// noColor disables ANSI styling.
+	SplitSeparators(noColor bool) (panelSep, gutterCellBorder string)
 
 	// Name returns the theme identifier (e.g. "drift", "delta").
 	Name() string
@@ -101,6 +112,13 @@ func (DriftTheme) RenderHunkHeader(_ int, _ string, _ bool) string { return "" }
 // GutterSeparators returns the DriftTheme gutter separator strings.
 // middleSep is " │" (existing behavior); rightBorder is "" (no border after new column).
 func (DriftTheme) GutterSeparators(_ bool) (string, string) {
+	return driftGutterSep, ""
+}
+
+// SplitSeparators returns the DriftTheme split-mode separator strings.
+// panelSep is " │" (standard TUI vertical separator between panels); gutterCellBorder is ""
+// (no border decoration around gutter cells — the panel separator serves that role).
+func (DriftTheme) SplitSeparators(_ bool) (string, string) {
 	return driftGutterSep, ""
 }
 
@@ -183,6 +201,13 @@ func (DeltaTheme) RenderHunkHeader(lineNum int, codeFragment string, noColor boo
 // color and noColor paths.
 func (DeltaTheme) GutterSeparators(_ bool) (string, string) {
 	return " ⋮ ", " │"
+}
+
+// SplitSeparators returns the DeltaTheme split-mode separator strings.
+// panelSep is "" — the gutter cell borders act as the visual separator between panels.
+// gutterCellBorder is "│" — each gutter cell is wrapped as "│ NNN │" in split mode.
+func (DeltaTheme) SplitSeparators(_ bool) (string, string) {
+	return "", "│"
 }
 
 // ParseChromeTheme maps a name string to a [ChromeTheme]. Returns an error

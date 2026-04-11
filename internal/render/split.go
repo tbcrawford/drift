@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unicode/utf8"
 
 	"charm.land/lipgloss/v2"
 	"github.com/alecthomas/chroma/v2"
@@ -50,8 +51,13 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 		termWidth = minTermWidth
 	}
 
-	panelWidth := (termWidth - 2) / 2
-	rightPanelWidth := termWidth - 2 - panelWidth
+	// Compute panel separator: plain form for width arithmetic, styled for rendering.
+	// When GutterCellBorder is set and ShowLineNumbers is on, the border acts as the
+	// visual separator so no explicit panel separator is emitted (panelSepW == 0).
+	plainPanelSep := splitPanelSepPlain(cfg)
+	panelSepW := utf8.RuneCountInString(plainPanelSep)
+	panelWidth := (termWidth - panelSepW) / 2
+	rightPanelWidth := termWidth - panelSepW - panelWidth
 
 	lexer := cfg.Lexer
 	if lexer == nil {
@@ -68,8 +74,8 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 
 	// Pre-compute separator and gutter cache once for the whole render call.
 	// Note: cfg.GutterRightBorder is not applied in split mode — the panel separator
-	// (gutterSep between JoinHorizontal calls) serves the same visual role.
-	gutterSep := styledGutterColumnSeparator(cfg)
+	// or GutterCellBorder serves the same visual role.
+	gutterSep := styledSplitPanelSep(cfg, plainPanelSep)
 	if cfg.ShowLineNumbers && cfg.GutterCache == nil {
 		cfg.GutterCache = NewGutterStyleCache(style, cfg.IsDark, cfg.NoColor)
 	}
@@ -116,15 +122,16 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 				sepLines = append(sepLines, gutterSep)
 			}
 		} else {
+			borderW := utf8.RuneCountInString(cfg.GutterCellBorder)
 			oldW, newW := gutterPairWidths(pairs)
 			for _, pair := range pairs {
 				lContent, rContent := splitHighlightPair(cfg, style, pair, lexer, formatter)
 
-				leftCodeW := panelWidth - oldW
+				leftCodeW := panelWidth - oldW - 2*borderW
 				if leftCodeW < 1 {
 					leftCodeW = 1
 				}
-				rightCodeW := rightPanelWidth - newW
+				rightCodeW := rightPanelWidth - newW - 2*borderW
 				if rightCodeW < 1 {
 					rightCodeW = 1
 				}
@@ -137,6 +144,14 @@ func Split(result edittype.DiffResult, w io.Writer, cfg *RenderConfig) error {
 
 				leftG := GutterNumberRender(cfg.GutterCache.Get(true, pair.leftOp), oldW, pair.leftOldNum)
 				rightG := GutterNumberRender(cfg.GutterCache.Get(false, pair.rightOp), newW, pair.rightNewNum)
+
+				// Wrap gutter cells with borders when GutterCellBorder is configured
+				// (e.g. "│ NNN │" for DeltaTheme).
+				if cfg.GutterCellBorder != "" {
+					border := styledGutterCellBorder(cfg)
+					leftG = border + leftG + border
+					rightG = border + rightG + border
+				}
 
 				leftLines = append(leftLines, lipgloss.JoinHorizontal(lipgloss.Top, leftG, renderPanelContent(lContent, leftCodeW, lBg)))
 				rightLines = append(rightLines, lipgloss.JoinHorizontal(lipgloss.Top, rightG, renderPanelContent(rContent, rightCodeW, rBg)))

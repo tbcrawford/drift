@@ -51,6 +51,8 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 		HunkHeaderRenderer: cfg.render.hunkHeaderRenderer,
 		GutterMiddleSep:    cfg.render.gutterMiddleSep,
 		GutterRightBorder:  cfg.render.gutterRightBorder,
+		SplitPanelSep:      cfg.render.splitPanelSep,
+		GutterCellBorder:   cfg.render.gutterCellBorder,
 	}
 
 	if cfg.render.split {
@@ -92,6 +94,8 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 		HunkHeaderRenderer: cfg.render.hunkHeaderRenderer,
 		GutterMiddleSep:    cfg.render.gutterMiddleSep,
 		GutterRightBorder:  cfg.render.gutterRightBorder,
+		SplitPanelSep:      cfg.render.splitPanelSep,
+		GutterCellBorder:   cfg.render.gutterCellBorder,
 	}
 
 	if cfg.render.split {

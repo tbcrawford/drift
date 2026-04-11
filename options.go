@@ -47,6 +47,8 @@ type renderConfig struct {
 	hunkHeaderRenderer func(newStart int, codeFragment string, noColor bool) string
 	gutterMiddleSep    string
 	gutterRightBorder  string
+	splitPanelSep      string
+	gutterCellBorder   string
 }
 
 // config holds all configuration for Diff and Render operations.
@@ -184,7 +186,7 @@ func WithHunkHeaderRenderer(fn func(newStart int, codeFragment string, noColor b
 	return func(c *config) { c.render.hunkHeaderRenderer = fn }
 }
 
-// WithGutterSeparators configures the gutter column separator strings.
+// WithGutterSeparators configures the gutter column separator strings for unified mode.
 // middleSep is placed between the old and new line-number columns.
 // rightBorder is placed after the new line-number column and before line content in unified mode.
 // Both default to "" which preserves the built-in defaults (" │" middle, "" right border).
@@ -193,6 +195,20 @@ func WithGutterSeparators(middleSep, rightBorder string) Option {
 	return func(c *config) {
 		c.render.gutterMiddleSep = middleSep
 		c.render.gutterRightBorder = rightBorder
+	}
+}
+
+// WithSplitSeparators configures the panel separator and gutter cell border for split mode.
+// panelSep is the string rendered between the left and right panels.
+// When panelSep is empty and gutterCellBorder is non-empty, the border acts as the visual
+// separator (no explicit panel separator is emitted).
+// gutterCellBorder is the character prepended and appended to each gutter cell when
+// ShowLineNumbers is true (e.g. "│" produces "│ NNN │" style gutters).
+// This is used internally by chrome themes; most callers do not need to set this directly.
+func WithSplitSeparators(panelSep, gutterCellBorder string) Option {
+	return func(c *config) {
+		c.render.splitPanelSep = panelSep
+		c.render.gutterCellBorder = gutterCellBorder
 	}
 }
 
