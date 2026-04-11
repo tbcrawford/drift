@@ -4,7 +4,7 @@ milestone: v1.0.0
 milestone_name: "blockers: Hirschberg Myers, WithContext validation, goreleaser"
 status: Ready to execute
 stopped_at: Completed 28-01-PLAN.md and 28-02-PLAN.md
-last_updated: "2026-04-10T19:58:48.843Z"
+last_updated: "2026-04-11T00:00:00.000Z"
 progress:
   total_phases: 28
   completed_phases: 17
@@ -199,6 +199,7 @@ Recent decisions affecting current work:
 | 2026-03-31 | Revamp README.md: centered hero image, badges, full TOC, CLI flags table, render options table, algorithms table, builder API, mobile-friendly HTML centering |
 | 2026-03-31 | Add GitHub Actions CI, release, and security workflows; fix goreleaser owner typo; track dist/config.yaml in git |
 | 2026-04-01 | [260401-k11] Collapse two-module workspace layout into single go.mod; delete go.work + cmd/drift/go.mod; add cobra+go-internal as direct deps; remove duplicate CI test step |
+| 2026-04-11 | [260411-o1x] Fix `--chrome delta` hunk header box in single-file mode: add `gitHunkFragmentsForFile`, backfill `CodeFragment` by `NewStart` match, wire `WithHunkHeaderRenderer` through render pipeline, add pager+delta chrome test (407 tests pass) |
 
 ### Pending Todos
 
