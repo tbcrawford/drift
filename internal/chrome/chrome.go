@@ -124,7 +124,8 @@ func (DeltaTheme) RenderFileHeader(name string, noColor bool, termWidth int) str
 		ruleStyle.Render(rule) + "\n\n"
 }
 
-// RenderHunkHeader renders the delta-style hunk header box when codeFragment is non-empty.
+// RenderHunkHeader renders the delta-style hunk header box. Always renders the box
+// — uses "• N:" when codeFragment is empty, or "• N: fragment" when non-empty.
 //
 // Styled (color) format:
 //
@@ -137,14 +138,13 @@ func (DeltaTheme) RenderFileHeader(name string, noColor bool, termWidth int) str
 //	-----------------------------------+
 //	• 111: func name {                 |
 //	-----------------------------------+
-//
-// Returns "" when codeFragment is empty, signalling the caller to use the standard
-// "@@ ... @@" format.
 func (DeltaTheme) RenderHunkHeader(lineNum int, codeFragment string, noColor bool) string {
+	var content string
 	if codeFragment == "" {
-		return ""
+		content = fmt.Sprintf("• %d:", lineNum)
+	} else {
+		content = fmt.Sprintf("• %d: %s", lineNum, codeFragment)
 	}
-	content := fmt.Sprintf("• %d: %s", lineNum, codeFragment)
 	n := utf8.RuneCountInString(content)
 	if noColor {
 		top := strings.Repeat("-", n+1) + "+"

@@ -113,12 +113,57 @@ func TestDriftTheme_RenderHunkHeader(t *testing.T) {
 
 func TestDeltaTheme_RenderHunkHeader_noFragment(t *testing.T) {
 	theme := chrome.DeltaTheme{}
-	// No code fragment → return "" (fall back to standard @@ format).
-	if got := theme.RenderHunkHeader(10, "", false); got != "" {
-		t.Errorf("DeltaTheme.RenderHunkHeader with empty fragment: expected empty string, got %q", got)
+	// No code fragment → box still renders with "• N:" content (no fallback to @@ format).
+	got := theme.RenderHunkHeader(10, "", false)
+	if got == "" {
+		t.Fatal("DeltaTheme.RenderHunkHeader with empty fragment: expected non-empty box, got empty string")
 	}
-	if got := theme.RenderHunkHeader(10, "", true); got != "" {
-		t.Errorf("DeltaTheme.RenderHunkHeader with empty fragment (noColor): expected empty string, got %q", got)
+	if !strings.Contains(got, "• 10:") {
+		t.Errorf("expected '• 10:' in hunk header output, got: %q", got)
+	}
+	if !strings.Contains(got, "┐") {
+		t.Errorf("expected '┐' box corner in colored output, got: %q", got)
+	}
+	if !strings.HasSuffix(got, "\n") {
+		t.Errorf("expected trailing newline, got: %q", got)
+	}
+	// Must NOT contain a trailing space after the colon (no fragment = no extra space).
+	if strings.Contains(got, "• 10: ") {
+		t.Errorf("expected no trailing space after '• 10:' when no fragment, got: %q", got)
+	}
+
+	gotNoColor := theme.RenderHunkHeader(10, "", true)
+	if gotNoColor == "" {
+		t.Fatal("DeltaTheme.RenderHunkHeader with empty fragment (noColor): expected non-empty box, got empty string")
+	}
+	if !strings.Contains(gotNoColor, "• 10:") {
+		t.Errorf("expected '• 10:' in no-color hunk header output, got: %q", gotNoColor)
+	}
+	if !strings.Contains(gotNoColor, "+") {
+		t.Errorf("expected '+' box corner in no-color output, got: %q", gotNoColor)
+	}
+	if !strings.HasSuffix(gotNoColor, "\n") {
+		t.Errorf("expected trailing newline in no-color output, got: %q", gotNoColor)
+	}
+}
+
+func TestDeltaTheme_RenderHunkHeader_noFragment_colored(t *testing.T) {
+	theme := chrome.DeltaTheme{}
+	got := theme.RenderHunkHeader(42, "", false)
+	if got == "" {
+		t.Fatal("DeltaTheme.RenderHunkHeader (colored, no fragment): expected non-empty box, got empty string")
+	}
+	if !strings.Contains(got, "• 42:") {
+		t.Errorf("expected '• 42:' in colored hunk header output, got: %q", got)
+	}
+	if !strings.Contains(got, "┐") {
+		t.Errorf("expected '┐' box corner in colored output, got: %q", got)
+	}
+	if !strings.Contains(got, "┘") {
+		t.Errorf("expected '┘' box corner in colored output, got: %q", got)
+	}
+	if !strings.HasSuffix(got, "\n") {
+		t.Errorf("expected trailing newline in colored output, got: %q", got)
 	}
 }
 
