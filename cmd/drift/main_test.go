@@ -1102,3 +1102,51 @@ func TestResolveRootOptions_chromeUnknown(t *testing.T) {
 		t.Fatal("expected non-nil error for unknown chrome theme, got nil")
 	}
 }
+
+// TestRunCLI_pagerMode_chromeDelta_noFragment verifies that --chrome delta in pager mode
+// renders the DeltaTheme hunk-header box even when the @@ header has NO code fragment.
+// Bug: DeltaTheme.RenderHunkHeader returned "" when codeFragment == "" causing fallback
+// to @@ format. Fix: always render the box (content: "• N:" when no fragment).
+func TestRunCLI_pagerMode_chromeDelta_noFragment(t *testing.T) {
+	var out, errOut bytes.Buffer
+	streams := IOStreams{
+		In:  strings.NewReader(singleFileUnifiedDiff), // no code_fragment in @@ header
+		Out: &out,
+		Err: &errOut,
+	}
+	code := runCLI(streams, []string{"--no-color", "--chrome", "delta"})
+	if code != 1 {
+		t.Fatalf("expected exit 1 for differing input, got %d; stderr=%q stdout=%q",
+			code, errOut.String(), out.String())
+	}
+	stdout := out.String()
+	// Box must render even with no code_fragment: "• N:" pattern with box corners.
+	if !strings.Contains(stdout, "• ") {
+		t.Errorf("expected '• ' bullet in DeltaTheme box even with no code_fragment, got:\n%s", stdout)
+	}
+	// Should NOT fall back to @@ format when DeltaTheme is active.
+	if strings.Contains(stdout, "@@ -") {
+		t.Errorf("should not fall back to @@ format with --chrome delta, got:\n%s", stdout)
+	}
+	// Plain box uses + as corner (noColor=true).
+	if !strings.Contains(stdout, "+") {
+		t.Errorf("expected '+' box corner character in no-color output, got:\n%s", stdout)
+	}
+}
+
+// TestRunCLI_chromeDelta_gutterFormat verifies that --chrome delta uses the delta-style
+// gutter format: old ⋮ new │content (not old │new content).
+func TestRunCLI_chromeDelta_gutterFormat(t *testing.T) {
+	oldPath, newPath := tempFiles(t, "line1\nline2\n", "line1\nlineX\n")
+	var out, errOut bytes.Buffer
+	streams := IOStreams{In: strings.NewReader(""), Out: &out, Err: &errOut}
+	code := runCLI(streams, []string{"--no-color", "--chrome", "delta", oldPath, newPath})
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d; stderr=%q stdout=%q", code, errOut.String(), out.String())
+	}
+	stdout := out.String()
+	// Delta gutter format uses ⋮ as middle separator.
+	if !strings.Contains(stdout, "⋮") {
+		t.Errorf("expected '⋮' gutter separator in --chrome delta output, got:\n%s", stdout)
+	}
+}

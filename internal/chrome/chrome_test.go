@@ -209,3 +209,39 @@ func TestDeltaTheme_RenderHunkHeader_withFragment_colored(t *testing.T) {
 		t.Errorf("expected trailing newline, got: %q", out)
 	}
 }
+
+func TestDeltaTheme_GutterSeparators(t *testing.T) {
+	theme := chrome.DeltaTheme{}
+	mid, right := theme.GutterSeparators(false)
+	if mid != " ⋮ " {
+		t.Errorf("GutterSeparators(color): middleSep = %q, want %q", mid, " ⋮ ")
+	}
+	if right != " │" {
+		t.Errorf("GutterSeparators(color): rightBorder = %q, want %q", right, " │")
+	}
+	mid2, right2 := theme.GutterSeparators(true)
+	if mid2 != " ⋮ " {
+		t.Errorf("GutterSeparators(noColor): middleSep = %q, want %q", mid2, " ⋮ ")
+	}
+	if right2 != " │" {
+		t.Errorf("GutterSeparators(noColor): rightBorder = %q, want %q", right2, " │")
+	}
+}
+
+func TestDriftTheme_GutterSeparators(t *testing.T) {
+	theme := chrome.DriftTheme{}
+	mid, right := theme.GutterSeparators(false)
+	if mid != " │" {
+		t.Errorf("GutterSeparators(color): middleSep = %q, want %q", mid, " │")
+	}
+	if right != "" {
+		t.Errorf("GutterSeparators(color): rightBorder = %q, want %q", right, "")
+	}
+	mid2, right2 := theme.GutterSeparators(true)
+	if mid2 != " │" {
+		t.Errorf("GutterSeparators(noColor): middleSep = %q, want %q", mid2, " │")
+	}
+	if right2 != "" {
+		t.Errorf("GutterSeparators(noColor): rightBorder = %q, want %q", right2, "")
+	}
+}
