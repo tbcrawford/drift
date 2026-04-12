@@ -1,6 +1,7 @@
 package render
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -50,21 +51,34 @@ func gutterWidths(lines []edittype.Line) (oldW, newW int) {
 
 // gutterStyleForCell returns a Lip Gloss style for one gutter column on one logical line.
 // All rows use foreground-only styling — no background color — so the terminal default
-// background shows through even on delete/insert rows. Changed lines (delete old-column,
-// insert new-column) use the accent blue foreground; context lines use the dim gray.
+// background shows through even on delete/insert rows. Changed lines use the diff-line
+// foreground color: red for delete rows, green for insert rows (derived from the Chroma
+// style's semantic diff colors, matching the line highlight color family). Context lines
+// use the dim gray foreground.
 // Callers should use [GutterNumberRender] so Width + alignment fill the column.
 func gutterStyleForCell(style *chroma.Style, isDark, noColor bool, oldColumn bool, lineOp edittype.Op) lipgloss.Style {
 	if noColor {
 		return lipgloss.NewStyle()
 	}
 	dim := highlight.GutterDimForegroundHex(isDark)
-	// accent is the slate-blue used throughout the DeltaTheme chrome.
-	const accentColor = "63"
+	isDelete := lineOp == edittype.Delete
 	switch {
 	case style != nil && oldColumn && lineOp == edittype.Delete:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color(accentColor))
+		// Delete row old-column: use the word-span red (brighter than the line bg).
+		c := highlight.WordSpanBackgroundColour(style, isDark, isDelete)
+		if c.IsSet() {
+			hex := fmt.Sprintf("#%02x%02x%02x", c.Red(), c.Green(), c.Blue())
+			return lipgloss.NewStyle().Foreground(lipgloss.Color(hex))
+		}
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(highlight.GutterHighlightForegroundHex(isDark)))
 	case style != nil && !oldColumn && lineOp == edittype.Insert:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color(accentColor))
+		// Insert row new-column: use the word-span green (brighter than the line bg).
+		c := highlight.WordSpanBackgroundColour(style, isDark, false)
+		if c.IsSet() {
+			hex := fmt.Sprintf("#%02x%02x%02x", c.Red(), c.Green(), c.Blue())
+			return lipgloss.NewStyle().Foreground(lipgloss.Color(hex))
+		}
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(highlight.GutterHighlightForegroundHex(isDark)))
 	default:
 		return lipgloss.NewStyle().Foreground(lipgloss.Color(dim))
 	}

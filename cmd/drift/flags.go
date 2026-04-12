@@ -99,6 +99,8 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 	// WithTermWidth, WithColorProfile, and WithIsDark short-circuit the per-call
 	// probes in buildRenderPipeline, so no internal API changes are needed.
 	var resolvedTermWidth int
+	var resolvedIsDark bool
+	var resolvedThemeName string
 	if f, ok := streams.Out.(*os.File); ok {
 		if w, _, err := term.GetSize(f.Fd()); err == nil && w > 0 {
 			resolvedTermWidth = w
@@ -114,8 +116,8 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		// to os.Stdout (via backgroundColor(os.Stdout, os.Stdout)) which races and
 		// leaks raw escape-sequence responses into the diff output.
 		if !flags.noColor && term.IsTerminal(f.Fd()) {
-			isDark := lipgloss.HasDarkBackground(os.Stdin, f)
-			opts = append(opts, drift.WithIsDark(isDark))
+			resolvedIsDark = lipgloss.HasDarkBackground(os.Stdin, f)
+			opts = append(opts, drift.WithIsDark(resolvedIsDark))
 
 			// Resolve the Chroma theme once via OSC 4 palette query, before any
 			// goroutines start. When rendering a directory diff, each file is
@@ -128,10 +130,15 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 			// already short-circuits the OSC 4 branch in resolveChromaStyle).
 			if flags.theme == "" && profile != colorprofile.NoTTY && profile != colorprofile.Ascii {
 				if palette, err := terminal.QueryANSIPalette(); err == nil && len(palette) > 0 {
-					opts = append(opts, drift.WithTheme(highlight.BestMatchTheme(palette)))
+					resolvedThemeName = highlight.BestMatchTheme(palette)
+					opts = append(opts, drift.WithTheme(resolvedThemeName))
 				}
 			}
 		}
+	}
+	// When --theme is explicitly set, use that name for accent color derivation.
+	if flags.theme != "" {
+		resolvedThemeName = flags.theme
 	}
 
 	// Resolve chrome decoration theme from --chrome flag value.
@@ -139,6 +146,15 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 	chromeTheme, err := chrome.ParseChromeTheme(flags.chrome)
 	if err != nil {
 		return nil, newExitCode(2, err.Error())
+	}
+
+	// For DeltaTheme, inject an accent color derived from the active Chroma theme
+	// so chrome decoration (Δ glyph, rules, hunk header box) uses a true blue from
+	// the syntax theme rather than the hardcoded ANSI-256 #63 (purple on many terms).
+	if dt, ok := chromeTheme.(chrome.DeltaTheme); ok && !flags.noColor {
+		style := highlight.SelectTheme(resolvedThemeName, resolvedIsDark)
+		dt.AccentColor = highlight.ChromeAccentColor(style, resolvedIsDark)
+		chromeTheme = dt
 	}
 	opts = append(opts, drift.WithHunkHeaderRenderer(chromeTheme.RenderHunkHeader))
 

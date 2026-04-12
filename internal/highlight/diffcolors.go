@@ -1,6 +1,7 @@
 package highlight
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/alecthomas/chroma/v2"
@@ -159,6 +160,29 @@ func redGreenTarget(del bool) (tr, tg, tb uint8) {
 
 func clampFloat(v float64) float64 {
 	return math.Max(0, math.Min(255, v))
+}
+
+// ChromeAccentColor returns a "#RRGGBB" hex color suitable for DeltaTheme chrome
+// decoration (Δ glyph, filename, rules, hunk header box). It queries the Chroma
+// style's Keyword token color (usually blue or cyan) as the accent. When the style
+// is nil or has no usable keyword color, a reasonable fallback is returned:
+// #5f87ff (bright blue) for dark terminals and #0050d0 (blue) for light terminals.
+func ChromeAccentColor(style *chroma.Style, isDark bool) string {
+	if style != nil {
+		// Try Keyword first (typically blue in most themes).
+		for _, tt := range []chroma.TokenType{chroma.Keyword, chroma.NameFunction, chroma.LiteralString} {
+			e := style.Get(tt)
+			if e.Colour.IsSet() {
+				r, g, b := e.Colour.Red(), e.Colour.Green(), e.Colour.Blue()
+				return fmt.Sprintf("#%02x%02x%02x", r, g, b)
+			}
+		}
+	}
+	// Fallback: bright blue for dark terminals, deep blue for light terminals.
+	if isDark {
+		return "#5f87ff"
+	}
+	return "#0050d0"
 }
 
 // blendColourTowardRGB linearly blends c toward (tr,tg,tb); alpha is the weight on the target.

@@ -125,7 +125,28 @@ func (DriftTheme) SplitSeparators(_ bool) (string, string) {
 // DeltaTheme is a chrome inspired by delta's visual style.
 // File headers use Δ + filename + full-width rule (matching DriftTheme structure).
 // Hunk headers with a code fragment render a Unicode box around the function context.
-type DeltaTheme struct{}
+// AccentColor is the #RRGGBB hex color used for chrome decoration; when empty the
+// fallback "#5f87ff" (bright blue on dark) is used. Callers should populate it via
+// [NewDeltaTheme] using a color derived from the active Chroma syntax theme.
+type DeltaTheme struct {
+	// AccentColor is the #RRGGBB hex color for all DeltaTheme chrome elements (Δ
+	// glyph, filename, rules, hunk header box). Empty means use the built-in fallback.
+	AccentColor string
+}
+
+// deltaAccent returns the effective accent color for a DeltaTheme instance.
+// When AccentColor is set by the caller it is used directly; otherwise a bright blue
+// that works on both dark and light terminals is used as the built-in fallback.
+func (t DeltaTheme) deltaAccent() string {
+	if t.AccentColor != "" {
+		return t.AccentColor
+	}
+	// Built-in fallback: bright blue that works on dark terminals.
+	// This is only reached when the caller did not inject a Chroma-derived color
+	// (e.g. in --no-color mode the accent is never needed, or in tests that
+	// construct DeltaTheme{} directly).
+	return "#5f87ff"
+}
 
 // Name returns "delta".
 func (DeltaTheme) Name() string { return "delta" }
@@ -143,17 +164,18 @@ func (DeltaTheme) Name() string { return "delta" }
 //	------------------------------------------------------------
 //
 // A blank line follows the rule so the diff hunk below has breathing room.
-func (DeltaTheme) RenderFileHeader(name string, noColor bool, termWidth int) string {
+func (t DeltaTheme) RenderFileHeader(name string, noColor bool, termWidth int) string {
 	width := resolveWidth(termWidth)
 	if noColor {
 		return "Δ " + name + "\n" + strings.Repeat("-", width) + "\n\n"
 	}
-	// Accent color for the Δ glyph and filename — slate-blue (ANSI 256 #63).
-	chevronStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63")).Bold(true)
+	accent := lipgloss.Color(t.deltaAccent())
+	// Accent color for the Δ glyph and filename — derived from the active Chroma theme.
+	chevronStyle := lipgloss.NewStyle().Foreground(accent).Bold(true)
 	// Filename in the same accent color as the Δ glyph.
-	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
+	nameStyle := lipgloss.NewStyle().Foreground(accent)
 	// Rule in the accent color to match the box-drawing lines in hunk headers.
-	ruleStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
+	ruleStyle := lipgloss.NewStyle().Foreground(accent)
 	rule := strings.Repeat("─", width)
 	return chevronStyle.Render("Δ") + " " + nameStyle.Render(name) + "\n" +
 		ruleStyle.Render(rule) + "\n\n"
@@ -173,7 +195,7 @@ func (DeltaTheme) RenderFileHeader(name string, noColor bool, termWidth int) str
 //	-----------------------------------+
 //	• 111: func name {                 |
 //	-----------------------------------+
-func (DeltaTheme) RenderHunkHeader(lineNum int, codeFragment string, noColor bool) string {
+func (t DeltaTheme) RenderHunkHeader(lineNum int, codeFragment string, noColor bool) string {
 	var content string
 	if codeFragment == "" {
 		content = fmt.Sprintf("• %d:", lineNum)
@@ -187,8 +209,9 @@ func (DeltaTheme) RenderHunkHeader(lineNum int, codeFragment string, noColor boo
 		bottom := strings.Repeat("-", n+1) + "+"
 		return top + "\n" + middle + "\n" + bottom + "\n"
 	}
-	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63"))  // slate blue
-	contentStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63")) // same accent for bullet text
+	accent := lipgloss.Color(t.deltaAccent())
+	borderStyle := lipgloss.NewStyle().Foreground(accent)
+	contentStyle := lipgloss.NewStyle().Foreground(accent)
 	top := borderStyle.Render(strings.Repeat("─", n+1) + "┐")
 	middle := contentStyle.Render(content) + borderStyle.Render(" │")
 	bottom := borderStyle.Render(strings.Repeat("─", n+1) + "┘")
