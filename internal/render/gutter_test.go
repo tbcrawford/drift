@@ -8,7 +8,6 @@ import (
 	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/tbcrawford/drift/internal/edittype"
-	"github.com/tbcrawford/drift/internal/highlight"
 )
 
 func TestGutterNumberRender_padsSingleDigitWithSpaces(t *testing.T) {
@@ -38,24 +37,25 @@ func TestGutterNumberRender_blankFillsFullColumnWidth(t *testing.T) {
 	}
 }
 
-func TestGutterDeleteCell_usesSemanticWordSpanColour(t *testing.T) {
+func TestGutterDeleteCell_usesAccentForeground(t *testing.T) {
 	t.Parallel()
 	style := styles.Get("github-dark")
 	if style == nil {
 		t.Fatal("github-dark style")
 	}
-	if !highlight.WordSpanBackgroundColour(style, true, true).IsSet() {
-		t.Fatal("expected word-span colour")
-	}
 	st := gutterStyleForCell(style, true, false, true, edittype.Delete)
 	out := GutterNumberRender(st, 3, 2)
-	// Foreground may precede background (38…48…); require embedded 48 (bg) sequence.
-	if !strings.Contains(out, ";48;") && !strings.Contains(out, ";48:") {
-		t.Fatalf("expected background SGR (48) in delete gutter (same pipeline as word spans): %q", out)
+	// Delete gutter cells now use accent blue foreground (color 63 / 38;5;63) with NO background.
+	if strings.Contains(out, ";48;") || strings.Contains(out, ";48:") {
+		t.Fatalf("delete gutter should not set background color, got %q", out)
+	}
+	// Should contain foreground ANSI (38).
+	if !strings.Contains(out, "\x1b[38;") {
+		t.Fatalf("expected foreground ANSI (38) in delete gutter, got %q", out)
 	}
 }
 
-func TestGutterStyleForCell_deleteOldColumn_hasBackgroundANSI(t *testing.T) {
+func TestGutterStyleForCell_deleteOldColumn_hasAccentForeground(t *testing.T) {
 	t.Parallel()
 	style := styles.Get("github")
 	if style == nil {
@@ -63,8 +63,13 @@ func TestGutterStyleForCell_deleteOldColumn_hasBackgroundANSI(t *testing.T) {
 	}
 	st := gutterStyleForCell(style, false, false, true, edittype.Delete)
 	out := st.Render("1")
-	if !strings.Contains(out, ";48;") && !strings.Contains(out, ";48:") {
-		t.Fatalf("expected background SGR (48) in gutter output, got %q", out)
+	// Changed: delete gutter now uses accent foreground only — no background.
+	if strings.Contains(out, ";48;") || strings.Contains(out, ";48:") {
+		t.Fatalf("delete gutter should not set background color, got %q", out)
+	}
+	// Must still have a foreground color (the accent blue).
+	if !strings.Contains(out, "\x1b[38;") {
+		t.Fatalf("expected foreground ANSI (38) in delete gutter output, got %q", out)
 	}
 }
 

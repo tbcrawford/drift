@@ -49,30 +49,22 @@ func gutterWidths(lines []edittype.Line) (oldW, newW int) {
 }
 
 // gutterStyleForCell returns a Lip Gloss style for one gutter column on one logical line.
-// Delete rows on the old column and insert rows on the new column use the same semantic
-// background as [highlight.WordSpanBackgroundColour] (matches highlighted changed words).
-// Context (unchanged) lines and blank gutter cells use **foreground only** — no gray fill,
-// so the terminal default background shows through. Callers should use [GutterNumberRender]
-// so Width + center alignment fill the column; padding spaces inherit the same style.
+// All rows use foreground-only styling — no background color — so the terminal default
+// background shows through even on delete/insert rows. Changed lines (delete old-column,
+// insert new-column) use the accent blue foreground; context lines use the dim gray.
+// Callers should use [GutterNumberRender] so Width + alignment fill the column.
 func gutterStyleForCell(style *chroma.Style, isDark, noColor bool, oldColumn bool, lineOp edittype.Op) lipgloss.Style {
 	if noColor {
 		return lipgloss.NewStyle()
 	}
 	dim := highlight.GutterDimForegroundHex(isDark)
-	high := highlight.GutterHighlightForegroundHex(isDark)
+	// accent is the slate-blue used throughout the DeltaTheme chrome.
+	const accentColor = "63"
 	switch {
 	case style != nil && oldColumn && lineOp == edittype.Delete:
-		c := highlight.WordSpanBackgroundColour(style, isDark, true)
-		if !c.IsSet() {
-			return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, true))).Foreground(lipgloss.Color(high))
-		}
-		return lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Foreground(lipgloss.Color(high))
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(accentColor))
 	case style != nil && !oldColumn && lineOp == edittype.Insert:
-		c := highlight.WordSpanBackgroundColour(style, isDark, false)
-		if !c.IsSet() {
-			return lipgloss.NewStyle().Background(lipgloss.Color(highlight.GutterBackgroundHex(isDark, false))).Foreground(lipgloss.Color(high))
-		}
-		return lipgloss.NewStyle().Background(lipgloss.Color(c.String())).Foreground(lipgloss.Color(high))
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(accentColor))
 	default:
 		return lipgloss.NewStyle().Foreground(lipgloss.Color(dim))
 	}
@@ -175,25 +167,28 @@ func styledGutterCellBorder(cfg *RenderConfig) string {
 }
 
 // GutterNumberRender renders a line number (or blank when n==0) in a fixed display width.
-// Non-zero numbers are wrapped with [gutterNumberPadEachSide] spaces on each side, then
-// centered in the column; padding uses the same Lip Gloss style so the background fills
-// the entire gutter width.
+// Non-zero numbers are right-aligned within the column with [gutterNumberPadEachSide]
+// spaces on the right side, and the remaining space on the left — so numbers like
+// 2, 10, 100 all align on the right edge of the cell: "  2 ", " 10 ", "100 ".
+// The style is applied to the whole cell so borders and backgrounds render uniformly.
 func GutterNumberRender(st lipgloss.Style, width int, n int) string {
 	if width < 1 {
 		width = 1
 	}
 	if n == 0 {
-		return st.Width(width).AlignHorizontal(lipgloss.Center).Render("")
+		return st.Width(width).Render("")
 	}
 	s := strconv.Itoa(n)
-	inner := strings.Repeat(" ", gutterNumberPadEachSide) + s + strings.Repeat(" ", gutterNumberPadEachSide)
-	if len(inner) > width {
-		if len(s) >= width {
-			return st.Render(s)
-		}
-		return st.Width(width).AlignHorizontal(lipgloss.Center).Render(s)
+	// Right-align: pad right side fixed, left side takes remaining space.
+	padRight := strings.Repeat(" ", gutterNumberPadEachSide)
+	inner := s + padRight
+	if len(inner) >= width {
+		// Number is wider than cell — just render the number directly.
+		return st.Render(s)
 	}
-	return st.Width(width).AlignHorizontal(lipgloss.Center).Render(inner)
+	// Pad left so that inner right-aligns within the full width.
+	padLeft := strings.Repeat(" ", width-len(inner))
+	return st.Render(padLeft + s + padRight)
 }
 
 func gutterPairWidths(pairs []linePair) (oldW, newW int) {

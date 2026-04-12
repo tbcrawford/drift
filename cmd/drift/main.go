@@ -122,6 +122,11 @@ func runPagerMode(r io.Reader, opts *rootOptions) error {
 			}
 
 			var buf bytes.Buffer
+			// Blank line before the 2nd and subsequent file headers to visually
+			// separate consecutive file diffs from each other.
+			if hasDiff {
+				buf.WriteByte('\n')
+			}
 			buf.WriteString(opts.chromeTheme.RenderFileHeader(f.Name, opts.noColor, opts.termWidth))
 			if rErr := drift.RenderWithNames(result, &buf, f.OldName, f.NewName, opts.driftOpts...); rErr != nil {
 				return false, newExitCode(2, rErr.Error())
@@ -258,6 +263,10 @@ func runDirectoryDiff(pairs []filePair, opts *rootOptions, w io.Writer) (hasDiff
 
 	for i := range results {
 		if results[i].Len() > 0 {
+			// Blank line before the 2nd and subsequent file headers.
+			if hasDiff {
+				_, _ = fmt.Fprint(w, "\n")
+			}
 			hasDiff = true
 			_, _ = results[i].WriteTo(w)
 		}
@@ -298,6 +307,10 @@ func runGitDirectoryDiff(pairs []gitFilePair, opts *rootOptions, w io.Writer) (h
 
 	for i := range results {
 		if results[i].Len() > 0 {
+			// Blank line before the 2nd and subsequent file headers.
+			if hasDiff {
+				_, _ = fmt.Fprint(w, "\n")
+			}
 			hasDiff = true
 			_, _ = results[i].WriteTo(w)
 		}

@@ -148,12 +148,12 @@ func (DeltaTheme) RenderFileHeader(name string, noColor bool, termWidth int) str
 	if noColor {
 		return "Δ " + name + "\n" + strings.Repeat("-", width) + "\n\n"
 	}
-	// Accent color for the Δ glyph — muted slate-blue (ANSI 256 #63).
+	// Accent color for the Δ glyph and filename — slate-blue (ANSI 256 #63).
 	chevronStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63")).Bold(true)
-	// Filename in a muted foreground (bright white on dark / dark gray on light).
-	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("250"))
-	// Rule in a dimmer tone so it recedes behind the filename.
-	ruleStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("238"))
+	// Filename in the same accent color as the Δ glyph.
+	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
+	// Rule in the accent color to match the box-drawing lines in hunk headers.
+	ruleStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
 	rule := strings.Repeat("─", width)
 	return chevronStyle.Render("Δ") + " " + nameStyle.Render(name) + "\n" +
 		ruleStyle.Render(rule) + "\n\n"
@@ -187,8 +187,8 @@ func (DeltaTheme) RenderHunkHeader(lineNum int, codeFragment string, noColor boo
 		bottom := strings.Repeat("-", n+1) + "+"
 		return top + "\n" + middle + "\n" + bottom + "\n"
 	}
-	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63"))   // slate blue
-	contentStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("250")) // muted white
+	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63"))  // slate blue
+	contentStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("63")) // same accent for bullet text
 	top := borderStyle.Render(strings.Repeat("─", n+1) + "┐")
 	middle := contentStyle.Render(content) + borderStyle.Render(" │")
 	bottom := borderStyle.Render(strings.Repeat("─", n+1) + "┘")
