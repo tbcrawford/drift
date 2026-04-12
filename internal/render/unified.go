@@ -93,6 +93,13 @@ type RenderConfig struct {
 	// gutter cell in split mode when ShowLineNumbers is true. Produces the delta-style
 	// "│ NNN │" gutter format. Empty means no border decoration (DriftTheme behavior).
 	GutterCellBorder string
+
+	// GutterBorderColor is an optional hex color (e.g. "#5f87ff") used to style the
+	// vertical │ border characters in the gutter and panel separators. When non-empty,
+	// it overrides the default dim gray foreground on GutterCellBorder, GutterMiddleSep,
+	// GutterRightBorder, and SplitPanelSep. Used by DeltaTheme to match the chrome
+	// accent color derived from the active Chroma syntax theme.
+	GutterBorderColor string
 }
 
 // Unified writes a Git-compatible unified diff of result to w.

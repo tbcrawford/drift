@@ -155,6 +155,9 @@ func resolveRootOptions(flags *rootFlags, streams IOStreams, args []string) (*ro
 		style := highlight.SelectTheme(resolvedThemeName, resolvedIsDark)
 		dt.AccentColor = highlight.ChromeAccentColor(style, resolvedIsDark)
 		chromeTheme = dt
+		// Apply the same accent color to the vertical │ gutter border characters
+		// so they match the chrome decoration color rather than the default dim gray.
+		opts = append(opts, drift.WithGutterBorderColor(dt.AccentColor))
 	}
 	opts = append(opts, drift.WithHunkHeaderRenderer(chromeTheme.RenderHunkHeader))
 

@@ -53,6 +53,7 @@ func Render(result DiffResult, w io.Writer, opts ...Option) error {
 		GutterRightBorder:  cfg.render.gutterRightBorder,
 		SplitPanelSep:      cfg.render.splitPanelSep,
 		GutterCellBorder:   cfg.render.gutterCellBorder,
+		GutterBorderColor:  cfg.render.gutterBorderColor,
 	}
 
 	if cfg.render.split {
@@ -96,6 +97,7 @@ func RenderWithNames(result DiffResult, w io.Writer, oldName, newName string, op
 		GutterRightBorder:  cfg.render.gutterRightBorder,
 		SplitPanelSep:      cfg.render.splitPanelSep,
 		GutterCellBorder:   cfg.render.gutterCellBorder,
+		GutterBorderColor:  cfg.render.gutterBorderColor,
 	}
 
 	if cfg.render.split {

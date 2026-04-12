@@ -49,6 +49,7 @@ type renderConfig struct {
 	gutterRightBorder  string
 	splitPanelSep      string
 	gutterCellBorder   string
+	gutterBorderColor  string
 }
 
 // config holds all configuration for Diff and Render operations.
@@ -210,6 +211,14 @@ func WithSplitSeparators(panelSep, gutterCellBorder string) Option {
 		c.render.splitPanelSep = panelSep
 		c.render.gutterCellBorder = gutterCellBorder
 	}
+}
+
+// WithGutterBorderColor sets the foreground color for │ gutter border characters
+// (GutterCellBorder, GutterMiddleSep, GutterRightBorder, SplitPanelSep).
+// color must be a hex string (e.g. "#5f87ff"). When empty, borders use the default
+// dim gray foreground. Used by DeltaTheme to match the chrome accent color.
+func WithGutterBorderColor(color string) Option {
+	return func(c *config) { c.render.gutterBorderColor = color }
 }
 
 // validate checks that all config fields hold valid values.

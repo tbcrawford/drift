@@ -119,6 +119,15 @@ func (c *GutterStyleCache) Get(oldColumn bool, op edittype.Op) lipgloss.Style {
 	return c.styles[gutterStyleKey{oldColumn: oldColumn, op: op}]
 }
 
+// gutterBorderFg returns the hex color string to use for │ border characters.
+// Uses cfg.GutterBorderColor when set; falls back to dim gray.
+func gutterBorderFg(cfg *RenderConfig) string {
+	if cfg != nil && cfg.GutterBorderColor != "" {
+		return cfg.GutterBorderColor
+	}
+	return highlight.GutterDimForegroundHex(cfg.IsDark)
+}
+
 // styledGutterColumnSeparator returns the gutter column separator with dim foreground when color is on.
 // Uses cfg.GutterMiddleSep when non-empty; falls back to gutterColumnSeparator (" │").
 // Used in unified mode only — split mode uses styledSplitPanelSep.
@@ -131,7 +140,7 @@ func styledGutterColumnSeparator(cfg *RenderConfig) string {
 		return sep
 	}
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color(highlight.GutterDimForegroundHex(cfg.IsDark))).
+		Foreground(lipgloss.Color(gutterBorderFg(cfg))).
 		Render(sep)
 }
 
@@ -162,12 +171,13 @@ func styledSplitPanelSep(cfg *RenderConfig, sep string) string {
 		return sep
 	}
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color(highlight.GutterDimForegroundHex(cfg.IsDark))).
+		Foreground(lipgloss.Color(gutterBorderFg(cfg))).
 		Render(sep)
 }
 
-// styledGutterCellBorder returns the gutter cell border with dim foreground when color is on.
+// styledGutterCellBorder returns the gutter cell border with the configured foreground color.
 // Used in split mode when cfg.GutterCellBorder is non-empty to produce "│ NNN │" gutter cells.
+// Uses GutterBorderColor when set (accent blue for DeltaTheme); falls back to dim gray.
 func styledGutterCellBorder(cfg *RenderConfig) string {
 	if cfg == nil || cfg.GutterCellBorder == "" {
 		return ""
@@ -176,7 +186,7 @@ func styledGutterCellBorder(cfg *RenderConfig) string {
 		return cfg.GutterCellBorder
 	}
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color(highlight.GutterDimForegroundHex(cfg.IsDark))).
+		Foreground(lipgloss.Color(gutterBorderFg(cfg))).
 		Render(cfg.GutterCellBorder)
 }
 
